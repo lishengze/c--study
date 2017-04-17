@@ -1,6 +1,6 @@
 CC = g++
 TARGET = a.out
-OBJECTS = main.o print.o testVirtualBase.o data-sema.o
+OBJECTS = main.o print.o testVirtualBase.o data-sema.o testDataPointer.o
 
 $(TARGET):$(OBJECTS)
 	$(CC) -o $(TARGET) $(OBJECTS)
@@ -17,6 +17,5 @@ testVirtualBase.o: testVirtualBase.cpp testVirtualBase.h print.h
 data-sema.o: data-sema.cpp data-sema.h print.h
 	$(CC) -c data-sema.cpp
 
-.PHONY: clean
-clean:
-	rm -f *.o
+testDataPointer.o: testDataPointer.cpp testDataPointer.h print.h
+	$(CC) -c testDataPointer.cpp

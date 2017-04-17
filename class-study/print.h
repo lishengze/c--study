@@ -9,6 +9,8 @@ using std::endl;
 #include <string>
 using std::string;
 
+#include <stdio.h>
+
 template<class datatype>
 void PrintData(string dataDescription, datatype* data, int datalength) {
 	cout << dataDescription << endl;
