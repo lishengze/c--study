@@ -1,6 +1,6 @@
 CC = g++
 TARGET = a.out
-OBJECTS = main.o print.o testVirtualBase.o data-sema.o testDataPointer.o
+OBJECTS = main.o print.o testVirtualBase.o data-sema.o testDataPointer.o testPureClass.o
 
 $(TARGET):$(OBJECTS)
 	$(CC) -o $(TARGET) $(OBJECTS)
@@ -19,3 +19,6 @@ data-sema.o: data-sema.cpp data-sema.h print.h
 
 testDataPointer.o: testDataPointer.cpp testDataPointer.h print.h
 	$(CC) -c testDataPointer.cpp
+
+testPureClass.o: testPureClass.cpp testPureClass.h print.h
+	$(CC) -c testPureClass.cpp
