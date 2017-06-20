@@ -4,17 +4,21 @@
 class PureClass {
 	public:
 	PureClass();
-	~PureClass();
-	int m_mutuble;
+	virtual void test() = 0;
+	virtual ~PureClass();
+	// int m_mutuble;
 };
 
 class DeClass:public PureClass {
 	public:
 		DeClass();
+		void test();
 		~DeClass();
 };
 
-
+/*
+* 
+*/
 void TestPureClass ();
 
 #endif

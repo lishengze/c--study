@@ -3,7 +3,7 @@
 
 PureClass::PureClass() {
 	cout << "PureClass" << endl;
-	m_mutuble = 0;
+	// m_mutuble = 0;
 }
 
 PureClass::~PureClass() {
@@ -15,13 +15,17 @@ DeClass::DeClass(){
 	cout << "DeClass" << endl;
 }
 
+void DeClass::test() {
+	cout << "test" << endl;
+}
+
 DeClass::~DeClass() {
 	cout << "~DeClass" << endl;
 }
 
 void TestPureClass () {
 	DeClass tmpObj;
-	cout <<tmpObj.m_mutuble << endl;
+	// cout <<tmpObj.m_mutuble << endl;
 
 	PureClass* pcPtr = &tmpObj;
 	delete pcPtr;
