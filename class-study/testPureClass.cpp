@@ -24,9 +24,9 @@ DeClass::~DeClass() {
 }
 
 void TestPureClass () {
-	DeClass tmpObj;
+	// DeClass tmpObj;
 	// cout <<tmpObj.m_mutuble << endl;
 
-	// PureClass* pcPtr = &tmpObj;
-	// delete pcPtr;
+	PureClass* pcPtr = new DeClass();
+	delete pcPtr;
 }
