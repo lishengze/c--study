@@ -1,6 +1,6 @@
 CC = g++
 TARGET = a.out
-OBJECTS = main.o print.o testVirtualBase.o data-sema.o testDataPointer.o testPureClass.o
+OBJECTS = main.o print.o testVirtualBase.o data-sema.o testDataPointer.o testPureClass.o testClassSize.o
 
 $(TARGET):$(OBJECTS)
 	$(CC) -o $(TARGET) $(OBJECTS)
@@ -22,3 +22,6 @@ testDataPointer.o: testDataPointer.cpp testDataPointer.h print.h
 
 testPureClass.o: testPureClass.cpp testPureClass.h print.h
 	$(CC) -c testPureClass.cpp
+
+testClassSize.o: testClassSize.cpp testClassSize.h print.h
+	$(CC) -c testClassSize.cpp
