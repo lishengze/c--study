@@ -57,7 +57,7 @@ void testStaticCast() {
 	} else {
 		pd1 -> func();
 	}
-	pd2 = static_cast<base1*>(pd3);
+	// pd2 = static_cast<base1*>(pd3);
 
 	// pd1 = static_cast<derived1*>(b1);
 	// pd1 -> func();

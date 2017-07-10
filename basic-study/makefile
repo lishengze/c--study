@@ -1,6 +1,6 @@
 CC = g++
 TARGET = a.out
-OBJECTS = main.o print.o testStaticCast.o
+OBJECTS = main.o print.o testStaticCast.o testVolatile.o
 
 $(TARGET):$(OBJECTS)
 	$(CC) -o $(TARGET) $(OBJECTS)
@@ -13,3 +13,6 @@ print.o: print.cpp print.h
 
 testStaticCast.o: testStaticCast.cpp print.h testStaticCast.h 
 	$(CC) -c testStaticCast.cpp
+
+testVolatile.o: testVolatile.cpp print.h testVolatile.h 
+	$(CC) -c testVolatile.cpp	
