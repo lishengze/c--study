@@ -1,18 +1,17 @@
 //============================================================================
-// Name        : SocketStudy.cpp
-// Author      : LSZ
+// Name        : ThreadStudy.cpp
+// Author      : lsz
 // Version     :
-// Copyright   : Your copyright notice
+// Copyright   : None
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#include <iostream>
-#include "func_time.h"
-using namespace std;
+#include <stdio.h>
+#include "test.h"
 
-int main() {
-
-	testFuncTimeMain();
-
+int main() 
+{
+	testMain();
+	printf("Singleton \n");
 	return 0;
 }
