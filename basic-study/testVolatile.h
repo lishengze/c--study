@@ -5,4 +5,6 @@ void testVolatile1();
 
 void testVolatile2();
 
+void testSizeof();
+
 #endif

@@ -8,7 +8,8 @@
 
 #include "test.h"
 
-int main() {
+int main() 
+{
 
 	testMain();
 

@@ -1,5 +1,5 @@
-#ifndef CONNECT_PROCESS_H
-#define CONNECT_PROCESS_H
+#ifndef _CONNECT_PROCESS_H_
+#define _CONNECT_PROCESS_H_
 
 #include <condition_variable>
 #include <thread>

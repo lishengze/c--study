@@ -46,4 +46,6 @@ class BasicServer
         thread                  m_heartbeatThread;        
 };
 
+void testBasicServer();
+
 #endif // ! BASIC_SERVER_H;

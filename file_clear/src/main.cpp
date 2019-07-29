@@ -1,16 +1,18 @@
 //============================================================================
-// Name        : ThreadStudy.cpp
-// Author      : lsz
+// Name        : file_clear.cpp
+// Author      : LSZ
 // Version     :
-// Copyright   : None
+// Copyright   : Your copyright notice
 // Description : Hello World in C++, Ansi-style
+// Date		   : 2019/5/25
 //============================================================================
 
-#include <iostream>
 #include "test.h"
 
 int main() 
 {
-	testFuncMain();
+
+	testMain();
+
 	return 0;
 }

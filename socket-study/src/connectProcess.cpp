@@ -1,6 +1,7 @@
 #include <sys/socket.h>
-#include <unistd.h>
 #include <arpa/inet.h>
+
+#include <unistd.h>
 #include <string.h>
 #include "connectProcess.h"
 #include "func_time.h"

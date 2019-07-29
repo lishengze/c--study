@@ -1,7 +1,6 @@
-#include <string.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#include "socket_head.h"
+
+#include <string>
 #include "basicServer.h"
 #include "connectProcess.h"
 
@@ -14,6 +13,8 @@ m_serverAddress(serverAddress), m_serverPort(serverPort)
 BasicServer::BasicServer()
 {
     m_serverBacklog = 20;
+
+    initEnv();
 }
 
 BasicServer::~BasicServer()
@@ -26,6 +27,8 @@ BasicServer::~BasicServer()
             delete *it;
         }
     }
+
+    cleanEnv();
 }
 
 void BasicServer::setAddress(string serverAddress) 
@@ -169,4 +172,15 @@ void BasicServer::sendDataArray(int32 clientID, char* dataAddress,
     {
         m_ConnProcVec[clientID]->sendData(dataAddress, dataSize*dataCount);
     }
+}
+
+
+class TestBasicServer
+{
+
+};
+
+void testBasicServer()
+{
+
 }
