@@ -40,17 +40,20 @@ void TestEmplace()
     double version = 1.0;
     string name = "Wps";
 
-    cout << "-- Insert --" << endl;
+    cout << "-- Map Insert --" << endl;
     mapValue.insert(make_pair(1, Complated(year, version, name)));
+    cout << endl;
 
-    cout << "-- Emplace --" << endl;
+    cout << "-- Map Emplace --" << endl;
     mapValue.emplace(2, Complated(year, version, name));
+    cout << endl;
 
-    cout << "-- Emplace_Back --" << endl;
+    cout << "-- Vec Emplace_Back --" << endl;
     vector<Complated>  vecValue;
     // vecValue.emplace_back(year, version, name);
     vecValue.emplace_back(Complated(year, version, name));
+    cout << endl;
 
-    cout << "-- Push Back --" << endl;
+    cout << "-- Vec Push Back --" << endl;
     vecValue.push_back(Complated(year, version, name));
 }
