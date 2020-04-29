@@ -1,3 +1,3 @@
-make clean
-make all
-./bin/main.exe
+rm -fr ./obj/*
+make
+./bin/main

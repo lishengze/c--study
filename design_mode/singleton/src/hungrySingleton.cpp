@@ -1,4 +1,4 @@
-#include "HungrySingleton.h"
+#include "hungrySingleton.h"
 #include <mutex>
 #include <thread>
 using std::lock_guard;

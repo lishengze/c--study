@@ -1,7 +1,7 @@
 # originating https://github.com/TheNetAdmin/Makefile-Templates
 # tool marcros
 CC := g++
-CCFLAG := -std=c++11
+CCFLAG := -std=c++11 -O0
 DBGFLAG := -g
 CCOBJFLAG := -c
 LINKFLAG = -pthread
@@ -9,14 +9,9 @@ LINKFLAG = -pthread
 # path marcros
 BIN_PATH := bin
 OBJ_PATH := obj
-SRC_PATH := src ../../public-files/public-func ../../public-files/public-class
-PUBFUNC_PATH := ../../public-files/public-func
-PUBCLASS_PATH := ../../public-files/public-class
+SRC_PATH := src 
 CURR_SRC_PATH := src
 DBG_PATH := debug
-
-HEADER_PATH = -I ../../public-files/public-func/ ../../public-files/public-class/
-LIB_PATH = -L ../../public-files/lib/
 
 # compile marcros
 TARGET_NAME := main
@@ -54,31 +49,18 @@ default: all
 $(TARGET): $(OBJ)
 	$(CC) $(CCFLAG) $(LINKFLAG) -o $@ $?
 
-$(OBJ_PATH)/%.o: $(CURR_SRC_PATH)/%.cpp
-	$(CC) $(CCOBJFLAG) -o $@ $< $(CCFLAG) $(HEADER_PATH)
+$(OBJ_PATH)/%.o: $(CURR_SRC_PATH)/%.cpp 
+	$(CC) $(CCFLAG) $(CCOBJFLAG) -o $@ $<  
 
-$(OBJ_PATH)/%.o: $(PUBFUNC_PATH)/%.cpp
-	$(CC) $(CCOBJFLAG) -o $@ $< $(CCFLAG) $(HEADER_PATH)
-
-$(OBJ_PATH)/%.o: $(PUBCLASS_PATH)/%.cpp
-	$(CC) $(CCOBJFLAG) -o $@ $< $(CCFLAG) $(HEADER_PATH)
 
 # $(DBG_PATH)/%.o: $(SRC_PATH)/%.cpp
 # 	$(CC) $(CCOBJFLAG) $(DBGFLAG) -o $@ $< $(CCFLAG)
 
+$(DBG_PATH)/%.o: $(CURR_SRC_PATH)/%.cpp
+	$(CC) $(CCFLAG) $(CCOBJFLAG) -o $@ $< 
+
 $(TARGET_DEBUG): $(OBJ_DEBUG)
 	$(CC) $(CCFLAG) $(DBGFLAG) $(LINKFLAG)  $? -o $@
-	
-$(DBG_PATH)/%.o: $(CURR_SRC_PATH)/%.cpp
-	$(CC) $(CCOBJFLAG) -o $@ $< $(CCFLAG) $(HEADER_PATH)
-
-$(DBG_PATH)/%.o: $(PUBFUNC_PATH)/%.cpp
-	$(CC) $(CCOBJFLAG) -o $@ $< $(CCFLAG) $(HEADER_PATH)
-
-$(DBG_PATH)/%.o: $(PUBCLASS_PATH)/%.cpp
-	$(CC) $(CCOBJFLAG) -o $@ $< $(CCFLAG) $(HEADER_PATH)
-
-
 
 # phony rules
 .PHONY: all
