@@ -1,2 +1,8 @@
+# !bin/bash
+rm -f ./obj/*.o
+rm -f ./bin/*
+
 make
-./a.out
+
+printf "\n\nResult: \n"
+./bin/main
