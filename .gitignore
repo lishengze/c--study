@@ -4,3 +4,22 @@
 *.out
 *.exe
 CMakeFiles/
+log/
+build/
+*.so
+
+*/__pycache_
+
+lib/
+__pycache__/
+.vscode/
+
+*.so
+
+build/
+cmake-build-debug/
+cmake-build-release/
+
+# grpc生成的代码
+protos/cpp/*
+protos/python/*
