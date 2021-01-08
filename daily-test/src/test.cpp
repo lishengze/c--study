@@ -1,5 +1,6 @@
 #include "test.h"
 #include "test_data_structure.h"
+#include "test_string.h"
 
 #include "global_declare.h"
 #include "json.hpp"
@@ -38,5 +39,7 @@ void TestMain()
 {
     // test_json();
 
-    test_data_structure();
+    // test_data_structure();
+
+    TestString();
 }
