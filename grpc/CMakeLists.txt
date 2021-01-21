@@ -17,6 +17,10 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 AUX_SOURCE_DIRECTORY(./src MAIN_SRC)
+AUX_SOURCE_DIRECTORY(./src/server SERVER_SRC)
+AUX_SOURCE_DIRECTORY(./src/client CLIENT_SRC)
+AUX_SOURCE_DIRECTORY(./proto/cpp PROTO_SRC)
+
 ###############################################################################################
 INCLUDE_DIRECTORIES("include/")
 
@@ -27,8 +31,11 @@ INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
 
 
-ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC})
+ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC} ${SERVER_SRC} ${CLIENT_SRC} ${PROTO_SRC})
+
 
 TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(${LIB_NAME} Threads::Threads)
+TARGET_LINK_LIBRARIES(${BIN_NAME} Threads::Threads)
+target_link_libraries(${BIN_NAME} protobuf protoc protobuf-lite)
+target_link_libraries(${BIN_NAME} grpc++_reflection grpc++ gpr ssl crypto)
 

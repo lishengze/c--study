@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package TestPackage;
+
+service TestStream
+{
+    rpc TestSimple(TestRequest) returns (TestResponse);
+    rpc TestClientStream(stream TestRequest) returns (TestResponse);
+    rpc TestServerStream(TestRequest) returns (stream TestResponse);
+    rpc TestDoubleStream(stream TestRequest) returns (stream TestResponse);
+};
+
+message TestRequest
+{
+    string name = 1;
+    string time = 2;
+};
+
+
+message TestResponse
+{
+    string name = 1;
+    string time = 2;
+};
