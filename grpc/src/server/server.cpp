@@ -1,5 +1,13 @@
 #include "server.h"
+
 #include "boost/make_shared.hpp"
+
+#include "pandora/util/time_util.h"
+
+#include "../include/global_declare.h"
+
+#include "rpc.h"
+
 
 BaseServer::~BaseServer()
 {
@@ -13,11 +21,19 @@ void BaseServer::start()
 {
     try
     {
+        cout << "BaseServer Start " << endl;
+
         builder_.AddListeningPort(address_, grpc::InsecureServerCredentials());
         builder_.RegisterService(&service_);
 
         cq_ = builder_.AddCompletionQueue();
         server_ = builder_.BuildAndStart();
+
+        simple_rpc = boost::make_shared<TestSimpleRPC>(&service_, cq_.get());
+
+        simple_rpc->register_all();
+
+        init_cq_thread();
     }
     catch(const std::exception& e)
     {
@@ -32,49 +48,33 @@ void BaseServer::init_cq_thread()
 
 void BaseServer::run_cq_loop()
 {
-    void* tag;
-    bool status;
-    while(true)
+    try
     {
-        cq_->Next(&tag, &status);
+        void* tag;
+        bool status;
+        while(true)
+        {
+            GPR_ASSERT(cq_->Next(&tag, &status));
 
-        if (status)
-        {
-            BaseRPC* rpc = static_cast<BaseRPC*>(tag);
-            rpc->process();
-        }
-        else
-        {
-            BaseRPC* rpc = static_cast<BaseRPC*>(tag);
-            rpc->release();
+            if (status)
+            {
+                BaseRPC* rpc = static_cast<BaseRPC*>(tag);
+                rpc->process();
+            }
+            else
+            {
+                BaseRPC* rpc = static_cast<BaseRPC*>(tag);
+                rpc->release();
+            }
         }
     }
+    catch(const std::exception& e)
+    {
+        std::cerr << "BaseServer::run_cq_loop " << e.what() << '\n';
+    }
+    catch(...)
+    {
+        cout << "BaseServer::run_cq_loop unkonwn exceptions" << endl;
+    }    
+
 }
-
-void BaseRPC::process()
-{
-
-}
-
-void BaseRPC::release()
-{
-
-}
-
-
-void TestSimpleRPC::register_all()
-{
-    service_->RequestTestSimple(&context_, &request_, &responder_, cq_, cq_, this);
-}
-
-void TestSimpleRPC::process()
-{
-    
-}
-
-void TestSimpleRPC::release()
-{
-    reply_.set_name("TestSimpleRPC");
-    reply_.set_time()
-}
-

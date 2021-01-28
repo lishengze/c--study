@@ -13,6 +13,9 @@
 #include <grpcpp/security/server_credentials.h>
 
 #include "cpp/test.grpc.pb.h"
+#include "../include/global_declare.h"
+
+#include "rpc.h"
 
 using grpc::Alarm;
 using grpc::Server;
@@ -27,22 +30,12 @@ using TestPackage::TestStream;
 using TestPackage::TestRequest;
 using TestPackage::TestResponse;
 
-
-using std::string;
-
-
-class BaseRPC
-{
-    public:
-        virtual void process();
-
-        virtual void release();
-};
-
 class BaseServer
 {
 
 public:
+
+    BaseServer(string address):address_(address) { }
 
     virtual ~BaseServer();
 
@@ -52,7 +45,7 @@ public:
 
     void run_cq_loop();
 
-private:
+protected:
 
     string                                  address_;
 
@@ -63,37 +56,6 @@ private:
     TestStream::AsyncService                service_;
 
     boost::shared_ptr<std::thread>          cq_thread_{nullptr};
-};
 
-class TestSimpleRPC:public BaseRPC
-{
-
-public:
-    TestSimpleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
-        service_(service), cq_(cq), responder_(&context_)
-    {
-
-    }
-
-    virtual void process();
-
-    virtual void release();    
-
-    void register_all();
-    
-
-
-private:
-
-    TestStream::AsyncService*                   service_;
-
-    ServerCompletionQueue*                      cq_;
-
-    ServerContext                               context_;
-
-    TestRequest                                 request_;
-
-    TestResponse                                reply_;
-    
-    ServerAsyncResponseWriter<TestResponse>     responder_;
+    TestSimpleRPCPtr                        simple_rpc;                           
 };
