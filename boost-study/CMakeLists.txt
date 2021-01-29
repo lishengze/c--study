@@ -19,6 +19,7 @@ find_package(Threads REQUIRED)
 AUX_SOURCE_DIRECTORY(./src MAIN_SRC)
 ###############################################################################################
 INCLUDE_DIRECTORIES(".")
+INCLUDE_DIRECTORIES("../component")
 
 FIND_PACKAGE(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
@@ -30,5 +31,6 @@ LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
 ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC})
 
 TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(${BIN_NAME} pandora)
 TARGET_LINK_LIBRARIES(${LIB_NAME} Threads::Threads)
 

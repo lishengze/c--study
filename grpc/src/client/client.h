@@ -38,6 +38,7 @@ public:
     std::unique_ptr<TestPackage::TestStream::Stub>  stub_;
     ClientContext                                   context_;
     CompletionQueue                                 cq_;
+    std::shared_ptr<std::thread>                    thread_{nullptr};  
 
 };
 
@@ -60,8 +61,8 @@ public:
 
 
 private:
-    TestRequest                 request_;
-    TestResponse                reply_;    
-    std::shared_ptr<std::thread>                    thread_{nullptr};  
+    TestRequest                                     request_;
+    TestResponse                                    reply_;    
+    
     std::unique_ptr<ClientAsyncResponseReader<TestResponse>> rpc_;
 };

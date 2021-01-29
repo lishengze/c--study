@@ -7,10 +7,10 @@
 
 BaseClient::~BaseClient()
 {
-    // if (thread_ && thread_->joinable())
-    // {
-    //     thread_->join();
-    // }
+    if (thread_ && thread_->joinable())
+    {
+        thread_->join();
+    }
 }
 
 void TestSimpleClient::start()
@@ -26,12 +26,14 @@ void TestSimpleClient::thread_run()
 {
     cout << "TestSimpleClient::thread_run " << endl;
 
-    while (true)
-    {
-        request();
+    request();
 
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-    }
+    // while (true)
+    // {
+    //     request();
+
+    //     std::this_thread::sleep_for(std::chrono::seconds(3));
+    // }
 }
 
 void TestSimpleClient::request()
@@ -42,11 +44,14 @@ void TestSimpleClient::request()
 
         grpc::Status status;
 
-        request_.set_name("TestSimpleClient");
+        string name = "TestSimpleClient";
+        string time = utrade::pandora::NanoTimeStr();
 
-        request_.set_time(utrade::pandora::NanoTimeStr());
+        request_.set_name(name);
 
-        cout << 0 << endl;
+        request_.set_time(time);
+
+        cout << "Request: " << name << " " << time << endl;
 
         status = stub_->TestSimple(&context_, request_, &reply_);
 
