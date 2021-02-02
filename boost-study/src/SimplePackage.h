@@ -1,5 +1,6 @@
 #pragma once
 #include "global_declare.h"
+#include "pandora/package/package_base.h"
 
 const ID_TYPE UT_Fid_BaseData = 10000;
 class BaseData
@@ -13,42 +14,16 @@ public:
 
     static const long Fid = UT_Fid_BaseData; 
 };
-
 DECLARE_PTR(BaseData);
 
-const ID_TYPE UT_Fid_TestData = 10001;
-class TestData:public BaseData
-{
 
-public:
-    TestData(std::string name, std::string time):name_(name), time_(time)
-    {
-        cout << "TestData: " << name_ << " " << time_ << endl;
-    }
-
-    virtual ~TestData() 
-    {
-        cout << "~TestData" << endl;
-    }
-
-    static const long Fid = UT_Fid_TestData; 
-
-    string get_name () { return name_;}
-    string get_time () { return time_;}
-
-private:
-    std::string         name_;
-    std::string         time_;
-};
-
-DECLARE_PTR(TestData);
-
-class Package
+class Package:public PackageBase
 {
 public:
     std::map<ID_TYPE, BaseDataPtr>  data_map_;
-};
 
+    void reset_fields() { }
+};
 DECLARE_PTR(Package);
 
 
@@ -114,5 +89,18 @@ boost::shared_ptr<UserClass> GetField(PackagePtr package)
         cout << "[E] GetField Unknown Exceptions! " << endl;
     }    
 }
+
+template<class UserClass, typename... Args>
+PackagePtr CreatePackage(const Args&... args)
+{
+    PackagePtr package = boost::make_shared<Package>();
+
+    if (!CreateField<UserClass>(package, args...))
+    {
+        package = nullptr;
+    }
+    return package;
+}
+
 
 void TestPackageMain();

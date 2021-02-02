@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "package.h"
+#include "SimplePackage.h"
 
 void testFuncMain()
 {
