@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include "../include/global_declare.h"
 
 #include "cpp/test.grpc.pb.h"
@@ -15,6 +17,9 @@ using TestPackage::TestStream;
 using TestPackage::TestRequest;
 using TestPackage::TestResponse;
 
+using std::cout;
+using std::endl;
+
 class BaseClient
 {
 public:
@@ -22,7 +27,7 @@ public:
     BaseClient(std::shared_ptr<Channel> channel):
         stub_{TestStream::NewStub(channel)}
     {
-
+        // cout << "Client connect: " << stub_-> 
     }
 
     virtual ~BaseClient();
@@ -39,6 +44,8 @@ public:
     ClientContext                                   context_;
     CompletionQueue                                 cq_;
     std::shared_ptr<std::thread>                    thread_{nullptr};  
+
+    bool                                            is_ansyc_{true};
 
 };
 

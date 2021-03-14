@@ -40,7 +40,7 @@ void TestSimpleClient::request()
 {
     try
     {
-        cout << "TestSimpleClient::request " << endl;
+        cout << "\nTestSimpleClient::request " << endl;
 
         grpc::Status status;
 
@@ -51,27 +51,63 @@ void TestSimpleClient::request()
 
         request_.set_time(time);
 
-        cout << "Request: " << name << " " << time << endl;
+        cout << "From Request: " << name << " " << time << endl;
 
-        status = stub_->TestSimple(&context_, request_, &reply_);
-
-        // rpc_ = stub_->PrepareAsyncTestSimple(&context_, request_, &cq_);
-        // cout << "[T] 2" << endl;
-        
-        // rpc_->StartCall();
-        
-        // cout << "[T] 3" << endl;
-        // rpc_->Finish(&reply_, &status, (void*)1);
-
-        // cout << 4 << endl;
-
-        if (status.ok())
+        if (!is_ansyc_)
         {
-            cout <<"Client OK " << reply_.name() << " " << reply_.time() << endl;
+            // status = stub_->TestSimple(&context_, request_, &reply_);
         }
         else
         {
-            cout <<"Client Failed " << status.error_message() << "\n" << status.error_details() << endl;
+            // rpc_ = stub_->PrepareAsyncTestSimple(&context_, request_, &cq_);
+            // cout <<"rpc_ = stub_->PrepareAsyncTestSimple(&context_, request_, &cq_);" << endl;
+            
+            // rpc_->StartCall();
+            // cout <<"rpc_->StartCall();" << endl;
+            
+            // rpc_->Finish(&reply_, &status, (void*)1);
+            // cout <<"rpc_->Finish(&reply_, &status, (void*)(&data));" << endl;
+
+            
+
+            rpc_ = stub_->AsyncTestSimple(&context_, request_, &cq_);
+            cout <<"rpc_ = stub_->AsyncTestSimple(&context_, request_, &cq_);" << endl;
+
+            // rpc_->StartCall();
+            // cout <<"rpc_->StartCall();" << endl;
+
+            int data;
+            rpc_->Finish(&reply_, &status, (void*)(&data));
+            cout <<"rpc_->Finish(&reply_, &status, (void*)(&data));" << endl;
+
+            void* got_tag;
+            bool ok = false;
+
+            if (!cq_.Next(&got_tag, &ok))
+            {
+                cout << "cq_.Next(&got_tag, &ok) Failed!" << endl;
+                return;
+            }
+            cout << "cq_.Next(&got_tag, &ok) " << endl;
+
+            if (got_tag != (void*)1)
+            {
+
+            }
+
+            if (!ok)
+            {
+                cout << "!ok " << endl;
+            }
+
+            if (!status.ok())
+            {
+                cout << " rpc_->Finish(&reply_, &status, (void*)1); Failed!" << endl;
+            }
+            else
+            {
+                cout <<"Front Server: " << reply_.name() << ", " << reply_.time() << endl;
+            }
         }
     }
     catch(const std::exception& e)

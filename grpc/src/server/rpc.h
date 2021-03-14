@@ -34,9 +34,16 @@ using std::string;
 class BaseRPC
 {
     public:
-        virtual void process();
+    virtual void process();
 
-        virtual void release();
+    virtual void proceed() { }
+
+    virtual void release() { }
+
+    virtual void register_request() { }
+
+    enum CallStatus { CREATE, PROCESS, FINISH };
+    CallStatus      status_{CREATE};  // The current serving state.        
 };
 
 
@@ -48,14 +55,14 @@ public:
     TestSimpleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
         service_(service), cq_(cq), responder_(&context_)
     {
-        register_all();
+        process();
     }
 
-    virtual void process();
+    virtual void proceed();
 
     virtual void release();    
 
-    void register_all();
+    virtual void register_request();
     
 private:
 
@@ -70,5 +77,7 @@ private:
     TestResponse                                reply_;
     
     ServerAsyncResponseWriter<TestResponse>     responder_;
+
+
 };
 using TestSimpleRPCPtr = boost::shared_ptr<TestSimpleRPC>;

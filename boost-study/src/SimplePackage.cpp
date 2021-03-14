@@ -15,6 +15,11 @@ public:
         cout << "TestData: " << name_ << " " << time_ << endl;
     }
 
+    TestData(const TestData& other)
+    {
+        cout << "TestData &" << endl;
+    }
+
     virtual ~TestData() 
     {
         cout << "~TestData" << endl;
@@ -96,7 +101,9 @@ void test_create_package()
     std::string name = "Create New";
     std::string time = utrade::pandora::NanoTimeStr();
 
-    PackagePtr packge = CreatePackage<TestData>(name, time);
+    TestData test_obj(name, time);
+
+    PackagePtr packge = CreatePackage<TestData>(test_obj);
 
     if (!packge)
     {

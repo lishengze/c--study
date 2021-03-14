@@ -21,7 +21,7 @@ void BaseServer::start()
 {
     try
     {
-        cout << "BaseServer Start " << endl;
+        cout << "BaseServer listen: " << address_ << endl;
 
         builder_.AddListeningPort(address_, grpc::InsecureServerCredentials());
         builder_.RegisterService(&service_);
@@ -31,7 +31,7 @@ void BaseServer::start()
 
         simple_rpc = boost::make_shared<TestSimpleRPC>(&service_, cq_.get());
 
-        simple_rpc->register_all();
+        // simple_rpc->register_all();
 
         init_cq_thread();
     }
@@ -54,15 +54,18 @@ void BaseServer::run_cq_loop()
         bool status;
         while(true)
         {
-            GPR_ASSERT(cq_->Next(&tag, &status));
+            // GPR_ASSERT(cq_->Next(&tag, &status));
 
-            if (status)
+            bool result = cq_->Next(&tag, &status);
+
+            if (result && status)
             {
                 BaseRPC* rpc = static_cast<BaseRPC*>(tag);
                 rpc->process();
             }
             else
             {
+
                 BaseRPC* rpc = static_cast<BaseRPC*>(tag);
                 rpc->release();
             }
