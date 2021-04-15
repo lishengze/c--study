@@ -1,10 +1,10 @@
-#include "DBEngine.h"
+#include "test.h"
 
 int main()
 {
     cout << "\n***** Study MySql Engine! *****" << endl;
 
-    TestEngine();
+    TestDBEngine test_obj;
     
     return 1;
 }
