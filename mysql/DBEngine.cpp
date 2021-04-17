@@ -5,6 +5,8 @@
 
 #include "sql_scripts.h"
 #include "quark/cxx/ut/UtPrintUtils.h"
+#include "quark/cxx/assign.h"
+#include "pandora/util/time_util.h"
 
 void DBEngine::connect_mysql()
 {
@@ -21,7 +23,7 @@ void DBEngine::connect_mysql()
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << "\n[E] " <<  e.what() << '\n';
     }
 }
 
@@ -50,7 +52,7 @@ void DBEngine::connect_mysql_schema()
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << "\n[E] " <<  e.what() << '\n';
     }
     
 }
@@ -66,37 +68,37 @@ void DBEngine::create_table(string account_name)
             boost::scoped_ptr<sql::Statement> stmt1(conn_->createStatement());
             if (!stmt1->execute(get_req_create_order_sql_str(account_name)))
             {
-                cout << "create req_create_table " << account_name << " failed!" << endl;
+                // cout << "create req_create_table " << account_name << " failed!" << endl;
             }
 
             boost::scoped_ptr<sql::Statement> stmt2(conn_->createStatement());
             if (!stmt2->execute(get_rsp_create_order_sql_str(account_name)))
             {
-                cout << "create rsp_create_table " << account_name << " failed!" << endl;
+                // cout << "create rsp_create_table " << account_name << " failed!" << endl;
             }
 
             boost::scoped_ptr<sql::Statement> stmt3(conn_->createStatement());
             if (!stmt3->execute(get_rtn_order_sql_str(account_name)))
             {
-                cout << "create rtn_order " << account_name << " failed!" << endl;
+                // cout << "create rtn_order " << account_name << " failed!" << endl;
             }
 
             boost::scoped_ptr<sql::Statement> stmt4(conn_->createStatement());
             if ( !stmt4->execute(get_rtn_trade_sql_str(account_name)) )
             {
-                cout << "create rtn_trade " << account_name << " failed!" << endl;
+                // cout << "create rtn_trade " << account_name << " failed!" << endl;
             }
 
             boost::scoped_ptr<sql::Statement> stmt5(conn_->createStatement());
             if (!stmt5->execute(get_req_cancel_order_sql_str(account_name)))
             {
-                cout << "create req_cancel_order " << account_name << " failed!" << endl;
+                // cout << "create req_cancel_order " << account_name << " failed!" << endl;
             }
 
             boost::scoped_ptr<sql::Statement> stmt6(conn_->createStatement());
             if ( !stmt6->execute(get_rsp_cancel_order_sql_str(account_name)) )
             {
-                cout << "create rsp_cancel_order " << account_name << " failed!" << endl;
+                // cout << "create rsp_cancel_order " << account_name << " failed!" << endl;
             }
         }
         else
@@ -106,7 +108,7 @@ void DBEngine::create_table(string account_name)
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << "\n[E] " <<  e.what() << '\n';
     }
     
 }
@@ -116,7 +118,7 @@ void DBEngine::prepare_statement(string account_name)
     try
     {
         cout << "prepare_statement: " << account_name << endl;
-        
+
         if (conn_)
         {
             if (accout_preparestmt_map_.find(account_name) == accout_preparestmt_map_.end())
@@ -137,7 +139,7 @@ void DBEngine::prepare_statement(string account_name)
     }
     catch(const std::exception& e)
     {
-        std::cerr << "DBEngine::prepare_statement: " << e.what() << '\n';
+        std::cerr << "\n[E] " <<  "DBEngine::prepare_statement: " << e.what() << '\n';
     }
 }
 
@@ -180,7 +182,7 @@ void DBEngine::prepare_statement(string account_name)
 //     }
 //     catch(const std::exception& e)
 //     {
-//         std::cerr << e.what() << '\n';
+//         std::cerr << "\n[E] " <<  e.what() << '\n';
 //     }
     
 // }
@@ -239,7 +241,7 @@ bool DBEngine::check_db(string db_name)
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << "\n[E] " <<  e.what() << '\n';
     }
     
 }
@@ -326,10 +328,22 @@ void DBEngine::create_db(string db_name)
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << "\n[E] " <<  e.what() << '\n';
     }
     
 
+}
+
+void DBEngine::clean_db()
+{
+    try
+    {
+        /* code */
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] DBEngine::clean_db " << e.what() << '\n';
+    }    
 }
 
 void DBEngine::insert_req_create_order(const CUTReqCreateOrderField& reqCreateOrder)
@@ -338,7 +352,10 @@ void DBEngine::insert_req_create_order(const CUTReqCreateOrderField& reqCreateOr
     {
        prepare_statement(reqCreateOrder.AccountName);
 
-       printUTData(&reqCreateOrder, UT_FID_ReqCreateOrder);
+       cout << "\nDBEngine::insert_req_create_order " << endl;
+       cout << "insert_rsp_create_order " << reqCreateOrder.OrderLocalID << " " << utrade::pandora::ToSecondStr(reqCreateOrder.SendTime)  << endl;
+
+    //    printUTData(&reqCreateOrder, UT_FID_ReqCreateOrder);
 
        sql::PreparedStatement* stmt = accout_preparestmt_map_[reqCreateOrder.AccountName].stmtInsertReqCreateOrder_;
        stmt->setString(1, reqCreateOrder.UserName);
@@ -356,39 +373,39 @@ void DBEngine::insert_req_create_order(const CUTReqCreateOrderField& reqCreateOr
        stmt->setString(13, reqCreateOrder.OrderLocalID);
        stmt->setString(14, char_to_string(reqCreateOrder.OrderMaker));
        stmt->setString(15, char_to_string(reqCreateOrder.OrderType));
-       stmt->setBigInt(16, std::to_string(reqCreateOrder.LandTime));
-       stmt->setBigInt(17, std::to_string(reqCreateOrder.SendTime));
+       stmt->setInt64(16, reqCreateOrder.LandTime);
+       stmt->setInt64(17, (reqCreateOrder.SendTime));
        stmt->setString(18, reqCreateOrder.StrategyOrderID);
        stmt->setString(19, char_to_string(reqCreateOrder.OrderMode));
        stmt->setString(20, char_to_string(reqCreateOrder.AssetType));
        stmt->setString(21, reqCreateOrder.TradeChannel);
        stmt->setString(22, char_to_string(reqCreateOrder.OrderXO));
-       stmt->setBigInt(23, reqCreateOrder.PlatformTime);
+       stmt->setInt64(23, (reqCreateOrder.PlatformTime));
        stmt->setString(24, reqCreateOrder.OrderSysID);
        stmt->setString(25, reqCreateOrder.OrderForeID);
-       stmt->setBigInt(26, reqCreateOrder.CreateTime);
-       stmt->setBigInt(27, reqCreateOrder.ModifyTime);
-       stmt->setBigInt(28, reqCreateOrder.RspLocalTime);
-       stmt->setDouble(39, reqCreateOrder.Cost);
+       stmt->setInt64(26, (reqCreateOrder.CreateTime));
+       stmt->setInt64(27, (reqCreateOrder.ModifyTime));
+       stmt->setInt64(28, (reqCreateOrder.RspLocalTime));
+       stmt->setDouble(29, reqCreateOrder.Cost);
        stmt->setDouble(30, reqCreateOrder.TradePrice);
        stmt->setDouble(31, reqCreateOrder.TradeVolume);
        stmt->setDouble(32, reqCreateOrder.RemainVolume);
        stmt->setDouble(33, reqCreateOrder.TradeValue);
        stmt->setString(34, char_to_string(reqCreateOrder.OrderStatus));
        stmt->setString(35, reqCreateOrder.SessionID);
-       stmt->setString(36, std::to_string(reqCreateOrder.RequestID));        
-       stmt->setString(37, std::to_string(reqCreateOrder.RequestForeID));        
+       stmt->setInt64(36, (reqCreateOrder.RequestID));        
+       stmt->setInt64(37, (reqCreateOrder.RequestForeID));        
        stmt->setDouble(38, reqCreateOrder.Fee);      
-       stmt->setString(39, reqCreateOrder.FeeCurrency);              
+       stmt->setString(39, reqCreateOrder.FeeCurrency);             
 
        if (!stmt->execute())
        {
-           cout << "Insert ReqCreateOrder: " << reqCreateOrder.UserName << " " << reqCreateOrder.AccountName << " " << reqCreateOrder.OrderLocalID << " Failed" << endl;
+        //    cout << "Insert ReqCreateOrder: " << reqCreateOrder.UserName << " " << reqCreateOrder.AccountName << " " << reqCreateOrder.OrderLocalID << " Failed" << endl;
        }
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"DBEngine::insert_req_create_order " << e.what() << '\n';
+        std::cerr << "\n[E] " << "DBEngine::insert_req_create_order " << e.what() << '\n';
     }
 }
 
@@ -398,7 +415,9 @@ void DBEngine::insert_rsp_create_order(const CUTRspCreateOrderField& rspCreateOr
     {
        prepare_statement(rspCreateOrder.AccountName);
 
-       printUTData(&rspCreateOrder, UT_FID_RspCreateOrder);
+       cout << "insert_rsp_create_order " << rspCreateOrder.OrderLocalID << " " << utrade::pandora::ToSecondStr(rspCreateOrder.RspLocalTime)  << endl;
+
+    //    printUTData(&rspCreateOrder, UT_FID_RspCreateOrder);
 
        sql::PreparedStatement* stmt = accout_preparestmt_map_[rspCreateOrder.AccountName].stmtInsertRspCreateOrder_;
 
@@ -417,28 +436,28 @@ void DBEngine::insert_rsp_create_order(const CUTRspCreateOrderField& rspCreateOr
        stmt->setString(13, rspCreateOrder.OrderLocalID);
        stmt->setString(14, char_to_string(rspCreateOrder.OrderMaker));
        stmt->setString(15, char_to_string(rspCreateOrder.OrderType));
-       stmt->setBigInt(16, std::to_string(rspCreateOrder.LandTime));
-       stmt->setBigInt(17, std::to_string(rspCreateOrder.SendTime));
+       stmt->setInt64(16, (rspCreateOrder.LandTime));
+       stmt->setInt64(17, (rspCreateOrder.SendTime));
        stmt->setString(18, rspCreateOrder.StrategyOrderID);
        stmt->setString(19, char_to_string(rspCreateOrder.OrderMode));
        stmt->setString(20, char_to_string(rspCreateOrder.AssetType));
        stmt->setString(21, rspCreateOrder.TradeChannel);
        stmt->setString(22, char_to_string(rspCreateOrder.OrderXO));
-       stmt->setBigInt(23, rspCreateOrder.PlatformTime);
+       stmt->setInt64(23, (rspCreateOrder.PlatformTime));
        stmt->setString(24, rspCreateOrder.OrderSysID);
        stmt->setString(25, rspCreateOrder.OrderForeID);
-       stmt->setBigInt(26, rspCreateOrder.CreateTime);
-       stmt->setBigInt(27, rspCreateOrder.ModifyTime);
-       stmt->setBigInt(28, rspCreateOrder.RspLocalTime);
-       stmt->setDouble(39, rspCreateOrder.Cost);
+       stmt->setInt64(26, (rspCreateOrder.CreateTime));
+       stmt->setInt64(27, (rspCreateOrder.ModifyTime));
+       stmt->setInt64(28, (rspCreateOrder.RspLocalTime));
+       stmt->setDouble(29, rspCreateOrder.Cost);
        stmt->setDouble(30, rspCreateOrder.TradePrice);
        stmt->setDouble(31, rspCreateOrder.TradeVolume);
        stmt->setDouble(32, rspCreateOrder.RemainVolume);
        stmt->setDouble(33, rspCreateOrder.TradeValue);
        stmt->setString(34, char_to_string(rspCreateOrder.OrderStatus));
        stmt->setString(35, rspCreateOrder.SessionID);
-       stmt->setString(36, std::to_string(rspCreateOrder.RequestID));        
-       stmt->setString(37, std::to_string(rspCreateOrder.RequestForeID));        
+       stmt->setInt64(36, (rspCreateOrder.RequestID));        
+       stmt->setInt64(37, (rspCreateOrder.RequestForeID));        
        stmt->setDouble(38, rspCreateOrder.Fee);      
        stmt->setString(39, rspCreateOrder.FeeCurrency);  
        stmt->setInt(40, rspInfoField.ErrorID);      
@@ -446,12 +465,12 @@ void DBEngine::insert_rsp_create_order(const CUTRspCreateOrderField& rspCreateOr
 
        if (!stmt->execute())
        {
-           cout << "Insert RspCreateOrder: " << rspCreateOrder.UserName << " " << rspCreateOrder.AccountName << " " << rspCreateOrder.OrderLocalID << " Failed" << endl;
+        //    cout << "Insert RspCreateOrder: " << rspCreateOrder.UserName << " " << rspCreateOrder.AccountName << " " << rspCreateOrder.OrderLocalID << " Failed" << endl;
        }       
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"DBEngine::insert_rsp_create_order " << e.what() << '\n';
+        std::cerr << "\n[E] " << "DBEngine::insert_rsp_create_order " << e.what() << '\n';
     }
 }
 
@@ -461,7 +480,8 @@ void DBEngine::insert_rtn_order(const CUTRtnOrderField& rtnOrder, const CUTRspIn
     {
        prepare_statement(rtnOrder.AccountName);
 
-       printUTData(&rtnOrder, UT_FID_RtnOrder);
+       std::cout << "insert_rtn_order " << rtnOrder.OrderLocalID << " " << utrade::pandora::ToSecondStr(rtnOrder.RspLocalTime) << std::endl;
+    //    printUTData(&rtnOrder, UT_FID_RtnOrder);
 
        sql::PreparedStatement* stmt = accout_preparestmt_map_[rtnOrder.AccountName].stmtInsertRtnOrder;
 
@@ -480,28 +500,28 @@ void DBEngine::insert_rtn_order(const CUTRtnOrderField& rtnOrder, const CUTRspIn
        stmt->setString(13, rtnOrder.OrderLocalID);
        stmt->setString(14, char_to_string(rtnOrder.OrderMaker));
        stmt->setString(15, char_to_string(rtnOrder.OrderType));
-       stmt->setBigInt(16, std::to_string(rtnOrder.LandTime));
-       stmt->setBigInt(17, std::to_string(rtnOrder.SendTime));
+       stmt->setInt64(16, (rtnOrder.LandTime));
+       stmt->setInt64(17, (rtnOrder.SendTime));
        stmt->setString(18, rtnOrder.StrategyOrderID);
        stmt->setString(19, char_to_string(rtnOrder.OrderMode));
        stmt->setString(20, char_to_string(rtnOrder.AssetType));
        stmt->setString(21, rtnOrder.TradeChannel);
        stmt->setString(22, char_to_string(rtnOrder.OrderXO));
-       stmt->setBigInt(23, rtnOrder.PlatformTime);
+       stmt->setInt64(23, (rtnOrder.PlatformTime));
        stmt->setString(24, rtnOrder.OrderSysID);
        stmt->setString(25, rtnOrder.OrderForeID);
-       stmt->setBigInt(26, rtnOrder.CreateTime);
-       stmt->setBigInt(27, rtnOrder.ModifyTime);
-       stmt->setBigInt(28, rtnOrder.RspLocalTime);
-       stmt->setDouble(39, rtnOrder.Cost);
+       stmt->setInt64(26, (rtnOrder.CreateTime));
+       stmt->setInt64(27, (rtnOrder.ModifyTime));
+       stmt->setInt64(28, (rtnOrder.RspLocalTime));
+       stmt->setDouble(29, rtnOrder.Cost);
        stmt->setDouble(30, rtnOrder.TradePrice);
        stmt->setDouble(31, rtnOrder.TradeVolume);
        stmt->setDouble(32, rtnOrder.RemainVolume);
        stmt->setDouble(33, rtnOrder.TradeValue);
        stmt->setString(34, char_to_string(rtnOrder.OrderStatus));
        stmt->setString(35, rtnOrder.SessionID);
-       stmt->setString(36, std::to_string(rtnOrder.RequestID));        
-       stmt->setString(37, std::to_string(rtnOrder.RequestForeID));        
+       stmt->setInt64(36, (rtnOrder.RequestID));        
+       stmt->setInt64(37, (rtnOrder.RequestForeID));        
        stmt->setDouble(38, rtnOrder.Fee);      
        stmt->setString(39, rtnOrder.FeeCurrency);  
        stmt->setInt(40, rspInfoField.ErrorID);      
@@ -509,12 +529,12 @@ void DBEngine::insert_rtn_order(const CUTRtnOrderField& rtnOrder, const CUTRspIn
 
        if (!stmt->execute())
        {
-           cout << "Insert RtnOrder: " << rtnOrder.UserName << " " << rtnOrder.AccountName << " " << rtnOrder.OrderLocalID << " Failed" << endl;
+        //    cout << "Insert RtnOrder: " << rtnOrder.UserName << " " << rtnOrder.AccountName << " " << rtnOrder.OrderLocalID << " Failed" << endl;
        }    
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"DBEngine::insert_rtn_order " << e.what() << '\n';
+        std::cerr << "\n[E] " << "DBEngine::insert_rtn_order " << e.what() << '\n';
     }
 }
 
@@ -523,8 +543,9 @@ void DBEngine::insert_rtn_trade(const CUTRtnTradeField& rtnTrade, const CUTRspIn
     try
     {
        prepare_statement(rtnTrade.AccountName);
+       std::cout << "insert_rtn_trade " << rtnTrade.OrderLocalID << " " << utrade::pandora::ToSecondStr(rtnTrade.RspLocalTime) << std::endl;
 
-       printUTData(&rtnTrade, UT_FID_RtnTrade);
+    //    printUTData(&rtnTrade, UT_FID_RtnTrade);
 
        sql::PreparedStatement* stmt = accout_preparestmt_map_[rtnTrade.AccountName].stmtInsertRtnTrade;
 
@@ -533,38 +554,39 @@ void DBEngine::insert_rtn_trade(const CUTRtnTradeField& rtnTrade, const CUTRspIn
        stmt->setString(3, char_to_string(rtnTrade.AccountType));
        stmt->setString(4, rtnTrade.InternalAccountName);
        stmt->setString(5, rtnTrade.TradeID);
-       stmt->setString(6, rtnTrade.ExchangeID);
-       stmt->setString(7, rtnTrade.InstrumentID);
+       stmt->setString(6, rtnTrade.OrderSysID);
+       stmt->setString(7, rtnTrade.ExchangeID);
+       stmt->setString(8, rtnTrade.InstrumentID);
        
-       stmt->setDouble(8, rtnTrade.MatchPrice);
-       stmt->setDouble(9, rtnTrade.MatchVolume);
-       stmt->setDouble(10, rtnTrade.MatchValue);
-       stmt->setString(11, char_to_string(rtnTrade.Direction));
-       stmt->setString(12, rtnTrade.OrderLocalID);
-       stmt->setDouble(13, rtnTrade.Fee);
-       stmt->setString(14, rtnTrade.FeeCurrency);
-       stmt->setString(15, rtnTrade.PlatformTime);
-       stmt->setString(16, rtnTrade.TradeTime);
-       stmt->setBigInt(17, rtnTrade.RspLocalTime);
-       stmt->setDouble(18, rtnTrade.Price);
-       stmt->setString(19, rtnTrade.TradeChannel);
+       stmt->setDouble(9, rtnTrade.MatchPrice);
+       stmt->setDouble(10, rtnTrade.MatchVolume);
+       stmt->setDouble(11, rtnTrade.MatchValue);
+       stmt->setString(12, char_to_string(rtnTrade.Direction));
+       stmt->setString(13, rtnTrade.OrderLocalID);
+       stmt->setDouble(14, rtnTrade.Fee);
+       stmt->setString(15, rtnTrade.FeeCurrency);
+       stmt->setString(16, rtnTrade.PlatformTime);
+       stmt->setString(17, rtnTrade.TradeTime);
+       stmt->setInt64(18, (rtnTrade.RspLocalTime));
+       stmt->setDouble(19, rtnTrade.Price);
        stmt->setString(20, rtnTrade.StrategyOrderID);
        stmt->setString(21, char_to_string(rtnTrade.OrderMaker));
        stmt->setString(22, char_to_string(rtnTrade.AssetType));
+
        stmt->setString(23, rtnTrade.TradeChannel);
        stmt->setString(24, rtnTrade.SessionID);
 
-       stmt->setInt(23, rspInfoField.ErrorID);
-       stmt->setString(24, rspInfoField.ErrorMsg);       
+       stmt->setInt(25, rspInfoField.ErrorID);
+       stmt->setString(26, rspInfoField.ErrorMsg);       
 
        if (!stmt->execute())
        {
-           cout << "Insert RtnTrade: " << rtnTrade.UserName << " " << rtnTrade.AccountName << " " << rtnTrade.OrderLocalID << " Failed" << endl;
+        //    cout << "Insert RtnTrade: " << rtnTrade.UserName << " " << rtnTrade.AccountName << " " << rtnTrade.OrderLocalID << " Failed" << endl;
        }   
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"DBEngine::insert_rtn_trade " << e.what() << '\n';
+        std::cerr << "\n[E] " << "DBEngine::insert_rtn_trade " << e.what() << '\n';
     }
 }
 
@@ -575,7 +597,9 @@ void DBEngine::insert_req_cancel_order(const CUTReqCancelOrderField& reqCancelOr
        
        prepare_statement(reqCancelOrder.AccountName);
 
-       printUTData(&reqCancelOrder, UT_FID_ReqCancelOrder);
+       cout << "insert_req_cancel_order " << reqCancelOrder.OrderLocalID << " " << utrade::pandora::ToSecondStr(reqCancelOrder.SendTime) << endl;
+        
+    //    printUTData(&reqCancelOrder, UT_FID_ReqCancelOrder);
 
        sql::PreparedStatement* stmt = accout_preparestmt_map_[reqCancelOrder.AccountName].stmtInsertReqCancelOrder_;
 
@@ -590,16 +614,16 @@ void DBEngine::insert_req_cancel_order(const CUTReqCancelOrderField& reqCancelOr
        stmt->setString(9, reqCancelOrder.ExchangeID);
        stmt->setString(10, reqCancelOrder.StrategyOrderID);
        stmt->setString(11, reqCancelOrder.TradeChannel);
-       stmt->setBigInt(12, std::to_string(reqCancelOrder.SendTime));
+       stmt->setInt64(12, (reqCancelOrder.SendTime));
 
        if (!stmt->execute())
        {
-           cout << "Insert ReqCancelOrder: " << reqCancelOrder.UserName << " " << reqCancelOrder.AccountName << " " << reqCancelOrder.OrderLocalID << " Failed" << endl;
+        //    cout << "Insert ReqCancelOrder: " << reqCancelOrder.UserName << " " << reqCancelOrder.AccountName << " " << reqCancelOrder.OrderLocalID << " Failed" << endl;
        }   
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"DBEngine::insert_req_cancel_order " << e.what() << '\n';
+        std::cerr << "\n[E] " << "DBEngine::insert_req_cancel_order " << e.what() << '\n';
     }
 }
 
@@ -609,7 +633,9 @@ void DBEngine::insert_rsp_cancel_order(const CUTRspCancelOrderField& rspCancelOr
     {
        prepare_statement(rspCancelOrder.AccountName);
 
-       printUTData(&rspCancelOrder, UT_FID_RspCancelOrder);
+       std::cout << "insert_rsp_cancel_order " << rspCancelOrder.OrderLocalID << " " << utrade::pandora::ToSecondStr(rspCancelOrder.RspLocalTime) << std::endl;
+
+    //    printUTData(&rspCancelOrder, UT_FID_RspCancelOrder);
 
        sql::PreparedStatement* stmt = accout_preparestmt_map_[rspCancelOrder.AccountName].stmtInsertRspCancelOrder_;
 
@@ -628,28 +654,28 @@ void DBEngine::insert_rsp_cancel_order(const CUTRspCancelOrderField& rspCancelOr
        stmt->setString(13, rspCancelOrder.OrderLocalID);
        stmt->setString(14, char_to_string(rspCancelOrder.OrderMaker));
        stmt->setString(15, char_to_string(rspCancelOrder.OrderType));
-       stmt->setBigInt(16, std::to_string(rspCancelOrder.LandTime));
-       stmt->setBigInt(17, std::to_string(rspCancelOrder.SendTime));
+       stmt->setInt64(16, (rspCancelOrder.LandTime));
+       stmt->setInt64(17, (rspCancelOrder.SendTime));
        stmt->setString(18, rspCancelOrder.StrategyOrderID);
        stmt->setString(19, char_to_string(rspCancelOrder.OrderMode));
        stmt->setString(20, char_to_string(rspCancelOrder.AssetType));
        stmt->setString(21, rspCancelOrder.TradeChannel);
        stmt->setString(22, char_to_string(rspCancelOrder.OrderXO));
-       stmt->setBigInt(23, rspCancelOrder.PlatformTime);
+       stmt->setInt64(23, (rspCancelOrder.PlatformTime));
        stmt->setString(24, rspCancelOrder.OrderSysID);
        stmt->setString(25, rspCancelOrder.OrderForeID);
-       stmt->setBigInt(26, rspCancelOrder.CreateTime);
-       stmt->setBigInt(27, rspCancelOrder.ModifyTime);
-       stmt->setBigInt(28, rspCancelOrder.RspLocalTime);
-       stmt->setDouble(39, rspCancelOrder.Cost);
+       stmt->setInt64(26, (rspCancelOrder.CreateTime));
+       stmt->setInt64(27, (rspCancelOrder.ModifyTime));
+       stmt->setInt64(28, (rspCancelOrder.RspLocalTime));
+       stmt->setDouble(29, rspCancelOrder.Cost);
        stmt->setDouble(30, rspCancelOrder.TradePrice);
        stmt->setDouble(31, rspCancelOrder.TradeVolume);
        stmt->setDouble(32, rspCancelOrder.RemainVolume);
        stmt->setDouble(33, rspCancelOrder.TradeValue);
        stmt->setString(34, char_to_string(rspCancelOrder.OrderStatus));
        stmt->setString(35, rspCancelOrder.SessionID);
-       stmt->setString(36, std::to_string(rspCancelOrder.RequestID));        
-       stmt->setString(37, std::to_string(rspCancelOrder.RequestForeID));        
+       stmt->setInt64(36, (rspCancelOrder.RequestID));        
+       stmt->setInt64(37, (rspCancelOrder.RequestForeID));        
        stmt->setDouble(38, rspCancelOrder.Fee);      
        stmt->setString(39, rspCancelOrder.FeeCurrency);  
 
@@ -658,11 +684,397 @@ void DBEngine::insert_rsp_cancel_order(const CUTRspCancelOrderField& rspCancelOr
 
        if (!stmt->execute())
        {
-           cout << "Insert rspCancelOrder: " << rspCancelOrder.UserName << " " << rspCancelOrder.AccountName << " " << rspCancelOrder.OrderLocalID << " Failed" << endl;
+        //    cout << "Insert rspCancelOrder: " << rspCancelOrder.UserName << " " << rspCancelOrder.AccountName << " " << rspCancelOrder.OrderLocalID << " Failed" << endl;
        }  
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"DBEngine::insert_rsp_cancel_order " << e.what() << '\n';
+        std::cerr << "\n[E] " << "DBEngine::insert_rsp_cancel_order " << e.what() << '\n';
     }
 }
+
+void DBEngine::get_req_create_order(sql::ResultSet* result, CUTReqCreateOrderField& reqCreateOrder)
+{
+    try
+    {
+        if (true || !result->wasNull())
+        {
+            assign(reqCreateOrder.UserName, result->getString(1).c_str());
+            assign(reqCreateOrder.AccountName, result->getString(2).c_str());
+            assign(reqCreateOrder.AccountType, result->getString(3).c_str());
+            assign(reqCreateOrder.ExchangeID, result->getString(4).c_str());
+            assign(reqCreateOrder.InstrumentID, result->getString(5).c_str());
+            assign(reqCreateOrder.InstrumentType, result->getString(6).c_str());  
+            assign(reqCreateOrder.Symbol, result->getString(7).c_str());
+            assign(reqCreateOrder.Price, result->getDouble(8));
+            assign(reqCreateOrder.LeverRate, result->getDouble(9));
+            assign(reqCreateOrder.Volume, result->getDouble(10));
+            assign(reqCreateOrder.Direction, result->getString(11).c_str());
+            assign(reqCreateOrder.OffsetFlag, result->getString(12).c_str());  
+            assign(reqCreateOrder.OrderLocalID, result->getString(13).c_str());
+            assign(reqCreateOrder.OrderMaker, result->getString(14).c_str());
+            assign(reqCreateOrder.OrderType, result->getString(15).c_str());
+            assign(reqCreateOrder.LandTime, result->getInt64(16));
+            assign(reqCreateOrder.SendTime, result->getInt64(17));
+            assign(reqCreateOrder.StrategyOrderID, result->getString(18).c_str());    
+            assign(reqCreateOrder.OrderMode, result->getString(19).c_str());
+            assign(reqCreateOrder.AssetType, result->getString(20).c_str());
+            assign(reqCreateOrder.TradeChannel, result->getString(21).c_str());
+            assign(reqCreateOrder.OrderXO, result->getString(22).c_str());
+            assign(reqCreateOrder.PlatformTime, result->getInt64(23));
+            assign(reqCreateOrder.OrderSysID, result->getString(24).c_str());
+            assign(reqCreateOrder.OrderForeID, result->getString(25).c_str());  
+            assign(reqCreateOrder.CreateTime, result->getInt64(26));
+            assign(reqCreateOrder.ModifyTime, result->getInt64(27));
+            assign(reqCreateOrder.RspLocalTime, result->getInt64(28));
+            assign(reqCreateOrder.Cost, result->getDouble(29));
+            assign(reqCreateOrder.TradePrice, result->getDouble(30));
+            assign(reqCreateOrder.TradeVolume, result->getDouble(31));
+            assign(reqCreateOrder.RemainVolume, result->getDouble(32));
+            assign(reqCreateOrder.TradeValue, result->getDouble(33));
+            assign(reqCreateOrder.OrderStatus, result->getString(34).c_str());
+            assign(reqCreateOrder.SessionID, result->getString(35).c_str());
+            assign(reqCreateOrder.RequestID, result->getInt64(36));   
+            assign(reqCreateOrder.RequestForeID, result->getInt64(37));
+            assign(reqCreateOrder.UserName, result->getString(38).c_str());
+            assign(reqCreateOrder.UserName, result->getString(39).c_str());    
+
+            cout << "\nDBEngine::get_req_create_order " << endl;
+            printUTData(&reqCreateOrder, UT_FID_ReqCreateOrder);    
+                                                                    
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] DBEngine::get_req_create_order " << e.what() << '\n';
+    }
+
+}
+
+void DBEngine::get_rsp_create_order(sql::ResultSet* result, CUTRspCreateOrderField& rspCreateOrder, CUTRspInfoField& rspInfoField)
+{
+    try
+    {
+        assign(rspCreateOrder.UserName, result->getString(1).c_str());
+        assign(rspCreateOrder.AccountName, result->getString(2).c_str());
+        assign(rspCreateOrder.AccountType, result->getString(3).c_str());
+        assign(rspCreateOrder.ExchangeID, result->getString(4).c_str());
+        assign(rspCreateOrder.InstrumentID, result->getString(5).c_str());
+        assign(rspCreateOrder.InstrumentType, result->getString(6).c_str());  
+        assign(rspCreateOrder.Symbol, result->getString(7).c_str());
+        assign(rspCreateOrder.Price, result->getDouble(8));
+        assign(rspCreateOrder.LeverRate, result->getDouble(9));
+        assign(rspCreateOrder.Volume, result->getDouble(10));
+        assign(rspCreateOrder.Direction, result->getString(11).c_str());
+        assign(rspCreateOrder.OffsetFlag, result->getString(12).c_str());  
+        assign(rspCreateOrder.OrderLocalID, result->getString(13).c_str());
+        assign(rspCreateOrder.OrderMaker, result->getString(14).c_str());
+        assign(rspCreateOrder.OrderType, result->getString(15).c_str());
+        assign(rspCreateOrder.LandTime, result->getInt64(16));
+        assign(rspCreateOrder.SendTime, result->getInt64(17));
+        assign(rspCreateOrder.StrategyOrderID, result->getString(18).c_str());    
+        assign(rspCreateOrder.OrderMode, result->getString(19).c_str());
+        assign(rspCreateOrder.AssetType, result->getString(20).c_str());
+        assign(rspCreateOrder.TradeChannel, result->getString(21).c_str());
+        assign(rspCreateOrder.OrderXO, result->getString(22).c_str());
+        assign(rspCreateOrder.PlatformTime, result->getInt64(23));
+        assign(rspCreateOrder.OrderSysID, result->getString(24).c_str());
+        assign(rspCreateOrder.OrderForeID, result->getString(25).c_str());  
+        assign(rspCreateOrder.CreateTime, result->getInt64(26));
+        assign(rspCreateOrder.ModifyTime, result->getInt64(27));
+        assign(rspCreateOrder.RspLocalTime, result->getInt64(28));
+        assign(rspCreateOrder.Cost, result->getDouble(29));
+        assign(rspCreateOrder.TradePrice, result->getDouble(30));
+        assign(rspCreateOrder.TradeVolume, result->getDouble(31));
+        assign(rspCreateOrder.RemainVolume, result->getDouble(32));
+        assign(rspCreateOrder.TradeValue, result->getDouble(33));
+        assign(rspCreateOrder.OrderStatus, result->getString(34).c_str());
+        assign(rspCreateOrder.SessionID, result->getString(35).c_str());
+        assign(rspCreateOrder.RequestID, result->getInt64(36));   
+        assign(rspCreateOrder.RequestForeID, result->getInt64(37));
+        assign(rspCreateOrder.UserName, result->getString(38).c_str());
+        assign(rspCreateOrder.UserName, result->getString(39).c_str());    
+
+        assign(rspInfoField.ErrorID, result->getInt(40));
+        assign(rspInfoField.ErrorMsg, result->getString(41).c_str());
+
+        cout << "DBEngine::get_rsp_create_order " << endl;
+        printUTData(&rspCreateOrder, UT_FID_RspCreateOrder);
+        printUTData(&rspInfoField, UT_FID_RspInfo);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] DBEngine::get_rsp_create_order" << e.what() << '\n';
+    }
+}
+
+void DBEngine::get_rtn_order(sql::ResultSet* result, CUTRtnOrderField& rtnOrder, CUTRspInfoField& rspInfoField)
+{
+    try
+    {
+            assign(rtnOrder.UserName, result->getString(1).c_str());
+            assign(rtnOrder.AccountName, result->getString(2).c_str());
+            assign(rtnOrder.AccountType, result->getString(3).c_str());
+            assign(rtnOrder.ExchangeID, result->getString(4).c_str());
+            assign(rtnOrder.InstrumentID, result->getString(5).c_str());
+            assign(rtnOrder.InstrumentType, result->getString(6).c_str());  
+            assign(rtnOrder.Symbol, result->getString(7).c_str());
+            assign(rtnOrder.Price, result->getDouble(8));
+            assign(rtnOrder.LeverRate, result->getDouble(9));
+            assign(rtnOrder.Volume, result->getDouble(10));
+            assign(rtnOrder.Direction, result->getString(11).c_str());
+            assign(rtnOrder.OffsetFlag, result->getString(12).c_str());  
+            assign(rtnOrder.OrderLocalID, result->getString(13).c_str());
+            assign(rtnOrder.OrderMaker, result->getString(14).c_str());
+            assign(rtnOrder.OrderType, result->getString(15).c_str());
+            assign(rtnOrder.LandTime, result->getInt64(16));
+            assign(rtnOrder.SendTime, result->getInt64(17));
+            assign(rtnOrder.StrategyOrderID, result->getString(18).c_str());    
+            assign(rtnOrder.OrderMode, result->getString(19).c_str());
+            assign(rtnOrder.AssetType, result->getString(20).c_str());
+            assign(rtnOrder.TradeChannel, result->getString(21).c_str());
+            assign(rtnOrder.OrderXO, result->getString(22).c_str());
+            assign(rtnOrder.PlatformTime, result->getInt64(23));
+            assign(rtnOrder.OrderSysID, result->getString(24).c_str());
+            assign(rtnOrder.OrderForeID, result->getString(25).c_str());  
+            assign(rtnOrder.CreateTime, result->getInt64(26));
+            assign(rtnOrder.ModifyTime, result->getInt64(27));
+            assign(rtnOrder.RspLocalTime, result->getInt64(28));
+            assign(rtnOrder.Cost, result->getDouble(29));
+            assign(rtnOrder.TradePrice, result->getDouble(30));
+            assign(rtnOrder.TradeVolume, result->getDouble(31));
+            assign(rtnOrder.RemainVolume, result->getDouble(32));
+            assign(rtnOrder.TradeValue, result->getDouble(33));
+            assign(rtnOrder.OrderStatus, result->getString(34).c_str());
+            assign(rtnOrder.SessionID, result->getString(35).c_str());
+            assign(rtnOrder.RequestID, result->getInt64(36));   
+            assign(rtnOrder.RequestForeID, result->getInt64(37));
+            assign(rtnOrder.UserName, result->getString(38).c_str());
+            assign(rtnOrder.UserName, result->getString(39).c_str());    
+
+            assign(rspInfoField.ErrorID, result->getInt(40));
+            assign(rspInfoField.ErrorMsg, result->getString(41).c_str());
+
+            cout << "DBEngine::get_rtn_order " << endl;
+            printUTData(&rtnOrder, UT_FID_RtnOrder);
+            printUTData(&rspInfoField, UT_FID_RspInfo);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] DBEngine::get_rtn_order" << e.what() << '\n';
+    }
+
+}
+
+void DBEngine::get_rtn_trade(sql::ResultSet* result, CUTRtnTradeField& rtnTrade, CUTRspInfoField& rspInfoField)
+{
+    try
+    {
+        assign(rtnTrade.UserName, result->getString(1).c_str());
+        assign(rtnTrade.AccountName, result->getString(2).c_str());
+        assign(rtnTrade.AccountType, result->getString(3).c_str());
+        assign(rtnTrade.InternalAccountName, result->getString(4).c_str());
+        assign(rtnTrade.TradeID, result->getString(5).c_str());
+        assign(rtnTrade.OrderSysID, result->getString(6).c_str());
+        assign(rtnTrade.ExchangeID, result->getString(7).c_str());
+        assign(rtnTrade.InstrumentID, result->getString(8).c_str());
+
+        assign(rtnTrade.MatchPrice, result->getDouble(9));
+        assign(rtnTrade.MatchVolume, result->getDouble(10));
+        assign(rtnTrade.MatchValue, result->getDouble(11));
+
+        assign(rtnTrade.Direction, result->getString(12).c_str());
+        assign(rtnTrade.OrderLocalID, result->getString(13).c_str());
+        assign(rtnTrade.Fee, result->getDouble(14));
+        assign(rtnTrade.FeeCurrency, result->getString(15).c_str());
+        assign(rtnTrade.PlatformTime, result->getString(16).c_str());
+        assign(rtnTrade.TradeTime, result->getString(17).c_str());
+        assign(rtnTrade.RspLocalTime, result->getInt64(18));
+        assign(rtnTrade.Price, result->getDouble(19));
+
+        assign(rtnTrade.StrategyOrderID, result->getString(20).c_str());
+        assign(rtnTrade.OrderMaker, result->getString(21).c_str());
+        assign(rtnTrade.AssetType, result->getString(22).c_str());
+        assign(rtnTrade.TradeChannel, result->getString(23).c_str());      
+        assign(rtnTrade.SessionID, result->getString(24).c_str());        
+
+        assign(rspInfoField.ErrorID, result->getInt(25));
+        assign(rspInfoField.ErrorMsg, result->getString(26).c_str());
+
+        cout << "DBEngine::get_rsp_cancel_order " << endl;
+        printUTData(&rtnTrade, UT_FID_RtnTrade);
+        printUTData(&rspInfoField, UT_FID_RspInfo);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] DBEngine::get_rtn_trade" << e.what() << '\n';
+    }
+
+}
+
+void DBEngine::get_req_cancel_order(sql::ResultSet* result, CUTReqCancelOrderField& reqCancelOrder)
+{
+    try
+    {
+        assign(reqCancelOrder.UserName, result->getString(1).c_str());
+        assign(reqCancelOrder.AccountName, result->getString(2).c_str());
+        assign(reqCancelOrder.AccountType, result->getString(3).c_str());
+        assign(reqCancelOrder.Symbol, result->getString(4).c_str());
+        assign(reqCancelOrder.AssetType, result->getString(5).c_str());
+        assign(reqCancelOrder.OrderLocalID, result->getString(6).c_str());
+        assign(reqCancelOrder.OrderSysID, result->getString(7).c_str());
+        assign(reqCancelOrder.OrderForeID, result->getString(8).c_str());
+        assign(reqCancelOrder.ExchangeID, result->getString(9).c_str());
+        assign(reqCancelOrder.StrategyOrderID, result->getString(10).c_str());
+        assign(reqCancelOrder.TradeChannel, result->getString(11).c_str());
+        assign(reqCancelOrder.SendTime, result->getInt64(12));
+    
+       cout << "get_req_cancel_order " << reqCancelOrder.OrderLocalID << " " << utrade::pandora::ToSecondStr(reqCancelOrder.SendTime) << endl;
+       printUTData(&reqCancelOrder, UT_FID_ReqCancelOrder);
+
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] DBEngine::get_req_cancel_order" << e.what() << '\n';
+    }
+
+}
+
+void DBEngine::get_rsp_cancel_order(sql::ResultSet* result, CUTRspCancelOrderField& rspCancelOrder, CUTRspInfoField& rspInfoField)
+{
+    try
+    {
+            assign(rspCancelOrder.UserName, result->getString(1).c_str());
+            assign(rspCancelOrder.AccountName, result->getString(2).c_str());
+            assign(rspCancelOrder.AccountType, result->getString(3).c_str());
+            assign(rspCancelOrder.ExchangeID, result->getString(4).c_str());
+            assign(rspCancelOrder.InstrumentID, result->getString(5).c_str());
+            assign(rspCancelOrder.InstrumentType, result->getString(6).c_str());  
+            assign(rspCancelOrder.Symbol, result->getString(7).c_str());
+            assign(rspCancelOrder.Price, result->getDouble(8));
+            assign(rspCancelOrder.LeverRate, result->getDouble(9));
+            assign(rspCancelOrder.Volume, result->getDouble(10));
+            assign(rspCancelOrder.Direction, result->getString(11).c_str());
+            assign(rspCancelOrder.OffsetFlag, result->getString(12).c_str());  
+            assign(rspCancelOrder.OrderLocalID, result->getString(13).c_str());
+            assign(rspCancelOrder.OrderMaker, result->getString(14).c_str());
+            assign(rspCancelOrder.OrderType, result->getString(15).c_str());
+            assign(rspCancelOrder.LandTime, result->getInt64(16));
+            assign(rspCancelOrder.SendTime, result->getInt64(17));
+            assign(rspCancelOrder.StrategyOrderID, result->getString(18).c_str());    
+            assign(rspCancelOrder.OrderMode, result->getString(19).c_str());
+            assign(rspCancelOrder.AssetType, result->getString(20).c_str());
+            assign(rspCancelOrder.TradeChannel, result->getString(21).c_str());
+            assign(rspCancelOrder.OrderXO, result->getString(22).c_str());
+            assign(rspCancelOrder.PlatformTime, result->getInt64(23));
+            assign(rspCancelOrder.OrderSysID, result->getString(24).c_str());
+            assign(rspCancelOrder.OrderForeID, result->getString(25).c_str());  
+            assign(rspCancelOrder.CreateTime, result->getInt64(26));
+            assign(rspCancelOrder.ModifyTime, result->getInt64(27));
+            assign(rspCancelOrder.RspLocalTime, result->getInt64(28));
+            assign(rspCancelOrder.Cost, result->getDouble(29));
+            assign(rspCancelOrder.TradePrice, result->getDouble(30));
+            assign(rspCancelOrder.TradeVolume, result->getDouble(31));
+            assign(rspCancelOrder.RemainVolume, result->getDouble(32));
+            assign(rspCancelOrder.TradeValue, result->getDouble(33));
+            assign(rspCancelOrder.OrderStatus, result->getString(34).c_str());
+            assign(rspCancelOrder.SessionID, result->getString(35).c_str());
+            assign(rspCancelOrder.RequestID, result->getInt64(36));   
+            assign(rspCancelOrder.RequestForeID, result->getInt64(37));
+            assign(rspCancelOrder.UserName, result->getString(38).c_str());
+            assign(rspCancelOrder.UserName, result->getString(39).c_str());    
+
+            assign(rspInfoField.ErrorID, result->getInt(40));
+            assign(rspInfoField.ErrorMsg, result->getString(41).c_str());
+
+            cout << "DBEngine::get_rsp_cancel_order " << endl;
+            printUTData(&rspCancelOrder, UT_FID_RspCancelOrder);
+            printUTData(&rspInfoField, UT_FID_RspInfo);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] DBEngine::get_rsp_cancel_order" << e.what() << '\n';
+    }
+}
+
+void DBEngine::get_req_create_order_by_time(string account_name, unsigned long start_time, unsigned long end_time)
+{
+    try
+    {
+        cout << "get_req_create_order_by_time " << account_name << " "
+             << "start: " << utrade::pandora::ToSecondStr(start_time) << " "
+             << "end: " << utrade::pandora::ToSecondStr(end_time) << " "
+             << endl;
+        string sql_str = select_req_create_order_by_time(account_name, start_time, end_time);
+
+        sql::Statement* state;
+        sql::ResultSet* sql_result;
+
+        cout << "sql_result: " << sql_str << endl;
+
+        if (!conn_)
+        {
+            std::cout << "Database was not connected!" << std::endl;
+        }
+        else
+        {
+            state = conn_->createStatement();
+            sql_result = state->executeQuery(sql_str);
+
+            while(sql_result->next())
+            {   
+                CUTReqCreateOrderField reqCreateOrder;
+                get_req_create_order(sql_result, reqCreateOrder);
+            }
+        }
+
+
+        
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] DBEngine::get_req_create_order_by_time" << e.what() << '\n';
+    }
+    
+}
+
+
+ void DBEngine::get_rsp_create_order_by_orderlocalid(string account_name, string order_local_id)
+ {
+    try
+    {
+        cout << "get_rsp_create_order_by_orderlocalid " << account_name << " "
+             << "order_local_id: " << order_local_id << " "
+             << endl;
+        string sql_str = select_rsp_create_order_by_orderlocalid(account_name, order_local_id);
+
+        sql::Statement* state;
+        sql::ResultSet* sql_result;
+
+        cout << "sql_result: " << sql_str << endl;
+
+        if (!conn_)
+        {
+            std::cout << "Database was not connected!" << std::endl;
+        }
+        else
+        {
+            state = conn_->createStatement();
+            sql_result = state->executeQuery(sql_str);
+
+            while(sql_result->next())
+            {   
+                CUTRspCreateOrderField rspCreateOrder;
+                CUTRspInfoField rspInfo;
+                get_rsp_create_order(sql_result, rspCreateOrder, rspInfo);
+            }
+        }
+
+
+        
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] DBEngine::get_rsp_create_order_by_orderlocalid" << e.what() << '\n';
+    }     
+ }

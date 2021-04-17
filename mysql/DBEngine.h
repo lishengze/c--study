@@ -42,12 +42,14 @@ class DBEngine
 
         bool check_db(string db_name);
 
+        void clean_db();
+
         void prepare_statement(string account_name);
 
         void create_table(string account_name);
 
         void insert_req_create_order(const CUTReqCreateOrderField& reqCreateOrder);
-
+        
         void insert_rsp_create_order(const CUTRspCreateOrderField& rspCreateOrder, const CUTRspInfoField& rspInfoField);
 
         void insert_rtn_order(const CUTRtnOrderField& rtnOrder, const CUTRspInfoField& rspInfoField);
@@ -57,6 +59,22 @@ class DBEngine
         void insert_req_cancel_order(const CUTReqCancelOrderField& reqCancelOrder);
 
         void insert_rsp_cancel_order(const CUTRspCancelOrderField& rspCancelOrder, const CUTRspInfoField& rspInfoField);
+
+        void get_req_create_order(sql::ResultSet* result, CUTReqCreateOrderField& reqCreateOrder);
+
+        void get_rsp_create_order(sql::ResultSet* result, CUTRspCreateOrderField& rspCreateOrder, CUTRspInfoField& rspInfoField);
+
+        void get_rtn_order(sql::ResultSet* result, CUTRtnOrderField& rtnOrder, CUTRspInfoField& rspInfoField);
+
+        void get_rtn_trade(sql::ResultSet* result, CUTRtnTradeField& rtnTrade, CUTRspInfoField& rspInfoField);
+
+        void get_req_cancel_order(sql::ResultSet* result, CUTReqCancelOrderField& reqCancelOrder);
+
+        void get_rsp_cancel_order(sql::ResultSet* result, CUTRspCancelOrderField& rspCancelOrder, CUTRspInfoField& rspInfoField);
+
+        void get_req_create_order_by_time(string account_name, unsigned long start_time, unsigned long end_time);
+
+        void get_rsp_create_order_by_orderlocalid(string account_name, string order_local_id);
 
         struct PrepareSMT
         {
@@ -86,7 +104,7 @@ class DBEngine
                 }
                 catch(const std::exception& e)
                 {
-                    std::cerr << "PrepareSMT::prepare " << e.what() << '\n';
+                    std::cerr << "\n[E] PrepareSMT::prepare " << e.what() << '\n';
                 }
             }
             

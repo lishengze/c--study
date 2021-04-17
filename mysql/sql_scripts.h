@@ -83,11 +83,11 @@ inline string get_req_create_order_sql_str(string account_name)
                     TradeValue DECIMAL(32, 8), \
                     OrderStatus VARCHAR(32), \
                     SessionID VARCHAR(64), \
-                    RequestID VARCHAR(64), \
-                    RequestForeID VARCHAR(64), \
+                    RequestID BIGINT, \
+                    RequestForeID BIGINT, \
                     Fee DECIMAL(32, 8), \
                     FeeCurrency VARCHAR(32), \
-                    PRIMARY KEY (`AccountName`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
+                    PRIMARY KEY (`SendTime`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
 
         // cout << "create sql: " << result << endl;
 
@@ -123,7 +123,7 @@ inline string select_req_create_order_by_time(string account_name, unsigned long
                       + " where SendTime>" + std::to_string(start_time) 
                       + " and SendTime<" + std::to_string(end_time)
                       + ";";
-        cout << result << endl;
+        // cout << result << endl;
         return result;        
     }
     catch(const std::exception& e)
@@ -174,13 +174,13 @@ inline string get_rsp_create_order_sql_str(string account_name)
                     TradeValue DECIMAL(32, 8), \
                     OrderStatus VARCHAR(32), \
                     SessionID VARCHAR(64), \
-                    RequestID VARCHAR(64), \
-                    RequestForeID VARCHAR(64), \
+                    RequestID BIGINT, \
+                    RequestForeID BIGINT, \
                     Fee DECIMAL(32, 8), \
                     FeeCurrency VARCHAR(32), \
                     ErrorID INTEGER, \
                     ErrorMsg VARCHAR(256), \
-                    PRIMARY KEY (`AccountName`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
+                    PRIMARY KEY (`RspLocalTime`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
         return result; 
     }
     catch(const std::exception& e)
@@ -263,13 +263,13 @@ inline string get_rtn_order_sql_str(string account_name)
                         TradeValue DECIMAL(32, 8), \
                         OrderStatus VARCHAR(32), \
                         SessionID VARCHAR(64), \
-                        RequestID VARCHAR(64), \
-                        RequestForeID VARCHAR(64), \
+                        RequestID BIGINT, \
+                        RequestForeID BIGINT, \
                         Fee DECIMAL(32, 8), \
                         FeeCurrency VARCHAR(32), \
                         ErrorID INTEGER, \
                         ErrorMsg VARCHAR(256), \
-                        PRIMARY KEY (`AccountName`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
+                        PRIMARY KEY (`RspLocalTime`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
 
         return result; 
     }
@@ -332,8 +332,8 @@ inline string get_rtn_trade_sql_str(string account_name)
                         OrderLocalID VARCHAR(64), \
                         Fee DECIMAL(32, 8), \
                         FeeCurrency VARCHAR(32), \
-                        PlatformTime VARCHAR(64), \
-                        TradeTime VARCHAR(64), \
+                        PlatformTime VARCHAR(256), \
+                        TradeTime VARCHAR(256), \
                         RspLocalTime BIGINT, \
                         Price DECIMAL(32,8), \
                         StrategyOrderID VARCHAR(64), \
@@ -343,7 +343,7 @@ inline string get_rtn_trade_sql_str(string account_name)
                         SessionID VARCHAR(64), \
                         ErrorID INTEGER, \
                         ErrorMsg VARCHAR(256), \
-                        PRIMARY KEY (`AccountName`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
+                        PRIMARY KEY (`RspLocalTime`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
 
         return result; 
     }
@@ -403,7 +403,7 @@ inline string get_req_cancel_order_sql_str(string account_name)
                         StrategyOrderID VARCHAR(64), \
                         TradeChannel VARCHAR(64), \
                         SendTime BIGINT, \
-                        PRIMARY KEY (`AccountName`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
+                        PRIMARY KEY (`SendTime`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
         return result; 
     }
     catch(const std::exception& e)
@@ -487,13 +487,13 @@ inline string get_rsp_cancel_order_sql_str(string account_name)
                     TradeValue DECIMAL(32, 8), \
                     OrderStatus VARCHAR(32), \
                     SessionID VARCHAR(64), \
-                    RequestID VARCHAR(64), \
-                    RequestForeID VARCHAR(64), \
+                    RequestID BIGINT, \
+                    RequestForeID BIGINT, \
                     Fee DECIMAL(32, 8), \
                     FeeCurrency VARCHAR(32), \
                     ErrorID INTEGER, \
                     ErrorMsg VARCHAR(256), \
-                    PRIMARY KEY (`AccountName`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
+                    PRIMARY KEY (`RspLocalTime`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
 
         return result; 
     }
