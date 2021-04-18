@@ -393,14 +393,56 @@ void TestDBEngine::test_get_db_data(DBEngine& db,string& account_name)
 {
     try
     {
-        unsigned long start_time = 1618649198587558976;
-        unsigned long end_time = 1618649200968497349;
+        unsigned long start_time = 1618736474017140204;
+        unsigned long end_time = 1618736480172401861;
 
         string order_local_id = "3";
 
-        // db.get_req_create_order_by_time(account_name, start_time, end_time);
+        std::vector<PackagePtr> package_list;
+        std::vector<string> order_local_id_list;
 
-        db.get_rsp_create_order_by_orderlocalid(account_name, order_local_id);
+        // db.get_req_create_order_by_time(account_name, start_time, end_time, order_local_id_list, package_list);
+
+        // for (auto id: order_local_id_list)
+        // {
+        //     cout << "order_local_id: " << id << endl;
+        // }
+
+        // for(PackagePtr package:package_list)
+        // {
+        //     auto* p = GET_FIELD(package, CUTRspReqCreateOrderField);
+        //     cout << endl;
+        //     printUTData(p, UT_FID_RspReqCreateOrder);
+        // }
+
+        // PackagePtr package = db.get_rsp_create_order_by_orderlocalid(account_name, order_local_id);
+        // auto* p = GET_FIELD(package, CUTRspCreateOrderField);
+        // printUTData(p, UT_FID_RspCreateOrder);
+
+        PackagePtr package = db.get_rtn_order_by_orderlocalid(account_name, order_local_id);
+        auto* p = GET_FIELD(package, CUTRtnOrderField);
+        printUTData(p, UT_FID_RtnOrder);        
+
+        // PackagePtr package = db.get_rtn_trade_by_orderlocalid(account_name, order_local_id);
+        // auto* p = GET_FIELD(package, CUTRtnTradeField);
+        // printUTData(p, UT_FID_RtnTrade);        
+
+        // db.get_req_cancel_order_by_time(account_name, start_time, end_time, order_local_id_list, package_list);
+        // for (auto id: order_local_id_list)
+        // {
+        //     cout << "order_local_id: " << id << endl;
+        // }        
+
+        // for(PackagePtr package:package_list)
+        // {
+        //     auto* p = GET_FIELD(package, CUTRspReqCancelOrderField);
+        //     cout << endl;
+        //     printUTData(p, UT_FID_RspReqCancelOrder);
+        // }        
+
+        // PackagePtr package = db.get_rsp_cancel_order_by_orderlocalid(account_name, order_local_id);
+        // auto* p = GET_FIELD(package, CUTRtnTradeField);
+        // printUTData(p, UT_FID_RspCancelOrder);           
     }
     catch(const std::exception& e)
     {
@@ -408,3 +450,4 @@ void TestDBEngine::test_get_db_data(DBEngine& db,string& account_name)
     }
     
 }
+

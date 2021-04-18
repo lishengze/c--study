@@ -9,14 +9,18 @@
 #include "sql_scripts.h"
 
 #include "quark/cxx/ut/UtData.h"
+#include "pandora/package/package_station.h"
+#include "pandora/package/package_manager.h"
 
 #include <string>
 #include <iostream>
 #include <map>
+#include <vector>
 using std::string;
 using std::cout;
 using std::endl;
 using std::map;
+using std::vector;
 
 class DBEngine
 {
@@ -60,7 +64,7 @@ class DBEngine
 
         void insert_rsp_cancel_order(const CUTRspCancelOrderField& rspCancelOrder, const CUTRspInfoField& rspInfoField);
 
-        void get_req_create_order(sql::ResultSet* result, CUTReqCreateOrderField& reqCreateOrder);
+        void get_req_create_order(sql::ResultSet* result, CUTRspReqCreateOrderField& reqCreateOrder);
 
         void get_rsp_create_order(sql::ResultSet* result, CUTRspCreateOrderField& rspCreateOrder, CUTRspInfoField& rspInfoField);
 
@@ -68,13 +72,23 @@ class DBEngine
 
         void get_rtn_trade(sql::ResultSet* result, CUTRtnTradeField& rtnTrade, CUTRspInfoField& rspInfoField);
 
-        void get_req_cancel_order(sql::ResultSet* result, CUTReqCancelOrderField& reqCancelOrder);
+        void get_req_cancel_order(sql::ResultSet* result, CUTRspReqCancelOrderField& reqCancelOrder);
 
         void get_rsp_cancel_order(sql::ResultSet* result, CUTRspCancelOrderField& rspCancelOrder, CUTRspInfoField& rspInfoField);
 
-        void get_req_create_order_by_time(string account_name, unsigned long start_time, unsigned long end_time);
+        void get_req_create_order_by_time(string account_name, unsigned long start_time, unsigned long end_time, 
+                                            vector<string>& id_list, vector<PackagePtr>& package_list);
 
-        void get_rsp_create_order_by_orderlocalid(string account_name, string order_local_id);
+        PackagePtr get_rsp_create_order_by_orderlocalid(string account_name, string order_local_id);
+
+        PackagePtr get_rtn_order_by_orderlocalid(string account_name, string order_local_id);
+
+        PackagePtr get_rtn_trade_by_orderlocalid(string account_name, string order_local_id);
+
+        void get_req_cancel_order_by_time(string account_name, unsigned long start_time, unsigned long end_time, 
+                                            vector<string>& id_list, vector<PackagePtr>& package_list);
+
+        PackagePtr get_rsp_cancel_order_by_orderlocalid(string account_name, string order_local_id);
 
         struct PrepareSMT
         {
@@ -138,6 +152,8 @@ class DBEngine
     string                  host_;
     string                  schema_;
     int                     port_;
+
+    utrade::pandora::PackageManagerPtr        package_manager_{nullptr};
 
     map<string, PrepareSMT> accout_preparestmt_map_;
 
