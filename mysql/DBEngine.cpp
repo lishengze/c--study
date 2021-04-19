@@ -798,9 +798,9 @@ void DBEngine::get_rsp_create_order(sql::ResultSet* result, CUTRspCreateOrderFie
         assign(rspInfoField.ErrorID, result->getInt(40));
         assign(rspInfoField.ErrorMsg, result->getString(41).c_str());
 
-        cout << "DBEngine::get_rsp_create_order " << endl;
-        printUTData(&rspCreateOrder, UT_FID_RspCreateOrder);
-        printUTData(&rspInfoField, UT_FID_RspInfo);
+        // cout << "DBEngine::get_rsp_create_order " << endl;
+        // printUTData(&rspCreateOrder, UT_FID_RspCreateOrder);
+        // printUTData(&rspInfoField, UT_FID_RspInfo);
     }
     catch(const std::exception& e)
     {
@@ -981,8 +981,7 @@ void DBEngine::get_rsp_cancel_order(sql::ResultSet* result, CUTRspCancelOrderFie
     }
 }
 
-void DBEngine::get_req_create_order_by_time(string account_name, unsigned long start_time, unsigned long end_time,
-                                            vector<string>& id_list, vector<PackagePtr>& package_list)
+vector<PackagePtr> DBEngine::get_req_create_order_by_time(string account_name, unsigned long start_time, unsigned long end_time)
 {
     try
     {
@@ -994,8 +993,9 @@ void DBEngine::get_req_create_order_by_time(string account_name, unsigned long s
 
         sql::Statement* state;
         sql::ResultSet* sql_result;
+        vector<PackagePtr> package_list;
 
-        cout << "sql_result: " << sql_str << endl;
+        // cout << "sql_result: " << sql_str << endl;
 
         if (!conn_)
         {
@@ -1014,14 +1014,15 @@ void DBEngine::get_req_create_order_by_time(string account_name, unsigned long s
 
                 get_req_create_order(sql_result, *reqCreateOrder);
 
-                cout << "\nDBEngine::get_req_create_order " << ++i << endl;
+                // cout << "\nDBEngine::get_req_create_order " << ++i << endl;
                 // printUTData(&reqCreateOrder, UT_FID_RspReqCreateOrder);  
 
+                package->prepare_response(UT_TID_RspReqCreateOrder, 0);
 
                 package_list.push_back(package);
-                id_list.push_back(string(reqCreateOrder->OrderLocalID));
             }
         }        
+        return package_list;
     }
     catch(const std::exception& e)
     {
@@ -1043,7 +1044,7 @@ PackagePtr DBEngine::get_rsp_create_order_by_orderlocalid(string account_name, s
         sql::Statement* state;
         sql::ResultSet* sql_result;
 
-        cout << "sql_result: " << sql_str << endl;
+        // cout << "sql_result: " << sql_str << endl;
 
         PackagePtr package = boost::make_shared<Package>();
 
@@ -1061,6 +1062,8 @@ PackagePtr DBEngine::get_rsp_create_order_by_orderlocalid(string account_name, s
                 CUTRspCreateOrderField* pRspCreateOrder = CREATE_FIELD(package, CUTRspCreateOrderField);
                 CUTRspInfoField* rspInfo = CREATE_FIELD(package, CUTRspInfoField);
                 get_rsp_create_order(sql_result, *pRspCreateOrder, *rspInfo);
+
+                package->prepare_response(UT_TID_RspCreateOrder, 0);
             }
         }        
         return package;
@@ -1083,7 +1086,7 @@ PackagePtr DBEngine::get_rtn_order_by_orderlocalid(string account_name, string o
         sql::Statement* state;
         sql::ResultSet* sql_result;
 
-        cout << "sql_result: " << sql_str << endl;
+        // cout << "sql_result: " << sql_str << endl;
 
         PackagePtr package = boost::make_shared<Package>();
 
@@ -1103,8 +1106,10 @@ PackagePtr DBEngine::get_rtn_order_by_orderlocalid(string account_name, string o
 
                 get_rtn_order(sql_result, *rtnOrder, *rspInfo);
 
-                printUTData(rtnOrder, UT_FID_RtnOrder);
-                printUTData(rspInfo, UT_FID_RspInfo);                
+                package->prepare_response(UT_TID_RtnOrder, 0);
+
+                // printUTData(rtnOrder, UT_FID_RtnOrder);
+                // printUTData(rspInfo, UT_FID_RspInfo);                
             }
         }    
 
@@ -1129,7 +1134,7 @@ PackagePtr DBEngine::get_rtn_trade_by_orderlocalid(string account_name, string o
         sql::Statement* state;
         sql::ResultSet* sql_result;
 
-        cout << "sql_result: " << sql_str << endl;
+        // cout << "sql_result: " << sql_str << endl;
 
         PackagePtr package = boost::make_shared<Package>();
 
@@ -1149,9 +1154,10 @@ PackagePtr DBEngine::get_rtn_trade_by_orderlocalid(string account_name, string o
                 CUTRspInfoField* rspInfo = CREATE_FIELD(package, CUTRspInfoField);      
 
                 get_rtn_trade(sql_result, *rtnTrade, *rspInfo);
+                package->prepare_response(UT_TID_RtnTrade, 0);
 
-                printUTData(rtnTrade, UT_FID_RtnTrade);
-                printUTData(rspInfo, UT_FID_RspInfo);
+                // printUTData(rtnTrade, UT_FID_RtnTrade);
+                // printUTData(rspInfo, UT_FID_RspInfo);
             }
         }   
 
@@ -1164,8 +1170,7 @@ PackagePtr DBEngine::get_rtn_trade_by_orderlocalid(string account_name, string o
         
 }
 
-void DBEngine::get_req_cancel_order_by_time(string account_name, unsigned long start_time, unsigned long end_time,
-                                            vector<string>& id_list, vector<PackagePtr>& package_list)
+vector<PackagePtr> DBEngine::get_req_cancel_order_by_time(string account_name, unsigned long start_time, unsigned long end_time)
 {
     try
     {
@@ -1178,7 +1183,9 @@ void DBEngine::get_req_cancel_order_by_time(string account_name, unsigned long s
         sql::Statement* state;
         sql::ResultSet* sql_result;
 
-        cout << "sql_result: " << sql_str << endl;
+        vector<PackagePtr> package_list;
+
+        // cout << "sql_result: " << sql_str << endl;
 
         if (!conn_)
         {
@@ -1197,14 +1204,17 @@ void DBEngine::get_req_cancel_order_by_time(string account_name, unsigned long s
 
                 get_req_cancel_order(sql_result, *reqCancelOrder);
 
-                cout << "DBEngine::get_req_cancel_order_by_time: " << ++i << endl;
+                // cout << "DBEngine::get_req_cancel_order_by_time: " << ++i << endl;
                 // cout << "get_req_cancel_order " << reqCancelOrder.OrderLocalID << " " << utrade::pandora::ToSecondStr(reqCancelOrder.SendTime) << endl;
                 // printUTData(reqCancelOrder, UT_FID_RspReqCancelOrder);
 
-                package_list.push_back(package);
-                id_list.push_back(string(reqCancelOrder->OrderLocalID));                
+                package->prepare_response(UT_TID_RspReqCancelOrder, 0);
+
+                package_list.push_back(package);           
             }
         }    
+
+        return package_list;
     }
     catch(const std::exception& e)
     {
@@ -1226,7 +1236,7 @@ PackagePtr DBEngine::get_rsp_cancel_order_by_orderlocalid(string account_name, s
         sql::Statement* state;
         sql::ResultSet* sql_result;
 
-        cout << "sql_result: " << sql_str << endl;
+        // cout << "sql_result: " << sql_str << endl;
 
         PackagePtr package = boost::make_shared<Package>();
 
@@ -1247,8 +1257,10 @@ PackagePtr DBEngine::get_rsp_cancel_order_by_orderlocalid(string account_name, s
                                 
                 get_rsp_cancel_order(sql_result, *rspCancelOrderField, *rspInfo);
 
-                printUTData(rspCancelOrderField, UT_FID_RspCancelOrder);
-                printUTData(rspInfo, UT_FID_RspInfo);
+                package->prepare_response(UT_TID_RspCancelOrder, 0);
+
+                // printUTData(rspCancelOrderField, UT_FID_RspCancelOrder);
+                // printUTData(rspInfo, UT_FID_RspInfo);
             }
         }   
 

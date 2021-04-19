@@ -18,4 +18,6 @@ class TestDBEngine
         void test_insert_data(DBEngine& db, string& account_name);
 
         void test_get_db_data(DBEngine& db, string& account_name);
+
+        void test_trade_console();
 };

@@ -105,7 +105,7 @@ inline string insert_req_create_order_sql(string account_name)
     {
         string table_name = account_name + "_ReqCreateOrder";
         string result = string("INSERT INTO ") + table_name + " VALUES (" + get_qm_string(39) +");";
-        cout << result << endl;
+        // cout << result << endl;
         return result;
     }
     catch(const std::exception& e)
@@ -123,7 +123,7 @@ inline string select_req_create_order_by_time(string account_name, unsigned long
                       + " where SendTime>" + std::to_string(start_time) 
                       + " and SendTime<" + std::to_string(end_time)
                       + ";";
-        // cout << result << endl;
+        // // cout << result << endl;
         return result;        
     }
     catch(const std::exception& e)
@@ -195,7 +195,7 @@ inline string insert_rsp_create_order_sql(string account_name)
     {
         string table_name = account_name + "_RspCreateOrder";
         string result = string("INSERT INTO ") + table_name + " VALUES (" + get_qm_string(41) +");";
-        cout << result << endl;
+        // cout << result << endl;
         return result;
     }
     catch(const std::exception& e)
@@ -211,7 +211,7 @@ inline string select_rsp_create_order_by_orderlocalid(string account_name, strin
         string table_name = account_name + "_RspCreateOrder";
         string result = string("select * from ") + table_name 
                       + " where OrderLocalID=" + orderlocalid + ";";
-        cout << result << endl;
+        // cout << result << endl;
         return result;        
     }
     catch(const std::exception& e)
@@ -285,7 +285,7 @@ inline string insert_rtn_order_sql(string account_name)
     {
         string table_name = account_name + "_RtnOrder";
         string result = string("INSERT INTO ") + table_name + " VALUES (" + get_qm_string(41) +");";
-        cout << result << endl;
+        // cout << result << endl;
         return result;
     }
     catch(const std::exception& e)
@@ -301,7 +301,7 @@ inline string select_rtn_order_by_orderlocalid(string account_name, string order
         string table_name = account_name + "_RtnOrder";
         string result = string("select * from ") + table_name 
                       + " where OrderLocalID=" + orderlocalid + ";";
-        cout << result << endl;
+        // cout << result << endl;
         return result;        
     }
     catch(const std::exception& e)
@@ -359,7 +359,7 @@ inline string insert_rtn_trade_sql(string account_name)
     {
         string table_name = account_name + "_RtnTrade";
         string result = string("INSERT INTO ") + table_name + " VALUES (" + get_qm_string(26) +");";
-        cout << result << endl;
+        // cout << result << endl;
         return result;
     }
     catch(const std::exception& e)
@@ -375,7 +375,7 @@ inline string select_rtn_trade_by_orderlocalid(string account_name, string order
         string table_name = account_name + "_RtnTrade";
         string result = string("select * from ") + table_name 
                       + " where OrderLocalID=" + orderlocalid + ";";
-        cout << result << endl;
+        // cout << result << endl;
         return result;        
     }
     catch(const std::exception& e)
@@ -418,7 +418,7 @@ inline string insert_req_cancel_order_sql(string account_name)
     {
         string table_name = account_name + "_ReqCancelOrder";
         string result = string("INSERT INTO ") + table_name + " VALUES (" + get_qm_string(12) +");";
-        cout << result << endl;
+        // cout << result << endl;
         return result;
     }
     catch(const std::exception& e)
@@ -436,7 +436,7 @@ inline string select_req_cancel_order_by_time(string account_name, unsigned long
                       + " where SendTime>" + std::to_string(start_time) 
                       + " and SendTime<" + std::to_string(end_time)
                       + ";";
-        cout << result << endl;
+        // cout << result << endl;
         return result;        
     }
     catch(const std::exception& e)
@@ -509,7 +509,7 @@ inline string insert_rsp_cancel_order_sql(string account_name)
     {
         string table_name = account_name + "_RspCancelOrder";
         string result = string("INSERT INTO ") + table_name + " VALUES (" + get_qm_string(41) +");";
-        cout << result << endl;
+        // cout << result << endl;
 
         return result;
     }
@@ -526,7 +526,7 @@ inline string select_rsp_cancel_order_by_orderlocalid(string account_name, strin
         string table_name = account_name + "_RspCancelOrder";
         string result = string("select * from ") + table_name 
                       + " where OrderLocalID=" + orderlocalid + ";";
-        cout << result << endl;
+        // cout << result << endl;
         return result;        
     }
     catch(const std::exception& e)

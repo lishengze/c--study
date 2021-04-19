@@ -5,6 +5,10 @@
 
 #include "pandora/util/time_util.h"
 
+#include <boost/make_shared.hpp>
+
+#include "trade_console.h"
+
 #include <thread>
 #include <chrono>
 
@@ -12,7 +16,9 @@ TestDBEngine::TestDBEngine()
 {
     // test_connect_schema();
 
-    test_create_table();    
+    // test_create_table();    
+
+    test_trade_console();
 }
 
 void TestDBEngine::test_connect()
@@ -401,14 +407,9 @@ void TestDBEngine::test_get_db_data(DBEngine& db,string& account_name)
         std::vector<PackagePtr> package_list;
         std::vector<string> order_local_id_list;
 
-        // db.get_req_create_order_by_time(account_name, start_time, end_time, order_local_id_list, package_list);
+        vector<PackagePtr> req_create_order_package_list = db.get_req_create_order_by_time(account_name, start_time, end_time);
 
-        // for (auto id: order_local_id_list)
-        // {
-        //     cout << "order_local_id: " << id << endl;
-        // }
-
-        // for(PackagePtr package:package_list)
+        // for(PackagePtr package:req_create_order_package_list)
         // {
         //     auto* p = GET_FIELD(package, CUTRspReqCreateOrderField);
         //     cout << endl;
@@ -419,30 +420,26 @@ void TestDBEngine::test_get_db_data(DBEngine& db,string& account_name)
         // auto* p = GET_FIELD(package, CUTRspCreateOrderField);
         // printUTData(p, UT_FID_RspCreateOrder);
 
-        PackagePtr package = db.get_rtn_order_by_orderlocalid(account_name, order_local_id);
-        auto* p = GET_FIELD(package, CUTRtnOrderField);
-        printUTData(p, UT_FID_RtnOrder);        
+        // PackagePtr package = db.get_rtn_order_by_orderlocalid(account_name, order_local_id);
+        // auto* p = GET_FIELD(package, CUTRtnOrderField);
+        // printUTData(p, UT_FID_RtnOrder);        
 
         // PackagePtr package = db.get_rtn_trade_by_orderlocalid(account_name, order_local_id);
         // auto* p = GET_FIELD(package, CUTRtnTradeField);
         // printUTData(p, UT_FID_RtnTrade);        
 
-        // db.get_req_cancel_order_by_time(account_name, start_time, end_time, order_local_id_list, package_list);
-        // for (auto id: order_local_id_list)
-        // {
-        //     cout << "order_local_id: " << id << endl;
-        // }        
+        vector<PackagePtr> req_cancel_order_package_list = db.get_req_cancel_order_by_time(account_name, start_time, end_time);
 
-        // for(PackagePtr package:package_list)
+        // for(PackagePtr package:req_create_order_package_list)
         // {
         //     auto* p = GET_FIELD(package, CUTRspReqCancelOrderField);
         //     cout << endl;
         //     printUTData(p, UT_FID_RspReqCancelOrder);
         // }        
 
-        // PackagePtr package = db.get_rsp_cancel_order_by_orderlocalid(account_name, order_local_id);
-        // auto* p = GET_FIELD(package, CUTRtnTradeField);
-        // printUTData(p, UT_FID_RspCancelOrder);           
+        PackagePtr package = db.get_rsp_cancel_order_by_orderlocalid(account_name, order_local_id);
+        auto* p = GET_FIELD(package, CUTRspCancelOrderField);
+        printUTData(p, UT_FID_RspCancelOrder);           
     }
     catch(const std::exception& e)
     {
@@ -451,3 +448,53 @@ void TestDBEngine::test_get_db_data(DBEngine& db,string& account_name)
     
 }
 
+PackagePtr get_req_rollback_info_package()
+{
+    try
+    {
+        PackagePtr package = boost::make_shared<Package>();
+
+        CUTReqRollbackInfoField* pReqRollbackInfo = CREATE_FIELD(package, CUTReqRollbackInfoField);
+
+        assign(pReqRollbackInfo->AccountName, "HUOBI_QA_MAIN");
+        assign(pReqRollbackInfo->TimeStart, 1618736474017140204);
+        assign(pReqRollbackInfo->TimeEnd, 1618736480172401861);
+
+        package->prepare_request(UT_TID_ReqRollbackInfo, 1);
+
+        return package;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] get_req_rollback_info_package " << e.what() << '\n';
+    }
+    
+}
+
+void TestDBEngine::test_trade_console()
+{
+    try
+    {
+        utrade::pandora::io_service_pool engine_pool(3);
+
+        TradeConsole trade_console(engine_pool, nullptr);
+
+        trade_console.launch();
+
+        engine_pool.start();
+        
+        PackagePtr reqRollbackInfoPackage = get_req_rollback_info_package();
+        const CUTReqRollbackInfoField* p = GET_NON_CONST_FIELD(reqRollbackInfoPackage, CUTReqRollbackInfoField);
+        printUTData(p, UT_FID_ReqRollbackInfo);
+
+        trade_console.request_message(reqRollbackInfoPackage);
+
+        engine_pool.block();    
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] test_trade_console " << e.what() << '\n';
+    }
+    
+
+}

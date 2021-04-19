@@ -12,6 +12,8 @@
 #include "pandora/package/package_station.h"
 #include "pandora/package/package_manager.h"
 
+#include <boost/shared_ptr.hpp>
+
 #include <string>
 #include <iostream>
 #include <map>
@@ -26,6 +28,11 @@ class DBEngine
 {
     public:
 
+        DBEngine()
+        {
+
+        }
+
         DBEngine(string address, string usr, string pwd):
         usr_{usr}, pwd_{pwd}, host_{address}
         {
@@ -37,6 +44,15 @@ class DBEngine
         {
             connect_mysql_schema();
         }        
+
+        void set_param(string usr, string pwd, string schema, int port, string host)
+        {
+            usr_ = usr;
+            pwd_ = pwd;
+            schema_ = schema;
+            port_ = port;
+            host_ = host;
+        }
 
         void connect_mysql();
 
@@ -76,8 +92,7 @@ class DBEngine
 
         void get_rsp_cancel_order(sql::ResultSet* result, CUTRspCancelOrderField& rspCancelOrder, CUTRspInfoField& rspInfoField);
 
-        void get_req_create_order_by_time(string account_name, unsigned long start_time, unsigned long end_time, 
-                                            vector<string>& id_list, vector<PackagePtr>& package_list);
+        vector<PackagePtr> get_req_create_order_by_time(string account_name, unsigned long start_time, unsigned long end_time);
 
         PackagePtr get_rsp_create_order_by_orderlocalid(string account_name, string order_local_id);
 
@@ -85,8 +100,7 @@ class DBEngine
 
         PackagePtr get_rtn_trade_by_orderlocalid(string account_name, string order_local_id);
 
-        void get_req_cancel_order_by_time(string account_name, unsigned long start_time, unsigned long end_time, 
-                                            vector<string>& id_list, vector<PackagePtr>& package_list);
+        vector<PackagePtr> get_req_cancel_order_by_time(string account_name, unsigned long start_time, unsigned long end_time);
 
         PackagePtr get_rsp_cancel_order_by_orderlocalid(string account_name, string order_local_id);
 
@@ -156,7 +170,6 @@ class DBEngine
     utrade::pandora::PackageManagerPtr        package_manager_{nullptr};
 
     map<string, PrepareSMT> accout_preparestmt_map_;
-
-    
-
 };
+
+using DBEnginePtr = boost::shared_ptr<DBEngine>;
