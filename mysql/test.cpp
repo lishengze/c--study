@@ -267,6 +267,7 @@ void SetCUTReqCancelOrderField(CUTReqCancelOrderField& reqCancelOrderField, stri
     assign(reqCancelOrderField.ExchangeID, "");
     assign(reqCancelOrderField.TradeChannel, "TestSession");
     assign(reqCancelOrderField.SendTime, utrade::pandora::NanoTime()); 
+    assign(reqCancelOrderField.SessionID, "TestSession");
 }
 
 void SetCUTRspCancelOrderField(CUTRspCancelOrderField& rspCancelOrder, string account_name, long& OrderLocalID)
@@ -322,8 +323,7 @@ void SetCUTRspCancelOrderField(CUTRspCancelOrderField& rspCancelOrder, string ac
     catch(const std::exception& e)
     {
         std::cerr << "[E] SetCUTrspCancelOrder"<< e.what() << '\n';
-    }
-    
+    }    
 }
 
 void TestDBEngine::test_create_table()
@@ -399,15 +399,15 @@ void TestDBEngine::test_get_db_data(DBEngine& db,string& account_name)
 {
     try
     {
-        unsigned long start_time = 1618736474017140204;
-        unsigned long end_time = 1618736480172401861;
+        unsigned long start_time = 1618886105423156762;
+        unsigned long end_time = 1618886114667327594;
 
         string order_local_id = "3";
 
         std::vector<PackagePtr> package_list;
         std::vector<string> order_local_id_list;
 
-        vector<PackagePtr> req_create_order_package_list = db.get_req_create_order_by_time(account_name, start_time, end_time);
+        // vector<PackagePtr> req_create_order_package_list = db.get_req_create_order_by_time(account_name, start_time, end_time);
 
         // for(PackagePtr package:req_create_order_package_list)
         // {
@@ -430,16 +430,16 @@ void TestDBEngine::test_get_db_data(DBEngine& db,string& account_name)
 
         vector<PackagePtr> req_cancel_order_package_list = db.get_req_cancel_order_by_time(account_name, start_time, end_time);
 
-        // for(PackagePtr package:req_create_order_package_list)
-        // {
-        //     auto* p = GET_FIELD(package, CUTRspReqCancelOrderField);
-        //     cout << endl;
-        //     printUTData(p, UT_FID_RspReqCancelOrder);
-        // }        
+        for(PackagePtr package:req_cancel_order_package_list)
+        {
+            auto* p = GET_FIELD(package, CUTRspReqCancelOrderField);
+            cout << endl;
+            printUTData(p, UT_FID_RspReqCancelOrder);
+        }        
 
-        PackagePtr package = db.get_rsp_cancel_order_by_orderlocalid(account_name, order_local_id);
-        auto* p = GET_FIELD(package, CUTRspCancelOrderField);
-        printUTData(p, UT_FID_RspCancelOrder);           
+        // PackagePtr package = db.get_rsp_cancel_order_by_orderlocalid(account_name, order_local_id);
+        // auto* p = GET_FIELD(package, CUTRspCancelOrderField);
+        // printUTData(p, UT_FID_RspCancelOrder);           
     }
     catch(const std::exception& e)
     {
@@ -457,8 +457,8 @@ PackagePtr get_req_rollback_info_package()
         CUTReqRollbackInfoField* pReqRollbackInfo = CREATE_FIELD(package, CUTReqRollbackInfoField);
 
         assign(pReqRollbackInfo->AccountName, "HUOBI_QA_MAIN");
-        assign(pReqRollbackInfo->TimeStart, 1618736474017140204);
-        assign(pReqRollbackInfo->TimeEnd, 1618736480172401861);
+        assign(pReqRollbackInfo->TimeStart, 1618886105423156762);
+        assign(pReqRollbackInfo->TimeEnd, 1618886114667327594);
 
         package->prepare_request(UT_TID_ReqRollbackInfo, 1);
 
@@ -469,6 +469,57 @@ PackagePtr get_req_rollback_info_package()
         std::cerr << "\n[E] get_req_rollback_info_package " << e.what() << '\n';
     }
     
+}
+
+PackagePtr get_insert_package()
+{
+    try
+    {
+        PackagePtr package = boost::make_shared<Package>();
+
+        string account_name = "HUOBI_QA_MAIN";
+        long OrderLocalID = 666;
+
+        CUTRspInfoField* pRspInfo = CREATE_FIELD(package, CUTRspInfoField);
+
+        CUTReqCreateOrderField* pReqCreateOrder= CREATE_FIELD(package, CUTReqCreateOrderField);
+        SetReqCreateOrderField(*pReqCreateOrder, account_name, OrderLocalID);
+
+        CUTRspCreateOrderField* pRspCreateOrder = CREATE_FIELD(package, CUTRspCreateOrderField);
+        SetCUTRspCreateOrderField(*pRspCreateOrder, account_name, OrderLocalID);
+
+        CUTRtnOrderField* pRtnOrder = CREATE_FIELD(package, CUTRtnOrderField);
+        SetCUTRtnOrderField(*pRtnOrder, account_name, OrderLocalID);
+
+        CUTRtnTradeField* pRtnTrade = CREATE_FIELD(package, CUTRtnTradeField);
+        SetCUTRtnTradeField(*pRtnTrade, account_name, OrderLocalID);
+
+        CUTReqCancelOrderField* pReqCancelOrder= CREATE_FIELD(package, CUTReqCancelOrderField);
+        SetCUTReqCancelOrderField(*pReqCancelOrder, account_name, OrderLocalID);
+        
+        CUTRspCancelOrderField* pRspCancelOrder = CREATE_FIELD(package, CUTRspCancelOrderField);
+        SetCUTRspCancelOrderField(*pRspCancelOrder, account_name, OrderLocalID);        
+                                        
+        // package->prepare_request(UT_TID_ReqCreateOrder, 0);
+
+        // package->prepare_response(UT_TID_RspCreateOrder, 0);
+
+        // package->prepare_response(UT_TID_RtnOrder, 0);
+
+        // package->prepare_response(UT_TID_RtnTrade, 0);
+
+
+        // package->prepare_request(UT_TID_ReqCancelOrder, 0);
+
+        package->prepare_response(UT_TID_RspCancelOrder, 0);
+
+
+        return package;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] get_insert_package " << e.what() << '\n';
+    }
 }
 
 void TestDBEngine::test_trade_console()
@@ -483,11 +534,23 @@ void TestDBEngine::test_trade_console()
 
         engine_pool.start();
         
-        PackagePtr reqRollbackInfoPackage = get_req_rollback_info_package();
-        const CUTReqRollbackInfoField* p = GET_NON_CONST_FIELD(reqRollbackInfoPackage, CUTReqRollbackInfoField);
-        printUTData(p, UT_FID_ReqRollbackInfo);
+        // PackagePtr reqRollbackInfoPackage = get_req_rollback_info_package();
+        // const CUTReqRollbackInfoField* p = GET_NON_CONST_FIELD(reqRollbackInfoPackage, CUTReqRollbackInfoField);
+        // trade_console.request_message(reqRollbackInfoPackage);
+        // // printUTData(p, UT_FID_ReqRollbackInfo);
 
-        trade_console.request_message(reqRollbackInfoPackage);
+        PackagePtr package = get_insert_package();
+        if (package->is_request_package())
+        {
+            trade_console.request_message(package);
+        }
+        else
+        {
+            trade_console.response_message(package);
+        }
+
+
+        
 
         engine_pool.block();    
     }
@@ -495,6 +558,4 @@ void TestDBEngine::test_trade_console()
     {
         std::cerr << "\n[E] test_trade_console " << e.what() << '\n';
     }
-    
-
 }

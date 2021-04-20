@@ -403,6 +403,7 @@ inline string get_req_cancel_order_sql_str(string account_name)
                         StrategyOrderID VARCHAR(64), \
                         TradeChannel VARCHAR(64), \
                         SendTime BIGINT, \
+                        SessionID VARCHAR(64), \
                         PRIMARY KEY (`SendTime`,`OrderLocalID`)) DEFAULT CHARSET utf8;");
         return result; 
     }
@@ -417,7 +418,7 @@ inline string insert_req_cancel_order_sql(string account_name)
     try
     {
         string table_name = account_name + "_ReqCancelOrder";
-        string result = string("INSERT INTO ") + table_name + " VALUES (" + get_qm_string(12) +");";
+        string result = string("INSERT INTO ") + table_name + " VALUES (" + get_qm_string(13) +");";
         // cout << result << endl;
         return result;
     }

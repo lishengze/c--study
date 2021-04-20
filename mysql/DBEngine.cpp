@@ -616,6 +616,7 @@ void DBEngine::insert_req_cancel_order(const CUTReqCancelOrderField& reqCancelOr
        stmt->setString(10, reqCancelOrder.StrategyOrderID);
        stmt->setString(11, reqCancelOrder.TradeChannel);
        stmt->setInt64(12, (reqCancelOrder.SendTime));
+       stmt->setString(13, (reqCancelOrder.SessionID));
 
        if (!stmt->execute())
        {
@@ -920,6 +921,7 @@ void DBEngine::get_req_cancel_order(sql::ResultSet* result, CUTRspReqCancelOrder
         assign(reqCancelOrder.StrategyOrderID, result->getString(10).c_str());
         assign(reqCancelOrder.TradeChannel, result->getString(11).c_str());
         assign(reqCancelOrder.SendTime, result->getInt64(12));
+        assign(reqCancelOrder.SessionID, result->getString(13).c_str()); 
     }
     catch(const std::exception& e)
     {
@@ -1016,9 +1018,6 @@ vector<PackagePtr> DBEngine::get_req_create_order_by_time(string account_name, u
 
                 // cout << "\nDBEngine::get_req_create_order " << ++i << endl;
                 // printUTData(&reqCreateOrder, UT_FID_RspReqCreateOrder);  
-
-                package->prepare_response(UT_TID_RspReqCreateOrder, 0);
-
                 package_list.push_back(package);
             }
         }        
@@ -1062,8 +1061,6 @@ PackagePtr DBEngine::get_rsp_create_order_by_orderlocalid(string account_name, s
                 CUTRspCreateOrderField* pRspCreateOrder = CREATE_FIELD(package, CUTRspCreateOrderField);
                 CUTRspInfoField* rspInfo = CREATE_FIELD(package, CUTRspInfoField);
                 get_rsp_create_order(sql_result, *pRspCreateOrder, *rspInfo);
-
-                package->prepare_response(UT_TID_RspCreateOrder, 0);
             }
         }        
         return package;
@@ -1105,8 +1102,6 @@ PackagePtr DBEngine::get_rtn_order_by_orderlocalid(string account_name, string o
                 CUTRspInfoField* rspInfo = CREATE_FIELD(package, CUTRspInfoField);
 
                 get_rtn_order(sql_result, *rtnOrder, *rspInfo);
-
-                package->prepare_response(UT_TID_RtnOrder, 0);
 
                 // printUTData(rtnOrder, UT_FID_RtnOrder);
                 // printUTData(rspInfo, UT_FID_RspInfo);                
@@ -1154,7 +1149,6 @@ PackagePtr DBEngine::get_rtn_trade_by_orderlocalid(string account_name, string o
                 CUTRspInfoField* rspInfo = CREATE_FIELD(package, CUTRspInfoField);      
 
                 get_rtn_trade(sql_result, *rtnTrade, *rspInfo);
-                package->prepare_response(UT_TID_RtnTrade, 0);
 
                 // printUTData(rtnTrade, UT_FID_RtnTrade);
                 // printUTData(rspInfo, UT_FID_RspInfo);
@@ -1208,8 +1202,6 @@ vector<PackagePtr> DBEngine::get_req_cancel_order_by_time(string account_name, u
                 // cout << "get_req_cancel_order " << reqCancelOrder.OrderLocalID << " " << utrade::pandora::ToSecondStr(reqCancelOrder.SendTime) << endl;
                 // printUTData(reqCancelOrder, UT_FID_RspReqCancelOrder);
 
-                package->prepare_response(UT_TID_RspReqCancelOrder, 0);
-
                 package_list.push_back(package);           
             }
         }    
@@ -1256,8 +1248,6 @@ PackagePtr DBEngine::get_rsp_cancel_order_by_orderlocalid(string account_name, s
                 CUTRspInfoField* rspInfo = CREATE_FIELD(package, CUTRspInfoField);    
                                 
                 get_rsp_cancel_order(sql_result, *rspCancelOrderField, *rspInfo);
-
-                package->prepare_response(UT_TID_RspCancelOrder, 0);
 
                 // printUTData(rspCancelOrderField, UT_FID_RspCancelOrder);
                 // printUTData(rspInfo, UT_FID_RspInfo);

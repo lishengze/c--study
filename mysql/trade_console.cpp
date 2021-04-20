@@ -282,20 +282,35 @@ void TradeConsole::req_rollback_info(PackagePtr package)
 
             for (PackagePtr req_create_order_package: req_create_order_package_list)
             {
-                auto* pReqCreateOrder = GET_FIELD(req_create_order_package, CUTReqCreateOrderField);
-                string order_loca_id = pReqCreateOrder->OrderLocalID;
-                cout << "req_create_order_local_id: " << order_loca_id << endl;
+                if (req_create_order_package)
+                {                                        
+                    auto* pRspReqCreateOrder = GET_FIELD(req_create_order_package, CUTRspReqCreateOrderField);
+                    if (pRspReqCreateOrder)
+                    {
+                        string order_loca_id = pRspReqCreateOrder->OrderLocalID;
+                        string session_id = pRspReqCreateOrder->SessionID;
 
-                PackagePtr rtn_order_package = db_engine_->get_rtn_order_by_orderlocalid(account_name, order_loca_id);
+                        cout << "req_create_order_local_id: " << order_loca_id << endl;
 
-                PackagePtr rtn_trade_package = db_engine_->get_rtn_trade_by_orderlocalid(account_name, order_loca_id);
+                        PackagePtr rtn_order_package = db_engine_->get_rtn_order_by_orderlocalid(account_name, order_loca_id);
 
-                PackagePtr rsp_create_order_package = db_engine_->get_rsp_create_order_by_orderlocalid(account_name, order_loca_id);
+                        PackagePtr rtn_trade_package = db_engine_->get_rtn_trade_by_orderlocalid(account_name, order_loca_id);
 
-                package_list.push_back(req_create_order_package);
-                package_list.push_back(rtn_order_package);
-                package_list.push_back(rtn_trade_package);
-                package_list.push_back(rsp_create_order_package);
+                        PackagePtr rsp_create_order_package = db_engine_->get_rsp_create_order_by_orderlocalid(account_name, order_loca_id);
+
+                        req_create_order_package->prepare_response(UT_TID_RspReqCreateOrder, 0, CHAIN_LAST, session_id);
+                        package_list.push_back(req_create_order_package);
+
+                        rtn_order_package->prepare_response(UT_TID_RtnOrder, 0, CHAIN_LAST, session_id);
+                        package_list.push_back(rtn_order_package);
+                        
+                        rtn_trade_package->prepare_response(UT_TID_RtnTrade, 0, CHAIN_LAST, session_id);
+                        package_list.push_back(rtn_trade_package);
+
+                        rsp_create_order_package->prepare_response(UT_TID_RspCreateOrder, 0, CHAIN_LAST, session_id);
+                        package_list.push_back(rsp_create_order_package);    
+                    }
+                }
             }
 
             // for(PackagePtr package:create_order_package_list)
@@ -309,16 +324,25 @@ void TradeConsole::req_rollback_info(PackagePtr package)
 
             std::vector<PackagePtr> req_cancel_order_package_list =  db_engine_->get_req_cancel_order_by_time(account_name, start_time, end_time);
 
-            for (PackagePtr req_cancel_order_package: req_cancel_order_package_list)
+            for (PackagePtr rspreq_cancel_order_package: req_cancel_order_package_list)
             {
-                auto* pReqCancelOrder = GET_FIELD(req_cancel_order_package, CUTReqCancelOrderField);
-                string order_loca_id = pReqCancelOrder->OrderLocalID;
-                cout << "req_create_order_local_id: " << order_loca_id << endl;
+                auto* pRspReqCancelOrder = GET_FIELD(rspreq_cancel_order_package, CUTRspReqCancelOrderField);
 
-                PackagePtr rsp_cancel_order_package = db_engine_->get_rsp_cancel_order_by_orderlocalid(account_name, order_loca_id);
+                if (pRspReqCancelOrder)
+                {
+                    string order_loca_id = pRspReqCancelOrder->OrderLocalID;
+                    string session_id = pRspReqCancelOrder->SessionID;
+                    cout << "req_cancel_order_local_id: " << order_loca_id << endl;
 
-                package_list.push_back(req_cancel_order_package);
-                package_list.push_back(rsp_cancel_order_package);
+                    PackagePtr rsp_cancel_order_package = db_engine_->get_rsp_cancel_order_by_orderlocalid(account_name, order_loca_id);
+
+                    rspreq_cancel_order_package->prepare_response(UT_TID_RspReqCancelOrder, 0, CHAIN_LAST, session_id);
+                    package_list.push_back(rspreq_cancel_order_package);
+
+                    rsp_cancel_order_package->prepare_response(UT_TID_RspCancelOrder, 0, CHAIN_LAST, session_id);
+                    package_list.push_back(rsp_cancel_order_package);
+                }
+
             }
 
             sort(package_list.begin(), package_list.end(), TimeCmp);
