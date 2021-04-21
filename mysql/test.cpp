@@ -47,7 +47,7 @@ void TestDBEngine::test_connect_schema()
 
 void SetReqCreateOrderField(CUTReqCreateOrderField& pUTReqCreateOrderField, string& account_name, long& OrderLocalID)
 {
-    assign(pUTReqCreateOrderField.UserName, "LszTest");
+    assign(pUTReqCreateOrderField.UserName, "TestUser9");
     assign(pUTReqCreateOrderField.AccountName, account_name); 
     assign(pUTReqCreateOrderField.AccountType, AT_Physical);
     assign(pUTReqCreateOrderField.ExchangeID, "HUOBI");
@@ -103,7 +103,7 @@ void SetCUTRspCreateOrderField(CUTRspCreateOrderField& rspCreateOrderField, stri
 {
     try
     {
-        assign(rspCreateOrderField.UserName, "LszTest");
+        assign(rspCreateOrderField.UserName, "TestUser9");
         assign(rspCreateOrderField.AccountName, account_name); 
         assign(rspCreateOrderField.AccountType, AT_Physical);
         assign(rspCreateOrderField.ExchangeID, "HUOBI");
@@ -163,7 +163,7 @@ void SetCUTRtnOrderField(CUTRtnOrderField& rtnOrder, string account_name, long& 
 {
     try
     {
-        assign(rtnOrder.UserName, "LszTest");
+        assign(rtnOrder.UserName, "TestUser9");
         assign(rtnOrder.AccountName, account_name); 
         assign(rtnOrder.AccountType, AT_Physical);
         assign(rtnOrder.ExchangeID, "HUOBI");
@@ -219,7 +219,7 @@ void SetCUTRtnTradeField(CUTRtnTradeField& rtnTrade, string account_name, long& 
 {
     try
     {
-        assign(rtnTrade.UserName, "LszTest");
+        assign(rtnTrade.UserName, "TestUser9");
         assign(rtnTrade.AccountName, account_name); 
         assign(rtnTrade.AccountType, AT_Physical);
 
@@ -256,7 +256,7 @@ void SetCUTRtnTradeField(CUTRtnTradeField& rtnTrade, string account_name, long& 
 
 void SetCUTReqCancelOrderField(CUTReqCancelOrderField& reqCancelOrderField, string account_name, long& OrderLocalID)
 {
-    assign(reqCancelOrderField.UserName, "LSZ");
+    assign(reqCancelOrderField.UserName, "TestUser9");
     assign(reqCancelOrderField.AccountName, account_name);
     assign(reqCancelOrderField.AccountType, AT_Physical);
     assign(reqCancelOrderField.Symbol, "XRP_USDT");
@@ -274,7 +274,7 @@ void SetCUTRspCancelOrderField(CUTRspCancelOrderField& rspCancelOrder, string ac
 {
     try
     {
-        assign(rspCancelOrder.UserName, "LszTest");
+        assign(rspCancelOrder.UserName, "TestUser9");
         assign(rspCancelOrder.AccountName, account_name); 
         assign(rspCancelOrder.AccountType, AT_Physical);
         assign(rspCancelOrder.ExchangeID, "HUOBI");
