@@ -16,9 +16,9 @@ TestDBEngine::TestDBEngine()
 {
     // test_connect_schema();
 
-    // test_create_table();    
+    test_create_table();    
 
-    test_trade_console();
+    // test_trade_console();
 }
 
 void TestDBEngine::test_connect()
@@ -337,11 +337,12 @@ void TestDBEngine::test_create_table()
     DBEngine db(usr, pwd, schema, port, host);
 
     string account_name = "HUOBI_QA_MAIN";
-    db.create_table(account_name);
 
-    // test_insert_data(db, account_name);
+    // db.create_table(account_name);
 
-    test_get_db_data(db, account_name);
+    test_insert_data(db, account_name);
+
+    // test_get_db_data(db, account_name);
 
     // db.connect_mysql();            
 }

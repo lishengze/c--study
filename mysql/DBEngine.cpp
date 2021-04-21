@@ -121,7 +121,7 @@ void DBEngine::prepare_statement(string account_name)
         cout << "prepare_statement: " << account_name << endl;
 
         if (conn_)
-        {
+        {            
             if (accout_preparestmt_map_.find(account_name) == accout_preparestmt_map_.end())
             {
                 accout_preparestmt_map_[account_name] = PrepareSMT();
@@ -129,6 +129,8 @@ void DBEngine::prepare_statement(string account_name)
 
             if (!accout_preparestmt_map_[account_name].is_prepared())
             {
+                create_table(account_name);
+
                 accout_preparestmt_map_[account_name].prepare(conn_, account_name);
             }            
         }
