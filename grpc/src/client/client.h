@@ -40,12 +40,11 @@ public:
 
       
 
-    std::unique_ptr<TestPackage::TestStream::Stub>  stub_;
-    ClientContext                                   context_;
+    std::unique_ptr<TestPackage::TestStream::Stub>  stub_;    
     CompletionQueue                                 cq_;
     std::shared_ptr<std::thread>                    thread_{nullptr};  
 
-    bool                                            is_ansyc_{true};
+    bool                                            is_ansyc_{false};
 
 };
 

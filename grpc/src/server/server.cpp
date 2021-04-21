@@ -56,7 +56,11 @@ void BaseServer::run_cq_loop()
         {
             // GPR_ASSERT(cq_->Next(&tag, &status));
 
+            std::cout << "Before Next; " << std::endl;
+
             bool result = cq_->Next(&tag, &status);
+
+            std::cout << "After Next: result: "<<  result << " status: " << status << std::endl;
 
             if (result && status)
             {

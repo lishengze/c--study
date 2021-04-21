@@ -3,6 +3,21 @@
 #include <thread>
 #include <chrono>
 
+void BaseRPC::make_active()
+{
+    try
+    {
+            gpr_timespec t = gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME);
+            //tfm::printfln("make_active %u.%u", t.tv_sec, t.tv_nsec);
+            alarm_.Set(cq_, t, this);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E]  BaseRPC::make_active" << e.what() << '\n';
+    }
+    
+}
+
 void BaseRPC::process()
 {
     try
@@ -22,6 +37,9 @@ void BaseRPC::process()
         else if (FINISH == status_)
         {
             cout << "\nStatus is FINISH" << endl;
+            // register_request();
+            make_active();
+            status_ = PROCESS;
         }
         else
         {
@@ -39,9 +57,12 @@ void BaseRPC::process()
     }    
 }
 
+// void make_active();
 
 void TestSimpleRPC::register_request()
 {
+    cout << "TestSimpleRPC::register_request again!" << endl;
+
     service_->RequestTestSimple(&context_, &request_, &responder_, cq_, cq_, this);
 }
 
@@ -55,7 +76,7 @@ void TestSimpleRPC::proceed()
 
 
 
-        int sleep_secs = 5;
+        int sleep_secs = 2;
         cout << "Sleep " << sleep_secs << " Secs" << endl;
         std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
 

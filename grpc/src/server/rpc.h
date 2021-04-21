@@ -34,6 +34,12 @@ using std::string;
 class BaseRPC
 {
     public:
+
+    BaseRPC(ServerCompletionQueue* cq): cq_{cq}
+    {
+
+    }
+
     virtual void process();
 
     virtual void proceed() { }
@@ -42,8 +48,13 @@ class BaseRPC
 
     virtual void register_request() { }
 
-    enum CallStatus { CREATE, PROCESS, FINISH };
-    CallStatus      status_{CREATE};  // The current serving state.        
+    void make_active();
+    
+    enum CallStatus     { CREATE, PROCESS, FINISH };
+    CallStatus          status_{CREATE};                // The current serving state.        
+
+    ServerCompletionQueue*                      cq_;
+    grpc::Alarm                                 alarm_;
 };
 
 
@@ -53,7 +64,7 @@ class TestSimpleRPC:public BaseRPC
 
 public:
     TestSimpleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
-        service_(service), cq_(cq), responder_(&context_)
+        BaseRPC{cq}, service_(service), responder_(&context_)
     {
         process();
     }
@@ -63,12 +74,12 @@ public:
     virtual void release();    
 
     virtual void register_request();
+
+    
     
 private:
 
     TestStream::AsyncService*                   service_;
-
-    ServerCompletionQueue*                      cq_;
 
     ServerContext                               context_;
 
@@ -77,7 +88,5 @@ private:
     TestResponse                                reply_;
     
     ServerAsyncResponseWriter<TestResponse>     responder_;
-
-
 };
 using TestSimpleRPCPtr = boost::shared_ptr<TestSimpleRPC>;

@@ -5,6 +5,7 @@
 #include "pandora/util/time_util.h"
 
 
+
 BaseClient::~BaseClient()
 {
     if (thread_ && thread_->joinable())
@@ -26,7 +27,15 @@ void TestSimpleClient::thread_run()
 {
     cout << "TestSimpleClient::thread_run " << endl;
 
-    request();
+    int test_numb = 5;
+
+    while(test_numb--)
+    {
+        request();
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+
+    
 
     // while (true)
     // {
@@ -47,6 +56,8 @@ void TestSimpleClient::request()
         string name = "TestSimpleClient";
         string time = utrade::pandora::NanoTimeStr();
 
+        ClientContext   context;
+
         request_.set_name(name);
 
         request_.set_time(time);
@@ -55,12 +66,12 @@ void TestSimpleClient::request()
 
         if (!is_ansyc_)
         {
-            // status = stub_->TestSimple(&context_, request_, &reply_);
+            status = stub_->TestSimple(&context, request_, &reply_);
         }
         else
         {
-            // rpc_ = stub_->PrepareAsyncTestSimple(&context_, request_, &cq_);
-            // cout <<"rpc_ = stub_->PrepareAsyncTestSimple(&context_, request_, &cq_);" << endl;
+            // rpc_ = stub_->PrepareAsyncTestSimple(&context, request_, &cq_);
+            // cout <<"rpc_ = stub_->PrepareAsyncTestSimple(&context, request_, &cq_);" << endl;
             
             // rpc_->StartCall();
             // cout <<"rpc_->StartCall();" << endl;
@@ -70,8 +81,8 @@ void TestSimpleClient::request()
 
             
 
-            rpc_ = stub_->AsyncTestSimple(&context_, request_, &cq_);
-            cout <<"rpc_ = stub_->AsyncTestSimple(&context_, request_, &cq_);" << endl;
+            rpc_ = stub_->AsyncTestSimple(&context, request_, &cq_);
+            cout <<"rpc_ = stub_->AsyncTestSimple(&context, request_, &cq_);" << endl;
 
             // rpc_->StartCall();
             // cout <<"rpc_->StartCall();" << endl;
@@ -99,16 +110,16 @@ void TestSimpleClient::request()
             {
                 cout << "!ok " << endl;
             }
-
-            if (!status.ok())
-            {
-                cout << " rpc_->Finish(&reply_, &status, (void*)1); Failed!" << endl;
-            }
-            else
-            {
-                cout <<"Front Server: " << reply_.name() << ", " << reply_.time() << endl;
-            }
         }
+
+        if (!status.ok())
+        {
+            cout << " Status Not OK!" << endl;
+        }
+        else
+        {
+            cout <<"Front Server: " << reply_.name() << ", " << reply_.time() << endl;
+        }        
     }
     catch(const std::exception& e)
     {
