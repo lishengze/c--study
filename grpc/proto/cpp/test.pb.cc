@@ -85,7 +85,7 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 const char descriptor_table_protodef_test_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\ntest.proto\022\013TestPackage\")\n\013TestRequest"
   "\022\014\n\004name\030\001 \001(\t\022\014\n\004time\030\002 \001(\t\"*\n\014TestResp"
-  "onse\022\014\n\004name\030\001 \001(\t\022\014\n\004time\030\002 \001(\t2\262\002\n\nTes"
+  "onse\022\014\n\004name\030\001 \001(\t\022\014\n\004time\030\002 \001(\t2\376\005\n\nTes"
   "tStream\022A\n\nTestSimple\022\030.TestPackage.Test"
   "Request\032\031.TestPackage.TestResponse\022I\n\020Te"
   "stClientStream\022\030.TestPackage.TestRequest"
@@ -93,7 +93,19 @@ const char descriptor_table_protodef_test_2eproto[] PROTOBUF_SECTION_VARIABLE(pr
   "verStream\022\030.TestPackage.TestRequest\032\031.Te"
   "stPackage.TestResponse0\001\022K\n\020TestDoubleSt"
   "ream\022\030.TestPackage.TestRequest\032\031.TestPac"
-  "kage.TestResponse(\0010\001b\006proto3"
+  "kage.TestResponse(\0010\001\022J\n\021ServerStreamApp"
+  "le\022\030.TestPackage.TestRequest\032\031.TestPacka"
+  "ge.TestResponse0\001\022I\n\020ServerStreamPear\022\030."
+  "TestPackage.TestRequest\032\031.TestPackage.Te"
+  "stResponse0\001\022J\n\021ServerStreamMango\022\030.Test"
+  "Package.TestRequest\032\031.TestPackage.TestRe"
+  "sponse0\001\022L\n\021DoubleStreamApple\022\030.TestPack"
+  "age.TestRequest\032\031.TestPackage.TestRespon"
+  "se(\0010\001\022K\n\020DoubleStreamPear\022\030.TestPackage"
+  ".TestRequest\032\031.TestPackage.TestResponse("
+  "\0010\001\022L\n\021DoubleStreamMango\022\030.TestPackage.T"
+  "estRequest\032\031.TestPackage.TestResponse(\0010"
+  "\001b\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_test_2eproto_deps[1] = {
 };
@@ -103,7 +115,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_tes
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_test_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_test_2eproto = {
-  false, false, descriptor_table_protodef_test_2eproto, "test.proto", 429,
+  false, false, descriptor_table_protodef_test_2eproto, "test.proto", 889,
   &descriptor_table_test_2eproto_once, descriptor_table_test_2eproto_sccs, descriptor_table_test_2eproto_deps, 2, 0,
   schemas, file_default_instances, TableStruct_test_2eproto::offsets,
   file_level_metadata_test_2eproto, 2, file_level_enum_descriptors_test_2eproto, file_level_service_descriptors_test_2eproto,

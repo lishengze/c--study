@@ -1,19 +1,14 @@
 #include "server.h"
 #include "../include/global_declare.h"
 
+#include "test.h"
 
-void test_simple()
-{
-    BaseServer simple_rpc("0.0.0.0:50051");
-
-    simple_rpc.start();
-}
 
 int main()
 {
     cout << "Server " << endl;
 
-    test_simple();
+    TestMain();
 
     return 1;
 }

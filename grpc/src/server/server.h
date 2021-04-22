@@ -30,6 +30,8 @@ using TestPackage::TestStream;
 using TestPackage::TestRequest;
 using TestPackage::TestResponse;
 
+class TradeEngine;
+
 class BaseServer
 {
 
@@ -59,7 +61,9 @@ protected:
 
     TestSimpleRPC*                          simple_rpc;      
 
-    ServerStreamRPC*                        server_stream_rpc;                     
+    ServerStreamRPC*                        server_stream_rpc;      
+
+    TradeEngine*                            trade_engine_;               
 };
 
 

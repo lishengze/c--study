@@ -8,6 +8,14 @@ service TestStream
     rpc TestClientStream(stream TestRequest) returns (TestResponse);
     rpc TestServerStream(TestRequest) returns (stream TestResponse);
     rpc TestDoubleStream(stream TestRequest) returns (stream TestResponse);
+
+    rpc ServerStreamApple(TestRequest) returns (stream TestResponse);
+    rpc ServerStreamPear(TestRequest) returns (stream TestResponse);
+    rpc ServerStreamMango(TestRequest) returns (stream TestResponse);
+
+    rpc DoubleStreamApple(stream TestRequest) returns (stream TestResponse);
+    rpc DoubleStreamPear(stream TestRequest) returns (stream TestResponse);
+    rpc DoubleStreamMango(stream TestRequest) returns (stream TestResponse);    
 };
 
 message TestRequest
