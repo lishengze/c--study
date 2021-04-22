@@ -24,6 +24,7 @@ using grpc::ServerCompletionQueue;
 using grpc::Status;
 using grpc::ServerAsyncWriter;
 using grpc::ServerAsyncResponseWriter;
+using grpc::ServerWriter;
 
 using TestPackage::TestStream;
 using TestPackage::TestRequest;
@@ -48,6 +49,8 @@ class BaseRPC
 
     virtual void register_request() { }
 
+    virtual void spawn() { }
+
     void make_active();
     
     enum CallStatus     { CREATE, PROCESS, FINISH };
@@ -55,6 +58,8 @@ class BaseRPC
 
     ServerCompletionQueue*                      cq_;
     grpc::Alarm                                 alarm_;
+
+    bool                                        is_first_{true};
 };
 
 
@@ -75,7 +80,7 @@ public:
 
     virtual void register_request();
 
-    
+    virtual void spawn() { }
     
 private:
 
@@ -90,3 +95,40 @@ private:
     ServerAsyncResponseWriter<TestResponse>     responder_;
 };
 using TestSimpleRPCPtr = boost::shared_ptr<TestSimpleRPC>;
+
+class ServerStreamRPC:public BaseRPC
+{
+public:
+
+    ServerStreamRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
+        BaseRPC{cq}, service_(service), responder_(&context_)
+    {
+        std::cout << "obj_count: " << ++obj_count << std::endl;
+
+        process();
+    }
+
+    virtual void proceed();
+
+    virtual void release();    
+
+    virtual void register_request();
+
+    virtual void spawn();
+
+    static int                                  obj_count;
+
+private:
+
+    TestStream::AsyncService*                   service_;
+
+    ServerContext                               context_;
+
+    TestRequest                                 request_;
+
+    TestResponse                                reply_;
+
+    ServerAsyncWriter<TestResponse>             responder_;
+};
+
+using ServerStreamRPCPtr = boost::shared_ptr<ServerStreamRPC>;

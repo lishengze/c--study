@@ -7,9 +7,9 @@ void BaseRPC::make_active()
 {
     try
     {
-            gpr_timespec t = gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME);
-            //tfm::printfln("make_active %u.%u", t.tv_sec, t.tv_nsec);
-            alarm_.Set(cq_, t, this);
+        std::cout << "make active " << std::endl;
+        gpr_timespec t = gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME);
+        alarm_.Set(cq_, t, this);
     }
     catch(const std::exception& e)
     {
@@ -30,6 +30,12 @@ void BaseRPC::process()
         }
         else if (PROCESS == status_)
         {
+            if (is_first_)
+            {
+                is_first_ = false;
+                spawn();
+            }
+
             cout << "\nStatus is PROCESS" << endl;
             status_ = FINISH;
             proceed();
@@ -43,6 +49,8 @@ void BaseRPC::process()
         }
         else
         {
+            // release();
+            
             cout << "\nUnkonw Status: " << status_ << endl;
         }
 
@@ -113,3 +121,80 @@ void TestSimpleRPC::release()
     cout << "TestSimpleRPC::release " << endl;
 }
 
+
+int ServerStreamRPC::obj_count = 0;
+
+void ServerStreamRPC::register_request()
+{
+    cout << "ServerStreamRPC::register_request!" << endl;
+
+    service_->RequestTestServerStream(&context_, &request_, &responder_, cq_, cq_, this);
+
+    // service_->RequestTestServerStream()
+}
+
+void ServerStreamRPC::proceed()
+{
+    try
+    {
+        cout << "\nServerStreamRPC::process " << endl;
+
+        cout << "From Request: name = " << request_.name() << ", time = " << request_.time() << endl;
+
+        int sleep_secs = 2;
+
+        grpc::Status status;
+        
+        int responder_numb = 1;
+        while(responder_numb--)
+        {
+            string name = "ServerStreamRPC";
+            string time = utrade::pandora::NanoTimeStr();
+            reply_.set_name(name);
+            reply_.set_time(time);
+
+            
+            responder_.Write(reply_, this);
+
+            cout << "Server Response " << name <<" " << time << endl;
+
+            std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));            
+        }
+
+        // responder_.Finish(status, this);
+
+        if (!status.ok())
+        {
+            cout << "ServerStreamRPC Write Error: " << status.error_details() << " " << status.error_message() << endl;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"ServerStreamRPC::process " << e.what() << '\n';
+    }
+    catch(...)
+    {
+        cout << "ServerStreamRPC::process unkonwn exceptions" << endl;
+    }
+}
+
+void ServerStreamRPC::release()
+{
+    cout << "ServerStreamRPC::release Obj_Count:  " << --obj_count << endl;
+    delete this;
+}
+
+void ServerStreamRPC::spawn()
+{
+    try
+    {
+        std::cout << "\n ******* Spawn A New Server For Next Client ********" << std::endl;
+        ServerStreamRPC* new_rpc = new ServerStreamRPC(service_, cq_);
+
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E]  ServerStreamRPC::spawn" << e.what() << '\n';
+    }
+    
+}

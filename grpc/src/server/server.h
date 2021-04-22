@@ -57,5 +57,13 @@ protected:
 
     boost::shared_ptr<std::thread>          cq_thread_{nullptr};
 
-    TestSimpleRPCPtr                        simple_rpc;                           
+    TestSimpleRPC*                          simple_rpc;      
+
+    ServerStreamRPC*                        server_stream_rpc;                     
 };
+
+
+// class SyncServer
+// {
+
+// };

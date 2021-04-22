@@ -9,6 +9,9 @@
 #include <grpcpp/grpcpp.h>
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
+using grpc::ClientAsyncReader;
+using grpc::ClientReader;
+
 using grpc::ClientContext;
 using grpc::CompletionQueue;
 using grpc::Status;
@@ -32,11 +35,11 @@ public:
 
     virtual ~BaseClient();
 
-    // virtual void start() { }
+    virtual void start();
 
-    // virtual void thread_run() { }
+    virtual void thread_run();
 
-    // virtual void request() { }
+    virtual void request() { }
 
       
 
@@ -44,7 +47,7 @@ public:
     CompletionQueue                                 cq_;
     std::shared_ptr<std::thread>                    thread_{nullptr};  
 
-    bool                                            is_ansyc_{false};
+    
 
 };
 
@@ -59,9 +62,9 @@ public:
 
     virtual ~TestSimpleClient(){ }
 
-    virtual void start();
+    // virtual void start();
 
-    virtual void thread_run();
+    // virtual void thread_run();
 
     virtual void request();
 
@@ -69,6 +72,35 @@ public:
 private:
     TestRequest                                     request_;
     TestResponse                                    reply_;    
+    bool                                            is_ansyc_{false};
     
     std::unique_ptr<ClientAsyncResponseReader<TestResponse>> rpc_;
 };
+
+class ServerStreamClient:public BaseClient
+{
+
+public:
+    ServerStreamClient(std::shared_ptr<Channel> channel):BaseClient(channel)
+    {
+
+    }
+
+    virtual ~ServerStreamClient(){ }
+
+    // virtual void start();
+
+    // virtual void thread_run();
+
+    virtual void request();
+
+
+private:
+    TestRequest                                     request_;
+    TestResponse                                    reply_;    
+    bool                                            is_ansyc_{false};
+    std::unique_ptr<ClientReader<TestResponse>>     async_rpc_;
+
+    std::unique_ptr<ClientReader<TestResponse>>     sync_rpc_;
+};
+

@@ -29,9 +29,9 @@ void BaseServer::start()
         cq_ = builder_.AddCompletionQueue();
         server_ = builder_.BuildAndStart();
 
-        simple_rpc = boost::make_shared<TestSimpleRPC>(&service_, cq_.get());
+        // simple_rpc = new TestSimpleRPC(&service_, cq_.get());
 
-        // simple_rpc->register_all();
+        server_stream_rpc = new ServerStreamRPC(&service_, cq_.get());
 
         init_cq_thread();
     }
@@ -69,7 +69,6 @@ void BaseServer::run_cq_loop()
             }
             else
             {
-
                 BaseRPC* rpc = static_cast<BaseRPC*>(tag);
                 rpc->release();
             }

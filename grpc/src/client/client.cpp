@@ -14,7 +14,7 @@ BaseClient::~BaseClient()
     }
 }
 
-void TestSimpleClient::start()
+void BaseClient::start()
 {
     cout << "TestSimpleClient::start " << endl;
 
@@ -23,11 +23,11 @@ void TestSimpleClient::start()
     thread_run();
 }
 
-void TestSimpleClient::thread_run()
+void BaseClient::thread_run()
 {
     cout << "TestSimpleClient::thread_run " << endl;
 
-    int test_numb = 5;
+    int test_numb = 1;
 
     while(test_numb--)
     {
@@ -36,7 +36,6 @@ void TestSimpleClient::thread_run()
     }
 
     
-
     // while (true)
     // {
     //     request();
@@ -128,5 +127,62 @@ void TestSimpleClient::request()
     catch(...)
     {
         std::cerr <<"TestSimpleClient::request unkonw exceptions! " << '\n';
+    }
+}
+
+void ServerStreamClient::request()
+{
+    try
+    {
+        cout << "\nServerStreamClient::request " << endl;
+
+        grpc::Status status;
+
+        string name = "ServerStreamClient";
+        string time = utrade::pandora::NanoTimeStr();
+
+        ClientContext   context;
+
+        request_.set_name(name);
+
+        request_.set_time(time);
+
+        cout << "From Request: " << name << " " << time << endl;
+
+        if (!is_ansyc_)
+        {
+            sync_rpc_ = stub_->TestServerStream(&context, request_);
+            while(sync_rpc_->Read(&reply_))
+            {
+                cout <<"From Server: " << reply_.name() << ", " << reply_.time() << endl;
+            }
+            status = sync_rpc_->Finish();
+
+            if (!status.ok())
+            {
+                cout << "Sync Read Status Not OK!" << endl;
+            }            
+        }
+        else
+        {
+
+        }
+
+        if (!status.ok())
+        {
+            cout << " Status Not OK!" << endl;
+        }
+        else
+        {
+            cout <<"Front Server: " << reply_.name() << ", " << reply_.time() << endl;
+        }        
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"ServerStreamClient::request " << e.what() << '\n';
+    }
+    catch(...)
+    {
+        std::cerr <<"ServerStreamClient::request unkonw exceptions! " << '\n';
     }
 }

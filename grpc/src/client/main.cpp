@@ -4,7 +4,9 @@
 
 void test_simple()
 {
-    TestSimpleClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
+    // TestSimpleClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
+
+    ServerStreamClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
 
     client.start();
 }
