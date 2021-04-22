@@ -38,7 +38,9 @@ class BaseRPC
 
     BaseRPC(ServerCompletionQueue* cq): cq_{cq}
     {
+        std::cout << "obj_count: " << ++obj_count << std::endl;
 
+        obj_id = obj_count;
     }
 
     virtual void process();
@@ -60,6 +62,10 @@ class BaseRPC
     grpc::Alarm                                 alarm_;
 
     bool                                        is_first_{true};
+
+   static int                                  obj_count;    
+
+   int                                         obj_id{0};
 };
 
 
@@ -81,6 +87,8 @@ public:
     virtual void register_request();
 
     virtual void spawn() { }
+
+ 
     
 private:
 
@@ -93,6 +101,8 @@ private:
     TestResponse                                reply_;
     
     ServerAsyncResponseWriter<TestResponse>     responder_;
+
+    
 };
 using TestSimpleRPCPtr = boost::shared_ptr<TestSimpleRPC>;
 
@@ -103,7 +113,7 @@ public:
     ServerStreamRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
         BaseRPC{cq}, service_(service), responder_(&context_)
     {
-        std::cout << "obj_count: " << ++obj_count << std::endl;
+        
 
         process();
     }
@@ -116,7 +126,7 @@ public:
 
     virtual void spawn();
 
-    static int                                  obj_count;
+    
 
 private:
 

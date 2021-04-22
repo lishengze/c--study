@@ -3,6 +3,8 @@
 #include <thread>
 #include <chrono>
 
+int BaseRPC::obj_count = 0;
+
 void BaseRPC::make_active()
 {
     try
@@ -122,7 +124,7 @@ void TestSimpleRPC::release()
 }
 
 
-int ServerStreamRPC::obj_count = 0;
+
 
 void ServerStreamRPC::register_request()
 {
@@ -139,7 +141,7 @@ void ServerStreamRPC::proceed()
     {
         cout << "\nServerStreamRPC::process " << endl;
 
-        cout << "From Request: name = " << request_.name() << ", time = " << request_.time() << endl;
+        cout << "From Request: id = " << request_.id() << " name = " << request_.name() << ", time = " << request_.time() << endl;
 
         int sleep_secs = 2;
 
@@ -152,11 +154,12 @@ void ServerStreamRPC::proceed()
             string time = utrade::pandora::NanoTimeStr();
             reply_.set_name(name);
             reply_.set_time(time);
+            reply_.set_id(obj_id);
 
             
             responder_.Write(reply_, this);
 
-            cout << "Server Response " << name <<" " << time << endl;
+            cout << "Server Response id = " << obj_id << " name = " << name << " time = " << time << endl;
 
             std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));            
         }
@@ -191,7 +194,7 @@ void ServerStreamRPC::spawn()
         std::cout << "\n ******* Spawn A New Server For Next Client ********" << std::endl;
         ServerStreamRPC* new_rpc = new ServerStreamRPC(service_, cq_);
 
-    }
+    } 
     catch(const std::exception& e)
     {
         std::cerr << "\n[E]  ServerStreamRPC::spawn" << e.what() << '\n';

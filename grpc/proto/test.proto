@@ -22,6 +22,7 @@ message TestRequest
 {
     string name = 1;
     string time = 2;
+    int32    id = 3;
 };
 
 
@@ -29,4 +30,5 @@ message TestResponse
 {
     string name = 1;
     string time = 2;
+    int32  id = 3;
 };

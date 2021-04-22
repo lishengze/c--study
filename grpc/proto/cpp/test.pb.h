@@ -185,6 +185,7 @@ class TestRequest PROTOBUF_FINAL :
   enum : int {
     kNameFieldNumber = 1,
     kTimeFieldNumber = 2,
+    kIdFieldNumber = 3,
   };
   // string name = 1;
   void clear_name();
@@ -218,6 +219,15 @@ class TestRequest PROTOBUF_FINAL :
   std::string* _internal_mutable_time();
   public:
 
+  // int32 id = 3;
+  void clear_id();
+  ::PROTOBUF_NAMESPACE_ID::int32 id() const;
+  void set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::int32 _internal_id() const;
+  void _internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  public:
+
   // @@protoc_insertion_point(class_scope:TestPackage.TestRequest)
  private:
   class _Internal;
@@ -227,6 +237,7 @@ class TestRequest PROTOBUF_FINAL :
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr time_;
+  ::PROTOBUF_NAMESPACE_ID::int32 id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_2eproto;
 };
@@ -347,6 +358,7 @@ class TestResponse PROTOBUF_FINAL :
   enum : int {
     kNameFieldNumber = 1,
     kTimeFieldNumber = 2,
+    kIdFieldNumber = 3,
   };
   // string name = 1;
   void clear_name();
@@ -380,6 +392,15 @@ class TestResponse PROTOBUF_FINAL :
   std::string* _internal_mutable_time();
   public:
 
+  // int32 id = 3;
+  void clear_id();
+  ::PROTOBUF_NAMESPACE_ID::int32 id() const;
+  void set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::int32 _internal_id() const;
+  void _internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  public:
+
   // @@protoc_insertion_point(class_scope:TestPackage.TestResponse)
  private:
   class _Internal;
@@ -389,6 +410,7 @@ class TestResponse PROTOBUF_FINAL :
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr time_;
+  ::PROTOBUF_NAMESPACE_ID::int32 id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_2eproto;
 };
@@ -527,6 +549,26 @@ inline void TestRequest::set_allocated_time(std::string* time) {
   // @@protoc_insertion_point(field_set_allocated:TestPackage.TestRequest.time)
 }
 
+// int32 id = 3;
+inline void TestRequest::clear_id() {
+  id_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 TestRequest::_internal_id() const {
+  return id_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 TestRequest::id() const {
+  // @@protoc_insertion_point(field_get:TestPackage.TestRequest.id)
+  return _internal_id();
+}
+inline void TestRequest::_internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  id_ = value;
+}
+inline void TestRequest::set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  _internal_set_id(value);
+  // @@protoc_insertion_point(field_set:TestPackage.TestRequest.id)
+}
+
 // -------------------------------------------------------------------
 
 // TestResponse
@@ -653,6 +695,26 @@ inline void TestResponse::set_allocated_time(std::string* time) {
   time_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), time,
       GetArena());
   // @@protoc_insertion_point(field_set_allocated:TestPackage.TestResponse.time)
+}
+
+// int32 id = 3;
+inline void TestResponse::clear_id() {
+  id_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 TestResponse::_internal_id() const {
+  return id_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 TestResponse::id() const {
+  // @@protoc_insertion_point(field_get:TestPackage.TestResponse.id)
+  return _internal_id();
+}
+inline void TestResponse::_internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  id_ = value;
+}
+inline void TestResponse::set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  _internal_set_id(value);
+  // @@protoc_insertion_point(field_set:TestPackage.TestResponse.id)
 }
 
 #ifdef __GNUC__
