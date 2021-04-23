@@ -185,7 +185,7 @@ class TestRequest PROTOBUF_FINAL :
   enum : int {
     kNameFieldNumber = 1,
     kTimeFieldNumber = 2,
-    kIdFieldNumber = 3,
+    kSessionIdFieldNumber = 3,
   };
   // string name = 1;
   void clear_name();
@@ -219,13 +219,20 @@ class TestRequest PROTOBUF_FINAL :
   std::string* _internal_mutable_time();
   public:
 
-  // int32 id = 3;
-  void clear_id();
-  ::PROTOBUF_NAMESPACE_ID::int32 id() const;
-  void set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  // string session_id = 3;
+  void clear_session_id();
+  const std::string& session_id() const;
+  void set_session_id(const std::string& value);
+  void set_session_id(std::string&& value);
+  void set_session_id(const char* value);
+  void set_session_id(const char* value, size_t size);
+  std::string* mutable_session_id();
+  std::string* release_session_id();
+  void set_allocated_session_id(std::string* session_id);
   private:
-  ::PROTOBUF_NAMESPACE_ID::int32 _internal_id() const;
-  void _internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  const std::string& _internal_session_id() const;
+  void _internal_set_session_id(const std::string& value);
+  std::string* _internal_mutable_session_id();
   public:
 
   // @@protoc_insertion_point(class_scope:TestPackage.TestRequest)
@@ -237,7 +244,7 @@ class TestRequest PROTOBUF_FINAL :
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr time_;
-  ::PROTOBUF_NAMESPACE_ID::int32 id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr session_id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_2eproto;
 };
@@ -358,7 +365,7 @@ class TestResponse PROTOBUF_FINAL :
   enum : int {
     kNameFieldNumber = 1,
     kTimeFieldNumber = 2,
-    kIdFieldNumber = 3,
+    kSessionIdFieldNumber = 3,
   };
   // string name = 1;
   void clear_name();
@@ -392,13 +399,20 @@ class TestResponse PROTOBUF_FINAL :
   std::string* _internal_mutable_time();
   public:
 
-  // int32 id = 3;
-  void clear_id();
-  ::PROTOBUF_NAMESPACE_ID::int32 id() const;
-  void set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  // string session_id = 3;
+  void clear_session_id();
+  const std::string& session_id() const;
+  void set_session_id(const std::string& value);
+  void set_session_id(std::string&& value);
+  void set_session_id(const char* value);
+  void set_session_id(const char* value, size_t size);
+  std::string* mutable_session_id();
+  std::string* release_session_id();
+  void set_allocated_session_id(std::string* session_id);
   private:
-  ::PROTOBUF_NAMESPACE_ID::int32 _internal_id() const;
-  void _internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+  const std::string& _internal_session_id() const;
+  void _internal_set_session_id(const std::string& value);
+  std::string* _internal_mutable_session_id();
   public:
 
   // @@protoc_insertion_point(class_scope:TestPackage.TestResponse)
@@ -410,7 +424,7 @@ class TestResponse PROTOBUF_FINAL :
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr time_;
-  ::PROTOBUF_NAMESPACE_ID::int32 id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr session_id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_2eproto;
 };
@@ -549,24 +563,66 @@ inline void TestRequest::set_allocated_time(std::string* time) {
   // @@protoc_insertion_point(field_set_allocated:TestPackage.TestRequest.time)
 }
 
-// int32 id = 3;
-inline void TestRequest::clear_id() {
-  id_ = 0;
+// string session_id = 3;
+inline void TestRequest::clear_session_id() {
+  session_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
 }
-inline ::PROTOBUF_NAMESPACE_ID::int32 TestRequest::_internal_id() const {
-  return id_;
+inline const std::string& TestRequest::session_id() const {
+  // @@protoc_insertion_point(field_get:TestPackage.TestRequest.session_id)
+  return _internal_session_id();
 }
-inline ::PROTOBUF_NAMESPACE_ID::int32 TestRequest::id() const {
-  // @@protoc_insertion_point(field_get:TestPackage.TestRequest.id)
-  return _internal_id();
+inline void TestRequest::set_session_id(const std::string& value) {
+  _internal_set_session_id(value);
+  // @@protoc_insertion_point(field_set:TestPackage.TestRequest.session_id)
 }
-inline void TestRequest::_internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
+inline std::string* TestRequest::mutable_session_id() {
+  // @@protoc_insertion_point(field_mutable:TestPackage.TestRequest.session_id)
+  return _internal_mutable_session_id();
+}
+inline const std::string& TestRequest::_internal_session_id() const {
+  return session_id_.Get();
+}
+inline void TestRequest::_internal_set_session_id(const std::string& value) {
   
-  id_ = value;
+  session_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
 }
-inline void TestRequest::set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
-  _internal_set_id(value);
-  // @@protoc_insertion_point(field_set:TestPackage.TestRequest.id)
+inline void TestRequest::set_session_id(std::string&& value) {
+  
+  session_id_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TestPackage.TestRequest.session_id)
+}
+inline void TestRequest::set_session_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  session_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TestPackage.TestRequest.session_id)
+}
+inline void TestRequest::set_session_id(const char* value,
+    size_t size) {
+  
+  session_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TestPackage.TestRequest.session_id)
+}
+inline std::string* TestRequest::_internal_mutable_session_id() {
+  
+  return session_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* TestRequest::release_session_id() {
+  // @@protoc_insertion_point(field_release:TestPackage.TestRequest.session_id)
+  return session_id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void TestRequest::set_allocated_session_id(std::string* session_id) {
+  if (session_id != nullptr) {
+    
+  } else {
+    
+  }
+  session_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), session_id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TestPackage.TestRequest.session_id)
 }
 
 // -------------------------------------------------------------------
@@ -697,24 +753,66 @@ inline void TestResponse::set_allocated_time(std::string* time) {
   // @@protoc_insertion_point(field_set_allocated:TestPackage.TestResponse.time)
 }
 
-// int32 id = 3;
-inline void TestResponse::clear_id() {
-  id_ = 0;
+// string session_id = 3;
+inline void TestResponse::clear_session_id() {
+  session_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
 }
-inline ::PROTOBUF_NAMESPACE_ID::int32 TestResponse::_internal_id() const {
-  return id_;
+inline const std::string& TestResponse::session_id() const {
+  // @@protoc_insertion_point(field_get:TestPackage.TestResponse.session_id)
+  return _internal_session_id();
 }
-inline ::PROTOBUF_NAMESPACE_ID::int32 TestResponse::id() const {
-  // @@protoc_insertion_point(field_get:TestPackage.TestResponse.id)
-  return _internal_id();
+inline void TestResponse::set_session_id(const std::string& value) {
+  _internal_set_session_id(value);
+  // @@protoc_insertion_point(field_set:TestPackage.TestResponse.session_id)
 }
-inline void TestResponse::_internal_set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
+inline std::string* TestResponse::mutable_session_id() {
+  // @@protoc_insertion_point(field_mutable:TestPackage.TestResponse.session_id)
+  return _internal_mutable_session_id();
+}
+inline const std::string& TestResponse::_internal_session_id() const {
+  return session_id_.Get();
+}
+inline void TestResponse::_internal_set_session_id(const std::string& value) {
   
-  id_ = value;
+  session_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
 }
-inline void TestResponse::set_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
-  _internal_set_id(value);
-  // @@protoc_insertion_point(field_set:TestPackage.TestResponse.id)
+inline void TestResponse::set_session_id(std::string&& value) {
+  
+  session_id_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TestPackage.TestResponse.session_id)
+}
+inline void TestResponse::set_session_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  session_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TestPackage.TestResponse.session_id)
+}
+inline void TestResponse::set_session_id(const char* value,
+    size_t size) {
+  
+  session_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TestPackage.TestResponse.session_id)
+}
+inline std::string* TestResponse::_internal_mutable_session_id() {
+  
+  return session_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* TestResponse::release_session_id() {
+  // @@protoc_insertion_point(field_release:TestPackage.TestResponse.session_id)
+  return session_id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void TestResponse::set_allocated_session_id(std::string* session_id) {
+  if (session_id != nullptr) {
+    
+  } else {
+    
+  }
+  session_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), session_id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TestPackage.TestResponse.session_id)
 }
 
 #ifdef __GNUC__

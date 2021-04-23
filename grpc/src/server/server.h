@@ -47,6 +47,20 @@ public:
 
     void run_cq_loop();
 
+    void set_rpc_map(SessionType session_id, RpcType rpc_id, BaseRPC* rpc);
+
+    template<class DataType>
+    void add_data(DataType* data) 
+    {
+        string session_id = data->session_id;
+        string rpc_id = data->rpc_id;
+
+        if (rpc_map_.find(session_id) != rpc_map_.end() && rpc_map_[session_id].find(rpc_id) != rpc_map_[session_id].end())
+        {
+            // rpc_map_[session_id][rpc_id]->add_data(data);
+        }
+    }    
+
 protected:
 
     string                                  address_;
@@ -61,9 +75,17 @@ protected:
 
     TestSimpleRPC*                          simple_rpc;      
 
-    ServerStreamRPC*                        server_stream_rpc;      
+    ServerStreamRPC*                        server_stream_rpc;   
 
-    TradeEngine*                            trade_engine_;               
+    ServerStreamAppleRPC*                   server_stream_apple_;
+    ServerStreamPearRPC*                    server_stream_pear_;
+    ServerStreamMangoRPC*                   server_stream_mango_;
+
+    TradeEngine*                            trade_engine_;
+
+    map<SessionType, map<RpcType, BaseRPC*>>  rpc_map_;
+
+    mutable std::mutex                      mutex_clients_;
 };
 
 

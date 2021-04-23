@@ -45,7 +45,7 @@ TestStream::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel
   , rpcmethod_TestClientStream_(TestStream_method_names[1], ::grpc::internal::RpcMethod::CLIENT_STREAMING, channel)
   , rpcmethod_TestServerStream_(TestStream_method_names[2], ::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   , rpcmethod_TestDoubleStream_(TestStream_method_names[3], ::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
-  , rpcmethod_ServerStreamApple_(TestStream_method_names[4], ::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
+  , rpcmethod_ServerStreamApple_(TestStream_method_names[4], ::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
   , rpcmethod_ServerStreamPear_(TestStream_method_names[5], ::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   , rpcmethod_ServerStreamMango_(TestStream_method_names[6], ::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   , rpcmethod_DoubleStreamApple_(TestStream_method_names[7], ::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
@@ -124,20 +124,20 @@ void TestStream::Stub::experimental_async::TestDoubleStream(::grpc::ClientContex
   return ::grpc::internal::ClientAsyncReaderWriterFactory< ::TestPackage::TestRequest, ::TestPackage::TestResponse>::Create(channel_.get(), cq, rpcmethod_TestDoubleStream_, context, false, nullptr);
 }
 
-::grpc::ClientReader< ::TestPackage::TestResponse>* TestStream::Stub::ServerStreamAppleRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) {
-  return ::grpc::internal::ClientReaderFactory< ::TestPackage::TestResponse>::Create(channel_.get(), rpcmethod_ServerStreamApple_, context, request);
+::grpc::ClientReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* TestStream::Stub::ServerStreamAppleRaw(::grpc::ClientContext* context) {
+  return ::grpc::internal::ClientReaderWriterFactory< ::TestPackage::TestRequest, ::TestPackage::TestResponse>::Create(channel_.get(), rpcmethod_ServerStreamApple_, context);
 }
 
-void TestStream::Stub::experimental_async::ServerStreamApple(::grpc::ClientContext* context, ::TestPackage::TestRequest* request, ::grpc::experimental::ClientReadReactor< ::TestPackage::TestResponse>* reactor) {
-  ::grpc::internal::ClientCallbackReaderFactory< ::TestPackage::TestResponse>::Create(stub_->channel_.get(), stub_->rpcmethod_ServerStreamApple_, context, request, reactor);
+void TestStream::Stub::experimental_async::ServerStreamApple(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::TestPackage::TestRequest,::TestPackage::TestResponse>* reactor) {
+  ::grpc::internal::ClientCallbackReaderWriterFactory< ::TestPackage::TestRequest,::TestPackage::TestResponse>::Create(stub_->channel_.get(), stub_->rpcmethod_ServerStreamApple_, context, reactor);
 }
 
-::grpc::ClientAsyncReader< ::TestPackage::TestResponse>* TestStream::Stub::AsyncServerStreamAppleRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::TestPackage::TestResponse>::Create(channel_.get(), cq, rpcmethod_ServerStreamApple_, context, request, true, tag);
+::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* TestStream::Stub::AsyncServerStreamAppleRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::TestPackage::TestRequest, ::TestPackage::TestResponse>::Create(channel_.get(), cq, rpcmethod_ServerStreamApple_, context, true, tag);
 }
 
-::grpc::ClientAsyncReader< ::TestPackage::TestResponse>* TestStream::Stub::PrepareAsyncServerStreamAppleRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::TestPackage::TestResponse>::Create(channel_.get(), cq, rpcmethod_ServerStreamApple_, context, request, false, nullptr);
+::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* TestStream::Stub::PrepareAsyncServerStreamAppleRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::TestPackage::TestRequest, ::TestPackage::TestResponse>::Create(channel_.get(), cq, rpcmethod_ServerStreamApple_, context, false, nullptr);
 }
 
 ::grpc::ClientReader< ::TestPackage::TestResponse>* TestStream::Stub::ServerStreamPearRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) {
@@ -263,13 +263,13 @@ TestStream::Service::Service() {
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       TestStream_method_names[4],
-      ::grpc::internal::RpcMethod::SERVER_STREAMING,
-      new ::grpc::internal::ServerStreamingHandler< TestStream::Service, ::TestPackage::TestRequest, ::TestPackage::TestResponse>(
+      ::grpc::internal::RpcMethod::BIDI_STREAMING,
+      new ::grpc::internal::BidiStreamingHandler< TestStream::Service, ::TestPackage::TestRequest, ::TestPackage::TestResponse>(
           [](TestStream::Service* service,
              ::grpc::ServerContext* ctx,
-             const ::TestPackage::TestRequest* req,
-             ::grpc::ServerWriter<::TestPackage::TestResponse>* writer) {
-               return service->ServerStreamApple(ctx, req, writer);
+             ::grpc::ServerReaderWriter<::TestPackage::TestResponse,
+             ::TestPackage::TestRequest>* stream) {
+               return service->ServerStreamApple(ctx, stream);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       TestStream_method_names[5],
@@ -353,10 +353,9 @@ TestStream::Service::~Service() {
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
-::grpc::Status TestStream::Service::ServerStreamApple(::grpc::ServerContext* context, const ::TestPackage::TestRequest* request, ::grpc::ServerWriter< ::TestPackage::TestResponse>* writer) {
+::grpc::Status TestStream::Service::ServerStreamApple(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream) {
   (void) context;
-  (void) request;
-  (void) writer;
+  (void) stream;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 

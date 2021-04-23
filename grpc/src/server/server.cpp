@@ -31,7 +31,16 @@ void BaseServer::start()
 
         // simple_rpc = new TestSimpleRPC(&service_, cq_.get());
 
-        server_stream_rpc = new ServerStreamRPC(&service_, cq_.get());
+        // server_stream_rpc = new ServerStreamRPC(&service_, cq_.get());
+
+        server_stream_apple_ = new ServerStreamAppleRPC(&service_, cq_.get());
+        server_stream_apple_->set_server(this);
+
+        server_stream_pear_ = new ServerStreamPearRPC(&service_, cq_.get());
+        server_stream_pear_->set_server(this);
+
+        server_stream_mango_ = new ServerStreamMangoRPC(&service_, cq_.get());
+        server_stream_mango_->set_server(this);
 
         init_cq_thread();
     }
@@ -46,6 +55,18 @@ void BaseServer::init_cq_thread()
     cq_thread_ = boost::make_shared<std::thread>(&BaseServer::run_cq_loop, this);
 }
 
+void BaseServer::set_rpc_map(SessionType session_id, RpcType rpc_id, BaseRPC* rpc)
+{
+    try
+    {
+        rpc_map_[session_id][rpc_id] = rpc;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
 void BaseServer::run_cq_loop()
 {
     try
@@ -54,8 +75,6 @@ void BaseServer::run_cq_loop()
         bool status;
         while(true)
         {
-            // GPR_ASSERT(cq_->Next(&tag, &status));
-
             std::cout << "Before Next; " << std::endl;
 
             bool result = cq_->Next(&tag, &status);

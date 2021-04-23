@@ -70,14 +70,14 @@ class TestStream final {
     std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>> PrepareAsyncTestDoubleStream(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>>(PrepareAsyncTestDoubleStreamRaw(context, cq));
     }
-    std::unique_ptr< ::grpc::ClientReaderInterface< ::TestPackage::TestResponse>> ServerStreamApple(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) {
-      return std::unique_ptr< ::grpc::ClientReaderInterface< ::TestPackage::TestResponse>>(ServerStreamAppleRaw(context, request));
+    std::unique_ptr< ::grpc::ClientReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>> ServerStreamApple(::grpc::ClientContext* context) {
+      return std::unique_ptr< ::grpc::ClientReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>>(ServerStreamAppleRaw(context));
     }
-    std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::TestPackage::TestResponse>> AsyncServerStreamApple(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq, void* tag) {
-      return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::TestPackage::TestResponse>>(AsyncServerStreamAppleRaw(context, request, cq, tag));
+    std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>> AsyncServerStreamApple(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>>(AsyncServerStreamAppleRaw(context, cq, tag));
     }
-    std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::TestPackage::TestResponse>> PrepareAsyncServerStreamApple(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::TestPackage::TestResponse>>(PrepareAsyncServerStreamAppleRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>> PrepareAsyncServerStreamApple(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>>(PrepareAsyncServerStreamAppleRaw(context, cq));
     }
     std::unique_ptr< ::grpc::ClientReaderInterface< ::TestPackage::TestResponse>> ServerStreamPear(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) {
       return std::unique_ptr< ::grpc::ClientReaderInterface< ::TestPackage::TestResponse>>(ServerStreamPearRaw(context, request));
@@ -149,9 +149,9 @@ class TestStream final {
       virtual void TestDoubleStream(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::TestPackage::TestRequest,::TestPackage::TestResponse>* reactor) = 0;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void ServerStreamApple(::grpc::ClientContext* context, ::TestPackage::TestRequest* request, ::grpc::ClientReadReactor< ::TestPackage::TestResponse>* reactor) = 0;
+      virtual void ServerStreamApple(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::TestPackage::TestRequest,::TestPackage::TestResponse>* reactor) = 0;
       #else
-      virtual void ServerStreamApple(::grpc::ClientContext* context, ::TestPackage::TestRequest* request, ::grpc::experimental::ClientReadReactor< ::TestPackage::TestResponse>* reactor) = 0;
+      virtual void ServerStreamApple(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::TestPackage::TestRequest,::TestPackage::TestResponse>* reactor) = 0;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void ServerStreamPear(::grpc::ClientContext* context, ::TestPackage::TestRequest* request, ::grpc::ClientReadReactor< ::TestPackage::TestResponse>* reactor) = 0;
@@ -198,9 +198,9 @@ class TestStream final {
     virtual ::grpc::ClientReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* TestDoubleStreamRaw(::grpc::ClientContext* context) = 0;
     virtual ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* AsyncTestDoubleStreamRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* PrepareAsyncTestDoubleStreamRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientReaderInterface< ::TestPackage::TestResponse>* ServerStreamAppleRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) = 0;
-    virtual ::grpc::ClientAsyncReaderInterface< ::TestPackage::TestResponse>* AsyncServerStreamAppleRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq, void* tag) = 0;
-    virtual ::grpc::ClientAsyncReaderInterface< ::TestPackage::TestResponse>* PrepareAsyncServerStreamAppleRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* ServerStreamAppleRaw(::grpc::ClientContext* context) = 0;
+    virtual ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* AsyncServerStreamAppleRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) = 0;
+    virtual ::grpc::ClientAsyncReaderWriterInterface< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* PrepareAsyncServerStreamAppleRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientReaderInterface< ::TestPackage::TestResponse>* ServerStreamPearRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::TestPackage::TestResponse>* AsyncServerStreamPearRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::TestPackage::TestResponse>* PrepareAsyncServerStreamPearRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq) = 0;
@@ -254,14 +254,14 @@ class TestStream final {
     std::unique_ptr<  ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>> PrepareAsyncTestDoubleStream(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>>(PrepareAsyncTestDoubleStreamRaw(context, cq));
     }
-    std::unique_ptr< ::grpc::ClientReader< ::TestPackage::TestResponse>> ServerStreamApple(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) {
-      return std::unique_ptr< ::grpc::ClientReader< ::TestPackage::TestResponse>>(ServerStreamAppleRaw(context, request));
+    std::unique_ptr< ::grpc::ClientReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>> ServerStreamApple(::grpc::ClientContext* context) {
+      return std::unique_ptr< ::grpc::ClientReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>>(ServerStreamAppleRaw(context));
     }
-    std::unique_ptr< ::grpc::ClientAsyncReader< ::TestPackage::TestResponse>> AsyncServerStreamApple(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq, void* tag) {
-      return std::unique_ptr< ::grpc::ClientAsyncReader< ::TestPackage::TestResponse>>(AsyncServerStreamAppleRaw(context, request, cq, tag));
+    std::unique_ptr<  ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>> AsyncServerStreamApple(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>>(AsyncServerStreamAppleRaw(context, cq, tag));
     }
-    std::unique_ptr< ::grpc::ClientAsyncReader< ::TestPackage::TestResponse>> PrepareAsyncServerStreamApple(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncReader< ::TestPackage::TestResponse>>(PrepareAsyncServerStreamAppleRaw(context, request, cq));
+    std::unique_ptr<  ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>> PrepareAsyncServerStreamApple(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>>(PrepareAsyncServerStreamAppleRaw(context, cq));
     }
     std::unique_ptr< ::grpc::ClientReader< ::TestPackage::TestResponse>> ServerStreamPear(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) {
       return std::unique_ptr< ::grpc::ClientReader< ::TestPackage::TestResponse>>(ServerStreamPearRaw(context, request));
@@ -333,9 +333,9 @@ class TestStream final {
       void TestDoubleStream(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::TestPackage::TestRequest,::TestPackage::TestResponse>* reactor) override;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void ServerStreamApple(::grpc::ClientContext* context, ::TestPackage::TestRequest* request, ::grpc::ClientReadReactor< ::TestPackage::TestResponse>* reactor) override;
+      void ServerStreamApple(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::TestPackage::TestRequest,::TestPackage::TestResponse>* reactor) override;
       #else
-      void ServerStreamApple(::grpc::ClientContext* context, ::TestPackage::TestRequest* request, ::grpc::experimental::ClientReadReactor< ::TestPackage::TestResponse>* reactor) override;
+      void ServerStreamApple(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::TestPackage::TestRequest,::TestPackage::TestResponse>* reactor) override;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void ServerStreamPear(::grpc::ClientContext* context, ::TestPackage::TestRequest* request, ::grpc::ClientReadReactor< ::TestPackage::TestResponse>* reactor) override;
@@ -384,9 +384,9 @@ class TestStream final {
     ::grpc::ClientReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* TestDoubleStreamRaw(::grpc::ClientContext* context) override;
     ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* AsyncTestDoubleStreamRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* PrepareAsyncTestDoubleStreamRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientReader< ::TestPackage::TestResponse>* ServerStreamAppleRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) override;
-    ::grpc::ClientAsyncReader< ::TestPackage::TestResponse>* AsyncServerStreamAppleRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq, void* tag) override;
-    ::grpc::ClientAsyncReader< ::TestPackage::TestResponse>* PrepareAsyncServerStreamAppleRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* ServerStreamAppleRaw(::grpc::ClientContext* context) override;
+    ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* AsyncServerStreamAppleRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) override;
+    ::grpc::ClientAsyncReaderWriter< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* PrepareAsyncServerStreamAppleRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientReader< ::TestPackage::TestResponse>* ServerStreamPearRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request) override;
     ::grpc::ClientAsyncReader< ::TestPackage::TestResponse>* AsyncServerStreamPearRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncReader< ::TestPackage::TestResponse>* PrepareAsyncServerStreamPearRaw(::grpc::ClientContext* context, const ::TestPackage::TestRequest& request, ::grpc::CompletionQueue* cq) override;
@@ -423,7 +423,7 @@ class TestStream final {
     virtual ::grpc::Status TestClientStream(::grpc::ServerContext* context, ::grpc::ServerReader< ::TestPackage::TestRequest>* reader, ::TestPackage::TestResponse* response);
     virtual ::grpc::Status TestServerStream(::grpc::ServerContext* context, const ::TestPackage::TestRequest* request, ::grpc::ServerWriter< ::TestPackage::TestResponse>* writer);
     virtual ::grpc::Status TestDoubleStream(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream);
-    virtual ::grpc::Status ServerStreamApple(::grpc::ServerContext* context, const ::TestPackage::TestRequest* request, ::grpc::ServerWriter< ::TestPackage::TestResponse>* writer);
+    virtual ::grpc::Status ServerStreamApple(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream);
     virtual ::grpc::Status ServerStreamPear(::grpc::ServerContext* context, const ::TestPackage::TestRequest* request, ::grpc::ServerWriter< ::TestPackage::TestResponse>* writer);
     virtual ::grpc::Status ServerStreamMango(::grpc::ServerContext* context, const ::TestPackage::TestRequest* request, ::grpc::ServerWriter< ::TestPackage::TestResponse>* writer);
     virtual ::grpc::Status DoubleStreamApple(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream);
@@ -522,12 +522,12 @@ class TestStream final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, const ::TestPackage::TestRequest* /*request*/, ::grpc::ServerWriter< ::TestPackage::TestResponse>* /*writer*/) override {
+    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* /*stream*/)  override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestServerStreamApple(::grpc::ServerContext* context, ::TestPackage::TestRequest* request, ::grpc::ServerAsyncWriter< ::TestPackage::TestResponse>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(4, context, request, writer, new_call_cq, notification_cq, tag);
+    void RequestServerStreamApple(::grpc::ServerContext* context, ::grpc::ServerAsyncReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncBidiStreaming(4, context, stream, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -804,29 +804,29 @@ class TestStream final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(4,
-          new ::grpc::internal::CallbackServerStreamingHandler< ::TestPackage::TestRequest, ::TestPackage::TestResponse>(
+          new ::grpc::internal::CallbackBidiHandler< ::TestPackage::TestRequest, ::TestPackage::TestResponse>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
     #else
                    ::grpc::experimental::CallbackServerContext*
     #endif
-                     context, const ::TestPackage::TestRequest* request) { return this->ServerStreamApple(context, request); }));
+                     context) { return this->ServerStreamApple(context); }));
     }
     ~ExperimentalWithCallbackMethod_ServerStreamApple() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, const ::TestPackage::TestRequest* /*request*/, ::grpc::ServerWriter< ::TestPackage::TestResponse>* /*writer*/) override {
+    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* /*stream*/)  override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    virtual ::grpc::ServerWriteReactor< ::TestPackage::TestResponse>* ServerStreamApple(
-      ::grpc::CallbackServerContext* /*context*/, const ::TestPackage::TestRequest* /*request*/)
+    virtual ::grpc::ServerBidiReactor< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* ServerStreamApple(
+      ::grpc::CallbackServerContext* /*context*/)
     #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::TestPackage::TestResponse>* ServerStreamApple(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::TestPackage::TestRequest* /*request*/)
+    virtual ::grpc::experimental::ServerBidiReactor< ::TestPackage::TestRequest, ::TestPackage::TestResponse>* ServerStreamApple(
+      ::grpc::experimental::CallbackServerContext* /*context*/)
     #endif
       { return nullptr; }
   };
@@ -1105,7 +1105,7 @@ class TestStream final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, const ::TestPackage::TestRequest* /*request*/, ::grpc::ServerWriter< ::TestPackage::TestResponse>* /*writer*/) override {
+    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* /*stream*/)  override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1287,12 +1287,12 @@ class TestStream final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, const ::TestPackage::TestRequest* /*request*/, ::grpc::ServerWriter< ::TestPackage::TestResponse>* /*writer*/) override {
+    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* /*stream*/)  override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestServerStreamApple(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(4, context, request, writer, new_call_cq, notification_cq, tag);
+    void RequestServerStreamApple(::grpc::ServerContext* context, ::grpc::ServerAsyncReaderWriter< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* stream, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncBidiStreaming(4, context, stream, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -1559,29 +1559,29 @@ class TestStream final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(4,
-          new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackBidiHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
     #else
                    ::grpc::experimental::CallbackServerContext*
     #endif
-                     context, const::grpc::ByteBuffer* request) { return this->ServerStreamApple(context, request); }));
+                     context) { return this->ServerStreamApple(context); }));
     }
     ~ExperimentalWithRawCallbackMethod_ServerStreamApple() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, const ::TestPackage::TestRequest* /*request*/, ::grpc::ServerWriter< ::TestPackage::TestResponse>* /*writer*/) override {
+    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* /*stream*/)  override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    virtual ::grpc::ServerWriteReactor< ::grpc::ByteBuffer>* ServerStreamApple(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
+    virtual ::grpc::ServerBidiReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* ServerStreamApple(
+      ::grpc::CallbackServerContext* /*context*/)
     #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer>* ServerStreamApple(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
+    virtual ::grpc::experimental::ServerBidiReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* ServerStreamApple(
+      ::grpc::experimental::CallbackServerContext* /*context*/)
     #endif
       { return nullptr; }
   };
@@ -1831,33 +1831,6 @@ class TestStream final {
     virtual ::grpc::Status StreamedTestServerStream(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::TestPackage::TestRequest,::TestPackage::TestResponse>* server_split_streamer) = 0;
   };
   template <class BaseClass>
-  class WithSplitStreamingMethod_ServerStreamApple : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithSplitStreamingMethod_ServerStreamApple() {
-      ::grpc::Service::MarkMethodStreamed(4,
-        new ::grpc::internal::SplitServerStreamingHandler<
-          ::TestPackage::TestRequest, ::TestPackage::TestResponse>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerSplitStreamer<
-                     ::TestPackage::TestRequest, ::TestPackage::TestResponse>* streamer) {
-                       return this->StreamedServerStreamApple(context,
-                         streamer);
-                  }));
-    }
-    ~WithSplitStreamingMethod_ServerStreamApple() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable regular version of this method
-    ::grpc::Status ServerStreamApple(::grpc::ServerContext* /*context*/, const ::TestPackage::TestRequest* /*request*/, ::grpc::ServerWriter< ::TestPackage::TestResponse>* /*writer*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    // replace default version of method with split streamed
-    virtual ::grpc::Status StreamedServerStreamApple(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::TestPackage::TestRequest,::TestPackage::TestResponse>* server_split_streamer) = 0;
-  };
-  template <class BaseClass>
   class WithSplitStreamingMethod_ServerStreamPear : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -1911,8 +1884,8 @@ class TestStream final {
     // replace default version of method with split streamed
     virtual ::grpc::Status StreamedServerStreamMango(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::TestPackage::TestRequest,::TestPackage::TestResponse>* server_split_streamer) = 0;
   };
-  typedef WithSplitStreamingMethod_TestServerStream<WithSplitStreamingMethod_ServerStreamApple<WithSplitStreamingMethod_ServerStreamPear<WithSplitStreamingMethod_ServerStreamMango<Service > > > > SplitStreamedService;
-  typedef WithStreamedUnaryMethod_TestSimple<WithSplitStreamingMethod_TestServerStream<WithSplitStreamingMethod_ServerStreamApple<WithSplitStreamingMethod_ServerStreamPear<WithSplitStreamingMethod_ServerStreamMango<Service > > > > > StreamedService;
+  typedef WithSplitStreamingMethod_TestServerStream<WithSplitStreamingMethod_ServerStreamPear<WithSplitStreamingMethod_ServerStreamMango<Service > > > SplitStreamedService;
+  typedef WithStreamedUnaryMethod_TestSimple<WithSplitStreamingMethod_TestServerStream<WithSplitStreamingMethod_ServerStreamPear<WithSplitStreamingMethod_ServerStreamMango<Service > > > > StreamedService;
 };
 
 }  // namespace TestPackage

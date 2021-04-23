@@ -14,6 +14,7 @@
 #include <grpcpp/security/server_credentials.h>
 
 #include "cpp/test.grpc.pb.h"
+#include "data_struct.h"
 #include "../include/global_declare.h"
 
 using grpc::Alarm;
@@ -25,12 +26,15 @@ using grpc::Status;
 using grpc::ServerAsyncWriter;
 using grpc::ServerAsyncResponseWriter;
 using grpc::ServerWriter;
+using grpc::ServerAsyncReaderWriter;
 
 using TestPackage::TestStream;
 using TestPackage::TestRequest;
 using TestPackage::TestResponse;
 
 using std::string;
+
+class BaseServer;
 
 class BaseRPC
 {
@@ -39,33 +43,48 @@ class BaseRPC
     BaseRPC(ServerCompletionQueue* cq): cq_{cq}
     {
         std::cout << "obj_count: " << ++obj_count << std::endl;
-
-        obj_id = obj_count;
     }
+
+    virtual ~BaseRPC() {}
 
     virtual void process();
 
     virtual void proceed() { }
 
-    virtual void release() { }
+    virtual void release();
 
     virtual void register_request() { }
 
     virtual void spawn() { }
 
+    virtual void add_data(Fruit* fruit) {}
+
     void make_active();
+
+   void set_server(BaseServer* server) { server_ = server;}
+
+   void set_rpc_map();
+
     
     enum CallStatus     { CREATE, PROCESS, FINISH };
     CallStatus          status_{CREATE};                // The current serving state.        
 
     ServerCompletionQueue*                      cq_;
-    grpc::Alarm                                 alarm_;
 
+    grpc::Alarm                                 alarm_;
+    
     bool                                        is_first_{true};
 
-   static int                                  obj_count;    
+    static int                                  obj_count;    
 
-   int                                         obj_id{0};
+    SessionType                                 session_id{""};
+
+    RpcType                                     rpc_id;
+
+    BaseServer*                                 server_{NULL};
+
+    bool                                        is_response_data_updated_{true};
+                                
 };
 
 
@@ -77,8 +96,12 @@ public:
     TestSimpleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
         BaseRPC{cq}, service_(service), responder_(&context_)
     {
+        rpc_id = "ServerStreamRPC";
+
         process();
     }
+
+    virtual ~TestSimpleRPC() { }
 
     virtual void proceed();
 
@@ -113,10 +136,12 @@ public:
     ServerStreamRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
         BaseRPC{cq}, service_(service), responder_(&context_)
     {
-        
+        rpc_id = "ServerStreamRPC";
 
         process();
     }
+
+    virtual ~ServerStreamRPC() { }
 
     virtual void proceed();
 
@@ -125,9 +150,7 @@ public:
     virtual void register_request();
 
     virtual void spawn();
-
     
-
 private:
 
     TestStream::AsyncService*                   service_;
@@ -142,3 +165,118 @@ private:
 };
 
 using ServerStreamRPCPtr = boost::shared_ptr<ServerStreamRPC>;
+
+class ServerStreamAppleRPC:public BaseRPC
+{
+public:
+
+    ServerStreamAppleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
+        BaseRPC{cq}, service_(service), responder_(&context_)
+    {
+        rpc_id = "apple";
+
+        process();
+    }
+
+    virtual ~ServerStreamAppleRPC() { }
+
+    virtual void proceed();
+
+    virtual void release();    
+
+    virtual void register_request();
+
+    virtual void spawn();
+    
+private:
+
+    TestStream::AsyncService*                   service_;
+
+    ServerContext                               context_;
+
+    TestRequest                                 request_;
+
+    TestResponse                                reply_;
+
+    ServerAsyncReaderWriter<TestResponse, TestRequest>   responder_;
+
+    
+};
+
+using ServerStreamAppleRPCPtr = boost::shared_ptr<ServerStreamAppleRPC>;
+
+
+class ServerStreamPearRPC:public BaseRPC
+{
+public:
+
+    ServerStreamPearRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
+        BaseRPC{cq}, service_(service), responder_(&context_)
+    {
+        rpc_id = "pear";
+
+        process();
+    }
+
+    virtual ~ServerStreamPearRPC() { }
+
+    virtual void proceed();
+
+    virtual void release();    
+
+    virtual void register_request();
+
+    virtual void spawn();
+    
+private:
+
+    TestStream::AsyncService*                   service_;
+
+    ServerContext                               context_;
+
+    TestRequest                                 request_;
+
+    TestResponse                                reply_;
+
+    ServerAsyncWriter<TestResponse>             responder_;
+};
+
+using ServerStreamPearRPCPtr = boost::shared_ptr<ServerStreamPearRPC>;
+
+class ServerStreamMangoRPC:public BaseRPC
+{
+public:
+
+    ServerStreamMangoRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
+        BaseRPC{cq}, service_(service), responder_(&context_)
+    {
+        rpc_id = "mango";
+
+        process();
+    }
+
+    virtual ~ServerStreamMangoRPC() { }
+
+    virtual void proceed();
+
+    virtual void release();    
+
+    virtual void register_request();
+
+    virtual void spawn();
+    
+private:
+
+    TestStream::AsyncService*                   service_;
+
+    ServerContext                               context_;
+
+    TestRequest                                 request_;
+
+    TestResponse                                reply_;
+
+    ServerAsyncWriter<TestResponse>             responder_;
+};
+
+using ServerStreamMangoRPCPtr = boost::shared_ptr<ServerStreamMangoRPC>;
+

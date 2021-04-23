@@ -9,9 +9,9 @@ service TestStream
     rpc TestServerStream(TestRequest) returns (stream TestResponse);
     rpc TestDoubleStream(stream TestRequest) returns (stream TestResponse);
 
-    rpc ServerStreamApple(TestRequest) returns (stream TestResponse);
-    rpc ServerStreamPear(TestRequest) returns (stream TestResponse);
-    rpc ServerStreamMango(TestRequest) returns (stream TestResponse);
+    rpc ServerStreamApple(stream TestRequest) returns (stream TestResponse);
+    rpc ServerStreamPear( TestRequest) returns (stream TestResponse);
+    rpc ServerStreamMango( TestRequest) returns (stream TestResponse);
 
     rpc DoubleStreamApple(stream TestRequest) returns (stream TestResponse);
     rpc DoubleStreamPear(stream TestRequest) returns (stream TestResponse);
@@ -22,7 +22,7 @@ message TestRequest
 {
     string name = 1;
     string time = 2;
-    int32    id = 3;
+    string session_id = 3;
 };
 
 
@@ -30,5 +30,5 @@ message TestResponse
 {
     string name = 1;
     string time = 2;
-    int32  id = 3;
+    string session_id = 3;
 };

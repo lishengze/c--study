@@ -4,7 +4,7 @@
 #include "../include/global_declare.h"
 #include "pandora/util/time_util.h"
 
-
+#include "client_rpc.h"
 
 BaseClient::~BaseClient()
 {
@@ -27,7 +27,7 @@ void BaseClient::thread_run()
 {
     cout << "TestSimpleClient::thread_run " << endl;
 
-    int test_numb = 1;
+    int test_numb = 3;
 
     while(test_numb--)
     {
@@ -140,6 +140,7 @@ void ServerStreamClient::request()
 
         string name = "ServerStreamClient";
         string time = utrade::pandora::NanoTimeStr();
+        string session_id = "apple";
 
         ClientContext   context;
 
@@ -147,25 +148,32 @@ void ServerStreamClient::request()
 
         request_.set_time(time);
 
-        cout << "From Request: " << name << " " << time << endl;
+        request_.set_session_id(session_id);
+
+        cout << "From Request: " << session_id << " " << name << " " << time << endl;
 
         if (!is_ansyc_)
         {
-            sync_rpc_ = stub_->TestServerStream(&context, request_);
-            while(sync_rpc_->Read(&reply_))
-            {
-                cout <<"From Server: " << reply_.name() << ", " << reply_.time() << endl;
-            }
-            status = sync_rpc_->Finish();
+            // sync_rpc_ = stub_->TestServerStream(&context, request_);
 
-            if (!status.ok())
-            {
-                cout << "Sync Read Status Not OK!" << endl;
-            }            
+            // sync_rpc_ = stub_->ServerStreamApple(&context, request_);
+
+            // stub_->ServerStreamApple()
+
+            // while(sync_rpc_->Read(&reply_))
+            // {
+            //     cout <<"From Server: " << reply_.session_id() << ", "  << reply_.name() << ", " << reply_.time() << endl;
+            // }
+            // status = sync_rpc_->Finish();
+
+            // if (!status.ok())
+            // {
+            //     cout << "Sync Read Status Not OK!" << endl;
+            // }            
         }
         else
         {
-
+             stub_->AsyncServerStreamApple(&context, cq_, this);
         }
 
         if (!status.ok())
@@ -184,5 +192,63 @@ void ServerStreamClient::request()
     catch(...)
     {
         std::cerr <<"ServerStreamClient::request unkonw exceptions! " << '\n';
+    }
+}
+
+void AsyncClient::start()
+{
+
+    try
+    {
+        init_cq_thread();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] AsyncClient::start " << e.what() << '\n';
+    }
+}
+
+void AsyncClient::init_cq_thread()
+{
+    try
+    {
+        cq_thread_ = boost::make_shared<std::thread>(&AsyncClient::run_cq_loop, this);
+
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] AsyncClient::init_cq_thread() " << e.what() << '\n';
+    }
+}
+
+void AsyncClient::run_cq_loop()
+{
+    try
+    {
+        void* tag;
+        bool status;
+        while(true)
+        {
+            std::cout << "Before Next; " << std::endl;
+
+            bool result = cq_.Next(&tag, &status);
+
+            std::cout << "After Next: result: "<<  result << " status: " << status << std::endl;
+
+            if (result && status)
+            {
+                ClientBaseRPC* rpc = static_cast<ClientBaseRPC*>(tag);
+                rpc->process();
+            }
+            else
+            {
+                ClientBaseRPC* rpc = static_cast<ClientBaseRPC*>(tag);
+                rpc->release();
+            }
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] AsyncClient::init_cq_thread() " <<e.what() << '\n';
     }
 }

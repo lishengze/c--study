@@ -17,6 +17,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 AUX_SOURCE_DIRECTORY(. MAIN_SRC)
+AUX_SOURCE_DIRECTORY(test TEST_SRC)
 AUX_SOURCE_DIRECTORY(../../proto/cpp PROTO_SRC)
 
 FIND_PACKAGE(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
@@ -32,7 +33,7 @@ INCLUDE_DIRECTORIES("../../proto")
 LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
 
 
-ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC} ${PROTO_SRC})
+ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC} ${PROTO_SRC} ${TEST_SRC})
 
 
 TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
