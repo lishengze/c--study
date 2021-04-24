@@ -80,7 +80,7 @@ void TestSimpleClient::request()
 
             
 
-            rpc_ = stub_->AsyncTestSimple(&context, request_, &cq_);
+            rpc_ = stub_->AsyncTestSimple(&context, request_, cq_);
             cout <<"rpc_ = stub_->AsyncTestSimple(&context, request_, &cq_);" << endl;
 
             // rpc_->StartCall();
@@ -93,7 +93,7 @@ void TestSimpleClient::request()
             void* got_tag;
             bool ok = false;
 
-            if (!cq_.Next(&got_tag, &ok))
+            if (!cq_->Next(&got_tag, &ok))
             {
                 cout << "cq_.Next(&got_tag, &ok) Failed!" << endl;
                 return;
@@ -195,17 +195,28 @@ void ServerStreamClient::request()
     }
 }
 
+
+
+
 void AsyncClient::start()
 {
-
     try
     {
+        init_rpc_client();
+
         init_cq_thread();
     }
     catch(const std::exception& e)
     {
         std::cerr << "\n[E] AsyncClient::start " << e.what() << '\n';
     }
+}
+
+void AsyncClient::init_rpc_client()
+{
+    apple_rpc_ = new ClientApplePRC(channel_, &cq_);
+
+    apple_rpc_->set_async_client(this);
 }
 
 void AsyncClient::init_cq_thread()

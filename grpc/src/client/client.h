@@ -7,6 +7,9 @@
 #include "cpp/test.grpc.pb.h"
 
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/alarm.h>
+
+using grpc::Alarm;
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
 using grpc::ClientAsyncReader;
@@ -158,13 +161,14 @@ private:
 };
 
 class ClientBaseRPC;
+class ClientApplePRC;
 
 class AsyncClient
 {
 public:
 
     AsyncClient(std::shared_ptr<Channel> channel):
-                stub_{TestStream::NewStub(channel)}
+                channel_{channel}
     {
         // cout << "Client connect: " << stub_-> 
     }
@@ -173,13 +177,15 @@ public:
 
     void start();
 
+    void init_rpc_client();
+
     void init_cq_thread();
 
     void run_cq_loop();
 
-      
-
-    std::unique_ptr<TestPackage::TestStream::Stub>  stub_;    
+    std::shared_ptr<Channel>                        channel_;
     CompletionQueue                                 cq_;
-    boost::shared_ptr<std::thread>                  cq_thread_{nullptr};    
+    boost::shared_ptr<std::thread>                  cq_thread_{nullptr};   
+
+    ClientApplePRC*                                 apple_rpc_;
 };
