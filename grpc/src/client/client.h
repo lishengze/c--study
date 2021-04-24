@@ -108,32 +108,6 @@ private:
     std::unique_ptr<ClientAsyncReaderWriter<TestRequest, TestResponse>> async_rpc_;
 };
 
-class TestSimpleClient:public BaseClient
-{
-
-public:
-    TestSimpleClient(std::shared_ptr<Channel> channel):BaseClient(channel)
-    {
-
-    }
-
-    virtual ~TestSimpleClient(){ }
-
-    // virtual void start();
-
-    // virtual void thread_run();
-
-    virtual void request();
-
-
-private:
-    TestRequest                                     request_;
-    TestResponse                                    reply_;    
-    bool                                            is_ansyc_{false};
-    
-    std::unique_ptr<ClientAsyncResponseReader<TestResponse>> rpc_;
-};
-
 class ServerStreamAppleClient:public BaseClient
 {
 
@@ -173,7 +147,7 @@ public:
         // cout << "Client connect: " << stub_-> 
     }
 
-    virtual ~AsyncClient();
+    virtual ~AsyncClient() { }
 
     void start();
 
@@ -184,7 +158,9 @@ public:
     void run_cq_loop();
 
     std::shared_ptr<Channel>                        channel_;
+
     CompletionQueue                                 cq_;
+    
     boost::shared_ptr<std::thread>                  cq_thread_{nullptr};   
 
     ClientApplePRC*                                 apple_rpc_;

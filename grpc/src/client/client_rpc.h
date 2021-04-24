@@ -41,8 +41,7 @@ class ClientBaseRPC
         stub_{TestStream::NewStub(channel)},
         cq_{cq} 
         { 
-
-            process();
+            
         }
 
         virtual ~ClientBaseRPC() { }
@@ -76,7 +75,9 @@ class ClientBaseRPC
         AsyncClient*                            async_client_{nullptr};
         CompletionQueue*                        cq_{nullptr};
         std::unique_ptr<TestStream::Stub>       stub_;
-        std::shared_ptr<Channel>                channel_;               
+        std::shared_ptr<Channel>                channel_;              
+
+        bool                                    is_first_{true}; 
 };
 
 
@@ -84,10 +85,12 @@ class ClientApplePRC:public ClientBaseRPC
 {
     public:
         ClientApplePRC(std::shared_ptr<Channel> channel, CompletionQueue* cq):
-        ClientBaseRPC(channel, cq),
-        responder_{&context_, false, this}
+        ClientBaseRPC(channel, cq)
         { 
+            cout << "Create ClientApplePRC" << endl;
             session_id_ = "apple";
+
+            process();
         }
 
         virtual ~ClientApplePRC() { }

@@ -4,16 +4,24 @@ void ClientBaseRPC::process()
 {
     try
     {
+        cout << "ClientBaseRPC::process " << endl;
         if (status_ == CREATE)
         {
             init_request();
-
-            spawn();
 
             status_ = PROCESS;
         }
         else if (status_ == PROCESS)
         {
+            cout << "Status is PROCESS " << endl;
+
+            if (is_first_)
+            {
+                is_first_ = false;
+
+                spawn();
+            }
+
             procceed();
 
             status_ = FINISH;
@@ -69,6 +77,8 @@ void ClientApplePRC::spawn()
 
         client_apple->set_async_client(async_client_);
 
+        std::cout << "Create A New Client For Request! " << std::endl;
+
     }
     catch(const std::exception& e)
     {
@@ -80,6 +90,8 @@ void ClientApplePRC::init_request()
 {
     try
     {
+        cout << "ClientApplePRC::init_request " << endl;
+
         grpc::Status status;
 
         responder_ = stub_->PrepareAsyncServerStreamApple(&context_, cq_);
@@ -108,6 +120,7 @@ void ClientApplePRC::procceed()
 {
     try
     {
+        cout << " ClientApplePRC::procceed " << endl;
         /* request new data */
         if (is_request_data_updated_)
         {

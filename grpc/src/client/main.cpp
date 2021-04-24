@@ -11,11 +11,19 @@ void test_simple()
     client.start();
 }
 
+void test_client_double_stream_async()
+{
+    AsyncClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
+    client.start();
+}
+
 int main()
 {
     cout << "Client " << endl;
 
-    test_simple();
+    // test_simple();
+
+    test_client_double_stream_async();
 
     return 1;
 }
