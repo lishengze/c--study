@@ -56,8 +56,7 @@ class ClientBaseRPC
 
         virtual void spawn() {}
 
-        virtual void make_actinve() { }
-       
+        virtual void make_active();
 
         void set_async_client(AsyncClient* async_client)
         {
@@ -70,12 +69,15 @@ class ClientBaseRPC
 
     protected:
         bool     is_request_data_updated_{true};
+        bool     is_write_cq_{false};
 
         string                                  session_id_;
         AsyncClient*                            async_client_{nullptr};
         CompletionQueue*                        cq_{nullptr};
         std::unique_ptr<TestStream::Stub>       stub_;
-        std::shared_ptr<Channel>                channel_;              
+        std::shared_ptr<Channel>                channel_;       
+
+        Alarm                                   alarm_;       
 
         bool                                    is_first_{true}; 
 };
@@ -100,7 +102,12 @@ class ClientApplePRC:public ClientBaseRPC
         virtual void init_request();
 
         virtual void procceed();
+
+        void write_msg();
+        
     private:
+
+    string                                                   last_cq_msg;
 
     TestRequest                                              request_;
     TestResponse                                             reply_;

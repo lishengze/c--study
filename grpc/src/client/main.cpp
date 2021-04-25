@@ -19,7 +19,7 @@ void test_client_double_stream_async()
 
 int main()
 {
-    cout << "Client " << endl;
+    cout << "****** Client ******\n" << endl;
 
     // test_simple();
 

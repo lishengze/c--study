@@ -202,9 +202,10 @@ void AsyncClient::start()
 {
     try
     {
-        init_rpc_client();
-
         init_cq_thread();
+        
+        init_rpc_client();
+        
     }
     catch(const std::exception& e)
     {

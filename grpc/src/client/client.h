@@ -147,7 +147,13 @@ public:
         // cout << "Client connect: " << stub_-> 
     }
 
-    virtual ~AsyncClient() { }
+    virtual ~AsyncClient() 
+    {
+        if (cq_thread_ &&  cq_thread_->joinable())
+        {
+            cq_thread_->join();
+        }
+    }
 
     void start();
 

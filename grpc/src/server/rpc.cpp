@@ -68,7 +68,7 @@ void BaseRPC::process()
         {
             cout << "\nStatus is FINISH" << endl;
             // register_request();
-            make_active();
+            // make_active();
             status_ = PROCESS;
         }
         else
@@ -172,7 +172,7 @@ void ServerStreamRPC::proceed()
     {
         cout << "\nServerStreamRPC::process " << endl;
 
-        cout << "From Request: id = " << request_.session_id() << " name = " << request_.name() << ", time = " << request_.time() << endl;
+        cout << "From Request: id = " << request_.session_id() << ", name = " << request_.name() << ", time = " << request_.time() << endl;
 
         if (session_id.length() == 0)
         {
@@ -197,7 +197,7 @@ void ServerStreamRPC::proceed()
             
             responder_.Write(reply_, this);
 
-            cout << "Server Response id = " << session_id << " name = " << name << " time = " << time << endl;
+            cout << "Server Response, id = " << session_id << ", name = " << name << ", time = " << time << endl;
 
             std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));            
         }
@@ -257,16 +257,22 @@ void ServerStreamAppleRPC::proceed()
 
         responder_.Read(&request_, this);
 
-        cout << "From Request: id = " << request_.session_id() << " name = " << request_.name() << ", time = " << request_.time() << endl;
+        cout << "From Request: id = " << request_.session_id() << ", name = " << request_.name() << ", time = " << request_.time() << endl;
+
+        if (request_.session_id().length() == 0)
+        {
+            cout << "Empty Request!" << endl;
+            make_active();
+            return;
+        }
 
         if (session_id.length() == 0)
         {
             session_id = request_.session_id();
-
             set_rpc_map();
         }
 
-        int sleep_secs = 2;
+        int sleep_secs = 1;
 
         grpc::Status status;
         
@@ -275,6 +281,7 @@ void ServerStreamAppleRPC::proceed()
         reply_.set_name(name);
         reply_.set_time(time);
         reply_.set_session_id(session_id);
+
         std::this_thread::sleep_for(std::chrono::seconds(sleep_secs)); 
 
         
@@ -282,7 +289,7 @@ void ServerStreamAppleRPC::proceed()
 
         cout << "Server Response id = " << session_id << " name = " << name << " time = " << time << endl;
 
-        responder_.Finish(status, this);
+        // responder_.Finish(status, this);
 
         if (!status.ok())
         {
@@ -411,6 +418,13 @@ void ServerStreamMangoRPC::proceed()
         cout << "\nServerStreamMangoRPC::process " << endl;
 
         cout << "From Request: id = " << request_.session_id() << " name = " << request_.name() << ", time = " << request_.time() << endl;
+
+        if (request_.session_id().length() == 0)
+        {
+            cout << "Error Request!" << endl;
+            make_active();
+            return;
+        }
 
         if (session_id.length() == 0)
         {

@@ -84,6 +84,10 @@ class BaseRPC
     BaseServer*                                 server_{NULL};
 
     bool                                        is_response_data_updated_{true};
+
+    bool                                        is_write_cq_{false};
+
+    bool                                        is_read_cq_{false};
                                 
 };
 
