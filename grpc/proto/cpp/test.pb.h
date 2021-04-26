@@ -186,6 +186,7 @@ class TestRequest PROTOBUF_FINAL :
     kNameFieldNumber = 1,
     kTimeFieldNumber = 2,
     kSessionIdFieldNumber = 3,
+    kObjIdFieldNumber = 4,
   };
   // string name = 1;
   void clear_name();
@@ -235,6 +236,22 @@ class TestRequest PROTOBUF_FINAL :
   std::string* _internal_mutable_session_id();
   public:
 
+  // string obj_id = 4;
+  void clear_obj_id();
+  const std::string& obj_id() const;
+  void set_obj_id(const std::string& value);
+  void set_obj_id(std::string&& value);
+  void set_obj_id(const char* value);
+  void set_obj_id(const char* value, size_t size);
+  std::string* mutable_obj_id();
+  std::string* release_obj_id();
+  void set_allocated_obj_id(std::string* obj_id);
+  private:
+  const std::string& _internal_obj_id() const;
+  void _internal_set_obj_id(const std::string& value);
+  std::string* _internal_mutable_obj_id();
+  public:
+
   // @@protoc_insertion_point(class_scope:TestPackage.TestRequest)
  private:
   class _Internal;
@@ -245,6 +262,7 @@ class TestRequest PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr time_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr session_id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr obj_id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_2eproto;
 };
@@ -366,6 +384,7 @@ class TestResponse PROTOBUF_FINAL :
     kNameFieldNumber = 1,
     kTimeFieldNumber = 2,
     kSessionIdFieldNumber = 3,
+    kObjIdFieldNumber = 4,
   };
   // string name = 1;
   void clear_name();
@@ -415,6 +434,22 @@ class TestResponse PROTOBUF_FINAL :
   std::string* _internal_mutable_session_id();
   public:
 
+  // string obj_id = 4;
+  void clear_obj_id();
+  const std::string& obj_id() const;
+  void set_obj_id(const std::string& value);
+  void set_obj_id(std::string&& value);
+  void set_obj_id(const char* value);
+  void set_obj_id(const char* value, size_t size);
+  std::string* mutable_obj_id();
+  std::string* release_obj_id();
+  void set_allocated_obj_id(std::string* obj_id);
+  private:
+  const std::string& _internal_obj_id() const;
+  void _internal_set_obj_id(const std::string& value);
+  std::string* _internal_mutable_obj_id();
+  public:
+
   // @@protoc_insertion_point(class_scope:TestPackage.TestResponse)
  private:
   class _Internal;
@@ -425,6 +460,7 @@ class TestResponse PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr time_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr session_id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr obj_id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_2eproto;
 };
@@ -625,6 +661,68 @@ inline void TestRequest::set_allocated_session_id(std::string* session_id) {
   // @@protoc_insertion_point(field_set_allocated:TestPackage.TestRequest.session_id)
 }
 
+// string obj_id = 4;
+inline void TestRequest::clear_obj_id() {
+  obj_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& TestRequest::obj_id() const {
+  // @@protoc_insertion_point(field_get:TestPackage.TestRequest.obj_id)
+  return _internal_obj_id();
+}
+inline void TestRequest::set_obj_id(const std::string& value) {
+  _internal_set_obj_id(value);
+  // @@protoc_insertion_point(field_set:TestPackage.TestRequest.obj_id)
+}
+inline std::string* TestRequest::mutable_obj_id() {
+  // @@protoc_insertion_point(field_mutable:TestPackage.TestRequest.obj_id)
+  return _internal_mutable_obj_id();
+}
+inline const std::string& TestRequest::_internal_obj_id() const {
+  return obj_id_.Get();
+}
+inline void TestRequest::_internal_set_obj_id(const std::string& value) {
+  
+  obj_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void TestRequest::set_obj_id(std::string&& value) {
+  
+  obj_id_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TestPackage.TestRequest.obj_id)
+}
+inline void TestRequest::set_obj_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  obj_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TestPackage.TestRequest.obj_id)
+}
+inline void TestRequest::set_obj_id(const char* value,
+    size_t size) {
+  
+  obj_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TestPackage.TestRequest.obj_id)
+}
+inline std::string* TestRequest::_internal_mutable_obj_id() {
+  
+  return obj_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* TestRequest::release_obj_id() {
+  // @@protoc_insertion_point(field_release:TestPackage.TestRequest.obj_id)
+  return obj_id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void TestRequest::set_allocated_obj_id(std::string* obj_id) {
+  if (obj_id != nullptr) {
+    
+  } else {
+    
+  }
+  obj_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), obj_id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TestPackage.TestRequest.obj_id)
+}
+
 // -------------------------------------------------------------------
 
 // TestResponse
@@ -813,6 +911,68 @@ inline void TestResponse::set_allocated_session_id(std::string* session_id) {
   session_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), session_id,
       GetArena());
   // @@protoc_insertion_point(field_set_allocated:TestPackage.TestResponse.session_id)
+}
+
+// string obj_id = 4;
+inline void TestResponse::clear_obj_id() {
+  obj_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& TestResponse::obj_id() const {
+  // @@protoc_insertion_point(field_get:TestPackage.TestResponse.obj_id)
+  return _internal_obj_id();
+}
+inline void TestResponse::set_obj_id(const std::string& value) {
+  _internal_set_obj_id(value);
+  // @@protoc_insertion_point(field_set:TestPackage.TestResponse.obj_id)
+}
+inline std::string* TestResponse::mutable_obj_id() {
+  // @@protoc_insertion_point(field_mutable:TestPackage.TestResponse.obj_id)
+  return _internal_mutable_obj_id();
+}
+inline const std::string& TestResponse::_internal_obj_id() const {
+  return obj_id_.Get();
+}
+inline void TestResponse::_internal_set_obj_id(const std::string& value) {
+  
+  obj_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void TestResponse::set_obj_id(std::string&& value) {
+  
+  obj_id_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TestPackage.TestResponse.obj_id)
+}
+inline void TestResponse::set_obj_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  obj_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TestPackage.TestResponse.obj_id)
+}
+inline void TestResponse::set_obj_id(const char* value,
+    size_t size) {
+  
+  obj_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TestPackage.TestResponse.obj_id)
+}
+inline std::string* TestResponse::_internal_mutable_obj_id() {
+  
+  return obj_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* TestResponse::release_obj_id() {
+  // @@protoc_insertion_point(field_release:TestPackage.TestResponse.obj_id)
+  return obj_id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void TestResponse::set_allocated_obj_id(std::string* obj_id) {
+  if (obj_id != nullptr) {
+    
+  } else {
+    
+  }
+  obj_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), obj_id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TestPackage.TestResponse.obj_id)
 }
 
 #ifdef __GNUC__

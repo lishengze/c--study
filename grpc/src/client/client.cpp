@@ -2,7 +2,7 @@
 #include "global_declare.h"
 
 #include "../include/global_declare.h"
-#include "pandora/util/time_util.h"
+#include "../include/time_util.h"
 
 #include "client_rpc.h"
 
@@ -53,7 +53,7 @@ void TestSimpleClient::request()
         grpc::Status status;
 
         string name = "TestSimpleClient";
-        string time = utrade::pandora::NanoTimeStr();
+        string time = NanoTimeStr();
 
         ClientContext   context;
 
@@ -139,7 +139,7 @@ void ServerStreamClient::request()
         grpc::Status status;
 
         string name = "ServerStreamClient";
-        string time = utrade::pandora::NanoTimeStr();
+        string time = NanoTimeStr();
         string session_id = "apple";
 
         ClientContext   context;
@@ -255,6 +255,9 @@ void AsyncClient::run_cq_loop()
             else
             {
                 ClientBaseRPC* rpc = static_cast<ClientBaseRPC*>(tag);
+
+                rpc->reconnect();
+
                 rpc->release();
             }
         }

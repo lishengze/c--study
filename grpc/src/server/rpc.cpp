@@ -1,5 +1,5 @@
 #include "rpc.h"
-#include "pandora/util/time_util.h"
+#include "../include/time_util.h"
 #include <thread>
 #include <chrono>
 
@@ -46,6 +46,8 @@ void BaseRPC::process()
 {
     try
     {
+        std::lock_guard<std::mutex> lk(mutex_);
+
         if (CREATE == status_)
         {
             cout << "\nStatus is CREATE" << endl;
@@ -60,8 +62,8 @@ void BaseRPC::process()
                 spawn();
             }
 
-            cout << "\nStatus is PROCESS" << endl;
-            status_ = FINISH;
+            // cout << "\nStatus is PROCESS" << endl;
+            // status_ = FINISH;
             proceed();
         }
         else if (FINISH == status_)
@@ -93,7 +95,18 @@ void BaseRPC::release()
 {
     try
     {
-        delete this;
+        std::lock_guard<std::mutex> lk(mutex_);
+        cout << "BaseRPC::release Obj_Count:  " << obj_id_ << endl;
+
+        if (!is_released_)
+        {
+            is_released_ = true;
+            delete this;
+        }
+        else
+        {
+            cout << "[E] BaseRPC::release id=" << obj_id_ << " has been Released!!! " << endl;
+        }
     }
     catch(const std::exception& e)
     {
@@ -124,7 +137,7 @@ void TestSimpleRPC::proceed()
         std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
 
         string name = "TestSimpleRPC";
-        string time = utrade::pandora::NanoTimeStr();
+        string time = NanoTimeStr();
         reply_.set_name(name);
         reply_.set_time(time);
         
@@ -189,7 +202,7 @@ void ServerStreamRPC::proceed()
         while(responder_numb--)
         {
             string name = "ServerStreamRPC";
-            string time = utrade::pandora::NanoTimeStr();
+            string time = NanoTimeStr();
             reply_.set_name(name);
             reply_.set_time(time);
             reply_.set_session_id(session_id);
@@ -249,51 +262,75 @@ void ServerStreamAppleRPC::register_request()
     service_->RequestServerStreamApple(&context_, &responder_, cq_, cq_, this);
 }
 
-void ServerStreamAppleRPC::proceed()
+void ServerStreamAppleRPC::write_msg()
 {
     try
     {
-        cout << "\nServerStreamAppleRPC::process " << endl;
-
-        responder_.Read(&request_, this);
-
-        cout << "From Request: id = " << request_.session_id() << ", name = " << request_.name() << ", time = " << request_.time() << endl;
-
-        if (request_.session_id().length() == 0)
-        {
-            cout << "Empty Request!" << endl;
-            make_active();
-            return;
-        }
-
-        if (session_id.length() == 0)
-        {
-            session_id = request_.session_id();
-            set_rpc_map();
-        }
-
-        int sleep_secs = 1;
+        cout << "ServerStreamAppleRPC::write_msg " << endl;
+        int sleep_secs = 3;
 
         grpc::Status status;
         
         string name = "ServerStreamAppleRPC";
-        string time = utrade::pandora::NanoTimeStr();
+        string time = NanoTimeStr();
         reply_.set_name(name);
         reply_.set_time(time);
         reply_.set_session_id(session_id);
+        reply_.set_obj_id(std::to_string(obj_id_));
 
         std::this_thread::sleep_for(std::chrono::seconds(sleep_secs)); 
 
         
         responder_.Write(reply_, this);
 
-        cout << "Server Response id = " << session_id << " name = " << name << " time = " << time << endl;
+        cout << "Server Response obj_id = " << obj_id_ <<  ", session = " << session_id << ", name = " << name << ", time = " << time << endl;
 
         // responder_.Finish(status, this);
+
+        is_write_cq_ = true;
 
         if (!status.ok())
         {
             cout << "ServerStreamAppleRPC Write Error: " << status.error_details() << " " << status.error_message() << endl;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] ServerStreamAppleRPC::write_msg " << e.what() << '\n';
+    }
+
+}
+
+void ServerStreamAppleRPC::proceed()
+{
+    try
+    {
+        cout << "\nServerStreamAppleRPC::process " << endl;
+
+        if (is_write_cq_)
+        {
+            is_write_cq_ = false;
+            cout << "This is Write_CQ" << endl;
+        }
+        else
+        {
+            responder_.Read(&request_, this);
+
+            cout << "From Request: session_id = " << request_.session_id() << ", name = " << request_.name() << ", time = " << request_.time() << endl;
+
+            if (request_.session_id().length() == 0)
+            {
+                cout << "Empty Request!" << endl;
+                return;
+            }
+
+            if (session_id.length() == 0)
+            {
+                session_id = request_.session_id();
+                set_rpc_map();
+            }
+
+            write_msg();
         }
     }
     catch(const std::exception& e)
@@ -308,8 +345,18 @@ void ServerStreamAppleRPC::proceed()
 
 void ServerStreamAppleRPC::release()
 {
-    cout << "ServerStreamAppleRPC::release Obj_Count:  " << --obj_count << endl;
-    delete this;
+    cout << "ServerStreamAppleRPC::release Obj_Count:  " << obj_id_ << endl;
+    std::lock_guard<std::mutex> lk(mutex_);
+
+        if (!is_released_)
+        {
+            is_released_ = true;
+            delete this;
+        }
+        else
+        {
+            cout << "[E] ClientApplePRC::release id=" << obj_id_ << " has been Released!!! " << endl;
+        }
 }
 
 void ServerStreamAppleRPC::spawn()
@@ -354,7 +401,7 @@ void ServerStreamPearRPC::proceed()
         grpc::Status status;
         
         string name = "ServerStreamPearRPC";
-        string time = utrade::pandora::NanoTimeStr();
+        string time = NanoTimeStr();
         reply_.set_name(name);
         reply_.set_time(time);
         reply_.set_session_id(session_id);
@@ -438,7 +485,7 @@ void ServerStreamMangoRPC::proceed()
         grpc::Status status;
         
         string name = "ServerStreamMangoRPC";
-        string time = utrade::pandora::NanoTimeStr();
+        string time = NanoTimeStr();
         reply_.set_name(name);
         reply_.set_time(time);
         reply_.set_session_id(session_id);

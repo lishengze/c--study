@@ -23,6 +23,7 @@ message TestRequest
     string name = 1;
     string time = 2;
     string session_id = 3;
+    string obj_id = 4;
 };
 
 
@@ -31,4 +32,5 @@ message TestResponse
     string name = 1;
     string time = 2;
     string session_id = 3;
+    string obj_id = 4;
 };

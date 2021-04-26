@@ -43,6 +43,8 @@ class BaseRPC
     BaseRPC(ServerCompletionQueue* cq): cq_{cq}
     {
         std::cout << "obj_count: " << ++obj_count << std::endl;
+
+        obj_id_ = obj_count;
     }
 
     virtual ~BaseRPC() {}
@@ -88,6 +90,12 @@ class BaseRPC
     bool                                        is_write_cq_{false};
 
     bool                                        is_read_cq_{false};
+
+    int                                         obj_id_;
+
+    std::mutex                                  mutex_;
+
+    bool                                        is_released_{false};
                                 
 };
 
@@ -191,6 +199,8 @@ public:
     virtual void register_request();
 
     virtual void spawn();
+
+    void write_msg();
     
 private:
 

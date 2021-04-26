@@ -31,6 +31,8 @@ using TestPackage::TestResponse;
 
 #include "../include/global_declare.h"
 
+
+
 class AsyncClient;
 
 class ClientBaseRPC
@@ -41,7 +43,7 @@ class ClientBaseRPC
         stub_{TestStream::NewStub(channel)},
         cq_{cq} 
         { 
-            
+            obj_id_ = ++obj_count_;
         }
 
         virtual ~ClientBaseRPC() { }
@@ -57,6 +59,8 @@ class ClientBaseRPC
         virtual void spawn() {}
 
         virtual void make_active();
+
+        virtual void reconnect() { }
 
         void set_async_client(AsyncClient* async_client)
         {
@@ -80,6 +84,14 @@ class ClientBaseRPC
         Alarm                                   alarm_;       
 
         bool                                    is_first_{true}; 
+
+        static int                              obj_count_;
+
+        int                                     obj_id_;
+
+        bool                                    is_released_{false};
+
+        std::mutex                              mutex_;
 };
 
 
@@ -89,7 +101,7 @@ class ClientApplePRC:public ClientBaseRPC
         ClientApplePRC(std::shared_ptr<Channel> channel, CompletionQueue* cq):
         ClientBaseRPC(channel, cq)
         { 
-            cout << "Create ClientApplePRC" << endl;
+            cout << "\n-------- Create ClientApplePRC id = " << obj_id_ << " --------"<< endl;
             session_id_ = "apple";
 
             process();
@@ -103,11 +115,17 @@ class ClientApplePRC:public ClientBaseRPC
 
         virtual void procceed();
 
+        virtual void reconnect();
+
+        virtual void release();
+
         void write_msg();
-        
+
     private:
 
     string                                                   last_cq_msg;
+
+    bool                                                     is_rsp_init_{true};
 
     TestRequest                                              request_;
     TestResponse                                             reply_;
