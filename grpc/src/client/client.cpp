@@ -267,3 +267,16 @@ void AsyncClient::run_cq_loop()
         std::cerr << "\n[E] AsyncClient::init_cq_thread() " <<e.what() << '\n';
     }
 }
+
+void AsyncClient::set_client_map(RpcType rpc_id, ClientBaseRPC* client_rpc)
+{
+    try
+    {
+        client_rpc_map_[rpc_id] = client_rpc;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E]  " << e.what() << '\n';
+    }
+    
+}

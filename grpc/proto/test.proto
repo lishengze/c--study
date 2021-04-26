@@ -24,6 +24,7 @@ message TestRequest
     string time = 2;
     string session_id = 3;
     string obj_id = 4;
+    string rpc_id = 5;
 };
 
 

@@ -187,6 +187,7 @@ class TestRequest PROTOBUF_FINAL :
     kTimeFieldNumber = 2,
     kSessionIdFieldNumber = 3,
     kObjIdFieldNumber = 4,
+    kRpcIdFieldNumber = 5,
   };
   // string name = 1;
   void clear_name();
@@ -252,6 +253,22 @@ class TestRequest PROTOBUF_FINAL :
   std::string* _internal_mutable_obj_id();
   public:
 
+  // string rpc_id = 5;
+  void clear_rpc_id();
+  const std::string& rpc_id() const;
+  void set_rpc_id(const std::string& value);
+  void set_rpc_id(std::string&& value);
+  void set_rpc_id(const char* value);
+  void set_rpc_id(const char* value, size_t size);
+  std::string* mutable_rpc_id();
+  std::string* release_rpc_id();
+  void set_allocated_rpc_id(std::string* rpc_id);
+  private:
+  const std::string& _internal_rpc_id() const;
+  void _internal_set_rpc_id(const std::string& value);
+  std::string* _internal_mutable_rpc_id();
+  public:
+
   // @@protoc_insertion_point(class_scope:TestPackage.TestRequest)
  private:
   class _Internal;
@@ -263,6 +280,7 @@ class TestRequest PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr time_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr session_id_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr obj_id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr rpc_id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_2eproto;
 };
@@ -721,6 +739,68 @@ inline void TestRequest::set_allocated_obj_id(std::string* obj_id) {
   obj_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), obj_id,
       GetArena());
   // @@protoc_insertion_point(field_set_allocated:TestPackage.TestRequest.obj_id)
+}
+
+// string rpc_id = 5;
+inline void TestRequest::clear_rpc_id() {
+  rpc_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& TestRequest::rpc_id() const {
+  // @@protoc_insertion_point(field_get:TestPackage.TestRequest.rpc_id)
+  return _internal_rpc_id();
+}
+inline void TestRequest::set_rpc_id(const std::string& value) {
+  _internal_set_rpc_id(value);
+  // @@protoc_insertion_point(field_set:TestPackage.TestRequest.rpc_id)
+}
+inline std::string* TestRequest::mutable_rpc_id() {
+  // @@protoc_insertion_point(field_mutable:TestPackage.TestRequest.rpc_id)
+  return _internal_mutable_rpc_id();
+}
+inline const std::string& TestRequest::_internal_rpc_id() const {
+  return rpc_id_.Get();
+}
+inline void TestRequest::_internal_set_rpc_id(const std::string& value) {
+  
+  rpc_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void TestRequest::set_rpc_id(std::string&& value) {
+  
+  rpc_id_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TestPackage.TestRequest.rpc_id)
+}
+inline void TestRequest::set_rpc_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  rpc_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TestPackage.TestRequest.rpc_id)
+}
+inline void TestRequest::set_rpc_id(const char* value,
+    size_t size) {
+  
+  rpc_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TestPackage.TestRequest.rpc_id)
+}
+inline std::string* TestRequest::_internal_mutable_rpc_id() {
+  
+  return rpc_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* TestRequest::release_rpc_id() {
+  // @@protoc_insertion_point(field_release:TestPackage.TestRequest.rpc_id)
+  return rpc_id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void TestRequest::set_allocated_rpc_id(std::string* rpc_id) {
+  if (rpc_id != nullptr) {
+    
+  } else {
+    
+  }
+  rpc_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), rpc_id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TestPackage.TestRequest.rpc_id)
 }
 
 // -------------------------------------------------------------------

@@ -30,6 +30,7 @@ using TestPackage::TestResponse;
 
 
 #include "../include/global_declare.h"
+#include "../include/data_struct.h"
 
 
 
@@ -43,6 +44,7 @@ class ClientBaseRPC
         stub_{TestStream::NewStub(channel)},
         cq_{cq} 
         { 
+            session_id_ = "lsz";
             obj_id_ = ++obj_count_;
         }
 
@@ -62,35 +64,39 @@ class ClientBaseRPC
 
         virtual void reconnect() { }
 
+        virtual void add_data(Fruit* data){ }
+
         void set_async_client(AsyncClient* async_client)
         {
             async_client_ = async_client;
         }
 
-    enum CallStatus     { CREATE, PROCESS, FINISH };
-    CallStatus          status_{CREATE};                // The current client state.            
+        enum CallStatus     { CREATE, PROCESS, FINISH };
+        CallStatus          status_{CREATE};                // The current client state.            
 
 
     protected:
-        bool     is_request_data_updated_{true};
-        bool     is_write_cq_{false};
-
-        string                                  session_id_;
         AsyncClient*                            async_client_{nullptr};
         CompletionQueue*                        cq_{nullptr};
         std::unique_ptr<TestStream::Stub>       stub_;
         std::shared_ptr<Channel>                channel_;       
 
-        Alarm                                   alarm_;       
+        Alarm                                   alarm_;   
 
-        bool                                    is_first_{true}; 
 
-        static int                              obj_count_;
 
+        string                                  session_id_;
+        string                                  rpc_id_;        
         int                                     obj_id_;
 
-        bool                                    is_released_{false};
+        static int                              obj_count_;        
 
+        bool                                    is_request_data_updated_{true};
+        bool                                    is_write_cq_{false};
+        bool                                    is_start_call_{true}; 
+        bool                                    is_rsp_init_{true};
+        bool                                    is_released_{false};
+                
         std::mutex                              mutex_;
 };
 
@@ -102,7 +108,7 @@ class ClientApplePRC:public ClientBaseRPC
         ClientBaseRPC(channel, cq)
         { 
             cout << "\n-------- Create ClientApplePRC id = " << obj_id_ << " --------"<< endl;
-            session_id_ = "apple";
+            rpc_id_ = "apple";
 
             process();
         }
@@ -119,13 +125,15 @@ class ClientApplePRC:public ClientBaseRPC
 
         virtual void release();
 
+        virtual void add_data(Fruit* data);
+
         void write_msg();
 
     private:
 
     string                                                   last_cq_msg;
 
-    bool                                                     is_rsp_init_{true};
+    
 
     TestRequest                                              request_;
     TestResponse                                             reply_;

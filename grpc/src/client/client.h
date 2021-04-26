@@ -163,6 +163,19 @@ public:
 
     void run_cq_loop();
 
+    void set_client_map(RpcType rpc_id, ClientBaseRPC* client_rpc);
+
+    template<class DataType>
+    void add_data(DataType* data) 
+    {
+        string rpc_id = data->rpc_id;
+
+        if (client_rpc_map_.find(rpc_id) != client_rpc_map_.end())
+        {
+            client_rpc_map_[rpc_id]->add_data(data);
+        }
+    }        
+
     std::shared_ptr<Channel>                        channel_;
 
     CompletionQueue                                 cq_;
@@ -170,4 +183,6 @@ public:
     boost::shared_ptr<std::thread>                  cq_thread_{nullptr};   
 
     ClientApplePRC*                                 apple_rpc_;
+
+    map<RpcType, ClientBaseRPC*>                    client_rpc_map_;
 };

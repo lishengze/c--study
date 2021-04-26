@@ -22,7 +22,7 @@ void ClientBaseRPC::process()
     try
     {
         std::lock_guard<std::mutex> lk(mutex_);
-        
+
         cout << "\nClientBaseRPC::process " << endl;
 
         if (status_ == CREATE)
@@ -208,8 +208,13 @@ void ClientApplePRC::procceed()
     {
         // cout << "ClientApplePRC::procceed " << endl;
 
+        if (is_start_call_)
+        {
+            is_start_call_ = false;
+            cout << "Is Start Call " << endl;
+        }
         /* request new data */
-        if (is_request_data_updated_)
+        else if (is_request_data_updated_)
         {
             cout << "First Request Data Come!" << endl;
             cout << "last_cq_msg: " << last_cq_msg << endl;
@@ -290,7 +295,7 @@ void ClientApplePRC::release()
     {
         std::lock_guard<std::mutex> lk(mutex_);
 
-        cout << "\n********* ClientApplePRC::release id = " << obj_id_ << " ********"<< endl;
+        cout << "\n********* ClientApplePRC::release id = " << obj_id_ << " ********\n"<< endl;
         if (!is_released_)
         {
             is_released_ = true;
@@ -299,11 +304,49 @@ void ClientApplePRC::release()
         else
         {
             cout << "[E] ClientApplePRC::release id=" << obj_id_ << " has been Released!!! " << endl;
-        }
-        
+        } 
     }
     catch(const std::exception& e)
     {
         std::cerr << "\n[E] ClientApplePRC::release " << e.what() << '\n';
     }
+}
+
+void ClientApplePRC::add_data(Fruit* data)
+{
+    try
+    {
+        cout << "\n+++++++ ClientApplePRC::add_data ++++++++++" << endl;
+        string name = "ClientApplePRC";
+        string time = NanoTimeStr();
+
+        Apple* real_data = (Apple*)(data);
+
+        request_.set_session_id(session_id_);
+        request_.set_name(real_data->name);
+        request_.set_time(real_data->time);
+        request_.set_obj_id(std::to_string(obj_id_));
+        request_.set_rpc_id(rpc_id_);
+
+        cout << "Request: obj_id=" << obj_id_ << ", session_id= " << request_.session_id() 
+                << " , name=" << request_.name() 
+                << " , time=" << request_.time()
+                << endl;            
+
+        // responder_ = stub_->AsyncServerStreamApple(&context_, cq_, this);
+
+        int sleep_secs = 3;
+        cout << "sleep for " << sleep_secs << " secs " << endl;
+        std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
+
+        is_write_cq_ = true;
+        is_request_data_updated_ = true;
+
+        responder_->Write(request_, this);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
 }
