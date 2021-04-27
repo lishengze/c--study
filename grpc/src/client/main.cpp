@@ -1,4 +1,5 @@
 #include "client.h"
+#include "trade_engin.h"
 #include "../include/global_declare.h"
 #include <grpcpp/grpcpp.h>
 
@@ -17,13 +18,21 @@ void test_client_double_stream_async()
     client.start();
 }
 
+void test_trade_engine()
+{
+    TradeEngine trade;
+    trade.start();
+}
+
 int main()
 {
     cout << "****** Client ******\n" << endl;
 
     // test_simple();
 
-    test_client_double_stream_async();
+    // test_client_double_stream_async();
+
+    test_trade_engine();
 
     return 1;
 }

@@ -66,16 +66,15 @@ class ClientBaseRPC
 
         virtual void add_data(Fruit* data){ }
 
-        void set_async_client(AsyncClient* async_client)
-        {
-            async_client_ = async_client;
-        }
+        virtual void set_client_map();
+
+        void set_async_client(AsyncClient* async_client);
 
         enum CallStatus     { CREATE, PROCESS, FINISH };
         CallStatus          status_{CREATE};                // The current client state.            
 
 
-    protected:
+    public:
         AsyncClient*                            async_client_{nullptr};
         CompletionQueue*                        cq_{nullptr};
         std::unique_ptr<TestStream::Stub>       stub_;
@@ -89,6 +88,8 @@ class ClientBaseRPC
         string                                  rpc_id_;        
         int                                     obj_id_;
 
+        string                                  cur_response_id_{""};
+
         static int                              obj_count_;        
 
         bool                                    is_request_data_updated_{true};
@@ -96,7 +97,7 @@ class ClientBaseRPC
         bool                                    is_start_call_{true}; 
         bool                                    is_rsp_init_{true};
         bool                                    is_released_{false};
-                
+
         std::mutex                              mutex_;
 };
 
@@ -131,14 +132,14 @@ class ClientApplePRC:public ClientBaseRPC
 
     private:
 
+    TestRequest  request;
+    TestResponse reply;
+
     string                                                   last_cq_msg;
-
-    
-
-    TestRequest                                              request_;
-    TestResponse                                             reply_;
 
     grpc::ClientContext                                      context_;
     std::unique_ptr<grpc::ClientAsyncReaderWriter<TestRequest, TestResponse>> responder_;
+
+    int  req_id_{0};
 };
 

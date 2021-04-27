@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "../include/global_declare.h"
+#include "data_struct.h"
 
 #include "cpp/test.grpc.pb.h"
 
@@ -165,16 +166,18 @@ public:
 
     void set_client_map(RpcType rpc_id, ClientBaseRPC* client_rpc);
 
-    template<class DataType>
-    void add_data(DataType* data) 
-    {
-        string rpc_id = data->rpc_id;
+    // template<class DataType>
+    // void add_data(DataType* data) 
+    // {
+    //     string rpc_id = data->rpc_id;
 
-        if (client_rpc_map_.find(rpc_id) != client_rpc_map_.end())
-        {
-            client_rpc_map_[rpc_id]->add_data(data);
-        }
-    }        
+    //     if (client_rpc_map_.find(rpc_id) != client_rpc_map_.end())
+    //     {
+    //         client_rpc_map_[rpc_id]->add_data(data);
+    //     }
+    // }        
+
+    void add_data(Fruit* data);   
 
     std::shared_ptr<Channel>                        channel_;
 
@@ -186,3 +189,5 @@ public:
 
     map<RpcType, ClientBaseRPC*>                    client_rpc_map_;
 };
+
+using AsyncClientPtr = boost::shared_ptr<AsyncClient>;

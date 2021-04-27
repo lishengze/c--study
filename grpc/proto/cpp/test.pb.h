@@ -188,6 +188,7 @@ class TestRequest PROTOBUF_FINAL :
     kSessionIdFieldNumber = 3,
     kObjIdFieldNumber = 4,
     kRpcIdFieldNumber = 5,
+    kRequestIdFieldNumber = 6,
   };
   // string name = 1;
   void clear_name();
@@ -269,6 +270,22 @@ class TestRequest PROTOBUF_FINAL :
   std::string* _internal_mutable_rpc_id();
   public:
 
+  // string request_id = 6;
+  void clear_request_id();
+  const std::string& request_id() const;
+  void set_request_id(const std::string& value);
+  void set_request_id(std::string&& value);
+  void set_request_id(const char* value);
+  void set_request_id(const char* value, size_t size);
+  std::string* mutable_request_id();
+  std::string* release_request_id();
+  void set_allocated_request_id(std::string* request_id);
+  private:
+  const std::string& _internal_request_id() const;
+  void _internal_set_request_id(const std::string& value);
+  std::string* _internal_mutable_request_id();
+  public:
+
   // @@protoc_insertion_point(class_scope:TestPackage.TestRequest)
  private:
   class _Internal;
@@ -281,6 +298,7 @@ class TestRequest PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr session_id_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr obj_id_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr rpc_id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr request_id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_2eproto;
 };
@@ -403,6 +421,7 @@ class TestResponse PROTOBUF_FINAL :
     kTimeFieldNumber = 2,
     kSessionIdFieldNumber = 3,
     kObjIdFieldNumber = 4,
+    kResponseIdFieldNumber = 6,
   };
   // string name = 1;
   void clear_name();
@@ -468,6 +487,22 @@ class TestResponse PROTOBUF_FINAL :
   std::string* _internal_mutable_obj_id();
   public:
 
+  // string response_id = 6;
+  void clear_response_id();
+  const std::string& response_id() const;
+  void set_response_id(const std::string& value);
+  void set_response_id(std::string&& value);
+  void set_response_id(const char* value);
+  void set_response_id(const char* value, size_t size);
+  std::string* mutable_response_id();
+  std::string* release_response_id();
+  void set_allocated_response_id(std::string* response_id);
+  private:
+  const std::string& _internal_response_id() const;
+  void _internal_set_response_id(const std::string& value);
+  std::string* _internal_mutable_response_id();
+  public:
+
   // @@protoc_insertion_point(class_scope:TestPackage.TestResponse)
  private:
   class _Internal;
@@ -479,6 +514,7 @@ class TestResponse PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr time_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr session_id_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr obj_id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr response_id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_test_2eproto;
 };
@@ -803,6 +839,68 @@ inline void TestRequest::set_allocated_rpc_id(std::string* rpc_id) {
   // @@protoc_insertion_point(field_set_allocated:TestPackage.TestRequest.rpc_id)
 }
 
+// string request_id = 6;
+inline void TestRequest::clear_request_id() {
+  request_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& TestRequest::request_id() const {
+  // @@protoc_insertion_point(field_get:TestPackage.TestRequest.request_id)
+  return _internal_request_id();
+}
+inline void TestRequest::set_request_id(const std::string& value) {
+  _internal_set_request_id(value);
+  // @@protoc_insertion_point(field_set:TestPackage.TestRequest.request_id)
+}
+inline std::string* TestRequest::mutable_request_id() {
+  // @@protoc_insertion_point(field_mutable:TestPackage.TestRequest.request_id)
+  return _internal_mutable_request_id();
+}
+inline const std::string& TestRequest::_internal_request_id() const {
+  return request_id_.Get();
+}
+inline void TestRequest::_internal_set_request_id(const std::string& value) {
+  
+  request_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void TestRequest::set_request_id(std::string&& value) {
+  
+  request_id_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TestPackage.TestRequest.request_id)
+}
+inline void TestRequest::set_request_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  request_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TestPackage.TestRequest.request_id)
+}
+inline void TestRequest::set_request_id(const char* value,
+    size_t size) {
+  
+  request_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TestPackage.TestRequest.request_id)
+}
+inline std::string* TestRequest::_internal_mutable_request_id() {
+  
+  return request_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* TestRequest::release_request_id() {
+  // @@protoc_insertion_point(field_release:TestPackage.TestRequest.request_id)
+  return request_id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void TestRequest::set_allocated_request_id(std::string* request_id) {
+  if (request_id != nullptr) {
+    
+  } else {
+    
+  }
+  request_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), request_id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TestPackage.TestRequest.request_id)
+}
+
 // -------------------------------------------------------------------
 
 // TestResponse
@@ -1053,6 +1151,68 @@ inline void TestResponse::set_allocated_obj_id(std::string* obj_id) {
   obj_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), obj_id,
       GetArena());
   // @@protoc_insertion_point(field_set_allocated:TestPackage.TestResponse.obj_id)
+}
+
+// string response_id = 6;
+inline void TestResponse::clear_response_id() {
+  response_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& TestResponse::response_id() const {
+  // @@protoc_insertion_point(field_get:TestPackage.TestResponse.response_id)
+  return _internal_response_id();
+}
+inline void TestResponse::set_response_id(const std::string& value) {
+  _internal_set_response_id(value);
+  // @@protoc_insertion_point(field_set:TestPackage.TestResponse.response_id)
+}
+inline std::string* TestResponse::mutable_response_id() {
+  // @@protoc_insertion_point(field_mutable:TestPackage.TestResponse.response_id)
+  return _internal_mutable_response_id();
+}
+inline const std::string& TestResponse::_internal_response_id() const {
+  return response_id_.Get();
+}
+inline void TestResponse::_internal_set_response_id(const std::string& value) {
+  
+  response_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void TestResponse::set_response_id(std::string&& value) {
+  
+  response_id_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TestPackage.TestResponse.response_id)
+}
+inline void TestResponse::set_response_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  response_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TestPackage.TestResponse.response_id)
+}
+inline void TestResponse::set_response_id(const char* value,
+    size_t size) {
+  
+  response_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TestPackage.TestResponse.response_id)
+}
+inline std::string* TestResponse::_internal_mutable_response_id() {
+  
+  return response_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* TestResponse::release_response_id() {
+  // @@protoc_insertion_point(field_release:TestPackage.TestResponse.response_id)
+  return response_id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void TestResponse::set_allocated_response_id(std::string* response_id) {
+  if (response_id != nullptr) {
+    
+  } else {
+    
+  }
+  response_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), response_id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TestPackage.TestResponse.response_id)
 }
 
 #ifdef __GNUC__

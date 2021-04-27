@@ -89,7 +89,11 @@ void BaseServer::run_cq_loop()
             else
             {
                 BaseRPC* rpc = static_cast<BaseRPC*>(tag);
-                rpc->release();
+                rpc->spawn();
+
+                // rpc->release();
+
+                delete rpc;
             }
         }
     }

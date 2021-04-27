@@ -75,7 +75,7 @@ class BaseRPC
 
     grpc::Alarm                                 alarm_;
     
-    bool                                        is_first_{true};
+
 
     static int                                  obj_count;    
 
@@ -84,6 +84,8 @@ class BaseRPC
     RpcType                                     rpc_id;
 
     BaseServer*                                 server_{NULL};
+
+    bool                                        is_first_{true};
 
     bool                                        is_response_data_updated_{true};
 
@@ -96,7 +98,8 @@ class BaseRPC
     std::mutex                                  mutex_;
 
     bool                                        is_released_{false};
-                                
+
+    string                                      cur_request_id_{""};                            
 };
 
 
@@ -213,6 +216,8 @@ private:
     TestResponse                                reply_;
 
     ServerAsyncReaderWriter<TestResponse, TestRequest>   responder_;
+
+    int  rsp_id_{0};
 
     
 };

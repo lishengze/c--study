@@ -205,6 +205,8 @@ void AsyncClient::start()
         init_cq_thread();
         
         init_rpc_client();
+
+        // cout << "------- AsyncClient::start() Over -----" << endl;
         
     }
     catch(const std::exception& e)
@@ -218,6 +220,9 @@ void AsyncClient::init_rpc_client()
     apple_rpc_ = new ClientApplePRC(channel_, &cq_);
 
     apple_rpc_->set_async_client(this);
+
+    // set_client_map(apple_rpc_->rpc_id_, apple_rpc_);
+
 }
 
 void AsyncClient::init_cq_thread()
@@ -268,10 +273,25 @@ void AsyncClient::run_cq_loop()
     }
 }
 
+void AsyncClient::add_data(Fruit* data) 
+{
+    string rpc_id = data->rpc_id;
+
+    if (client_rpc_map_.find(rpc_id) != client_rpc_map_.end())
+    {
+        client_rpc_map_[rpc_id]->add_data(data);
+    }
+    else
+    {
+        cout << "rpc: " << rpc_id << " was not found!" << endl;
+    }
+}   
+
 void AsyncClient::set_client_map(RpcType rpc_id, ClientBaseRPC* client_rpc)
 {
     try
     {
+        cout << "AsyncClient::set_client_map " << rpc_id << endl;
         client_rpc_map_[rpc_id] = client_rpc;
     }
     catch(const std::exception& e)
