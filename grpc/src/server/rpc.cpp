@@ -514,18 +514,27 @@ void ServerStreamAppleRPC::proceed()
 
 void ServerStreamAppleRPC::release()
 {
-    cout << "\n------- ServerStreamAppleRPC::release obj_id:  " << obj_id_ << " ---------"<< endl;
-    std::lock_guard<std::mutex> lk(mutex_);
+    try
+    {
+        cout << "\n------- ServerStreamAppleRPC::release obj_id:  " << obj_id_ << " ---------"<< endl;
+        std::lock_guard<std::mutex> lk(mutex_);
 
-    if (!is_released_)
-    {
-        is_released_ = true;
-        delete this;
+        if (!is_released_)
+        {
+            is_released_ = true;
+            delete this;
+        }
+        else
+        {
+            cout << "[E] ServerStreamAppleRPC::release id=" << obj_id_ << " has been Released!!! " << endl;
+        }
     }
-    else
+    catch(const std::exception& e)
     {
-        cout << "[E] ServerStreamAppleRPC::release id=" << obj_id_ << " has been Released!!! " << endl;
+        std::cerr <<"\n[E] ServerStreamAppleRPC::release() " << e.what() << '\n';
     }
+    
+
 }
 
 void ServerStreamAppleRPC::spawn()
