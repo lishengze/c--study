@@ -514,7 +514,7 @@ void ServerStreamAppleRPC::proceed()
 
 void ServerStreamAppleRPC::release()
 {
-    cout << "ServerStreamAppleRPC::release Obj_Count:  " << obj_id_ << endl;
+    cout << "\n------- ServerStreamAppleRPC::release obj_id:  " << obj_id_ << " ---------"<< endl;
     std::lock_guard<std::mutex> lk(mutex_);
 
     if (!is_released_)
@@ -524,7 +524,7 @@ void ServerStreamAppleRPC::release()
     }
     else
     {
-        cout << "[E] ClientApplePRC::release id=" << obj_id_ << " has been Released!!! " << endl;
+        cout << "[E] ServerStreamAppleRPC::release id=" << obj_id_ << " has been Released!!! " << endl;
     }
 }
 
@@ -535,6 +535,8 @@ void ServerStreamAppleRPC::spawn()
         std::cout << "\n ******* Spawn A New ServerStreamAppleRPC Server For Next Client ********" << std::endl;
         std::lock_guard<std::mutex> lk(mutex_);
         ServerStreamAppleRPC* new_rpc = new ServerStreamAppleRPC(service_, cq_);
+
+        new_rpc->set_server(server_);
     } 
     catch(const std::exception& e)
     {

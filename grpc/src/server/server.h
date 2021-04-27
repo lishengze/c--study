@@ -85,7 +85,9 @@ protected:
 
     map<SessionType, map<RpcType, BaseRPC*>>  rpc_map_;
 
-    mutable std::mutex                      mutex_clients_;
+    map<BaseRPC*, int>                      released_rpc_map_;
+
+    std::mutex                              cq_mutex_;
 };
 
 

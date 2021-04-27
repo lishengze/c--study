@@ -188,6 +188,10 @@ public:
     ClientApplePRC*                                 apple_rpc_;
 
     map<RpcType, ClientBaseRPC*>                    client_rpc_map_;
+
+    map<ClientBaseRPC*, int>                        released_rpc_map_;
+
+    std::mutex                                      cq_mutex_;
 };
 
 using AsyncClientPtr = boost::shared_ptr<AsyncClient>;

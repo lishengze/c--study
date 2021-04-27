@@ -250,16 +250,27 @@ void AsyncClient::run_cq_loop()
 
             bool result = cq_.Next(&tag, &status);
 
-            std::cout << "After Next: result: "<<  result << " status: " << status << std::endl;
+            std::lock_guard<std::mutex> lk(cq_mutex_);
+
+            ClientBaseRPC* rpc = static_cast<ClientBaseRPC*>(tag);
+
+            if (released_rpc_map_.find(rpc) != released_rpc_map_.end())
+            {
+                cout << "RPC id=" << released_rpc_map_[rpc] << " has been released!" << endl;
+                continue;
+            }
+
+
+            std::cout << "After Next: result: "<<  result << " status: " << status << " obj_id: " << rpc->obj_id_ << std::endl;
 
             if (result && status)
             {
-                ClientBaseRPC* rpc = static_cast<ClientBaseRPC*>(tag);
+                
                 rpc->process();
             }
             else
-            {
-                ClientBaseRPC* rpc = static_cast<ClientBaseRPC*>(tag);
+            {                
+                released_rpc_map_[rpc] = rpc->obj_id_;
 
                 rpc->reconnect();
 

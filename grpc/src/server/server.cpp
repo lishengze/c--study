@@ -75,25 +75,33 @@ void BaseServer::run_cq_loop()
         bool status;
         while(true)
         {
-            std::cout << "Before Next; " << std::endl;
+            std::cout << "\n++++++++ Loop Start " << " ++++++++"<< std::endl;
 
             bool result = cq_->Next(&tag, &status);
 
-            std::cout << "After Next: result: "<<  result << " status: " << status << std::endl;
+            std::lock_guard<std::mutex> lk(cq_mutex_);
+
+            BaseRPC* rpc = static_cast<BaseRPC*>(tag);
+
+            if (released_rpc_map_.find(rpc) != released_rpc_map_.end())
+            {
+                cout << "[E] RPC id=" << released_rpc_map_[rpc] << " has been released!" << endl;
+                continue;
+            }
+
+            std::cout << "[CQ] result: "<<  result << " status: " << status  << ", obj_id: " << rpc->obj_id_ << std::endl;
 
             if (result && status)
-            {
-                BaseRPC* rpc = static_cast<BaseRPC*>(tag);
+            {                
                 rpc->process();
             }
             else
             {
-                BaseRPC* rpc = static_cast<BaseRPC*>(tag);
+                released_rpc_map_[rpc] = rpc->obj_id_;
+
                 rpc->spawn();
 
-                // rpc->release();
-
-                delete rpc;
+                rpc->release();
             }
         }
     }
