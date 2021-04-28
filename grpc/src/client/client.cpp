@@ -140,7 +140,7 @@ void ServerStreamClient::request()
 
         string name = "ServerStreamClient";
         string time = NanoTimeStr();
-        string session_id = "apple";
+        string session_id_ = "apple";
 
         ClientContext   context;
 
@@ -148,9 +148,9 @@ void ServerStreamClient::request()
 
         request_.set_time(time);
 
-        request_.set_session_id(session_id);
+        request_.set_session_id(session_id_);
 
-        cout << "From Request: " << session_id << " " << name << " " << time << endl;
+        cout << "From Request: " << session_id_ << " " << name << " " << time << endl;
 
         if (!is_ansyc_)
         {
@@ -162,7 +162,7 @@ void ServerStreamClient::request()
 
             // while(sync_rpc_->Read(&reply_))
             // {
-            //     cout <<"From Server: " << reply_.session_id() << ", "  << reply_.name() << ", " << reply_.time() << endl;
+            //     cout <<"From Server: " << reply_.session_id_() << ", "  << reply_.name() << ", " << reply_.time() << endl;
             // }
             // status = sync_rpc_->Finish();
 
@@ -221,6 +221,8 @@ void AsyncClient::init_rpc_client()
 
     apple_rpc_->set_async_client(this);
 
+    apple_rpc_->process();
+
     // set_client_map(apple_rpc_->rpc_id_, apple_rpc_);
 
 }
@@ -246,7 +248,7 @@ void AsyncClient::run_cq_loop()
         bool status;
         while(true)
         {
-            std::cout << "Before Next; " << std::endl;
+            std::cout << "\n++++++++ Loop Start " << " ++++++++"<< std::endl;
 
             bool result = cq_.Next(&tag, &status);
 
@@ -254,27 +256,32 @@ void AsyncClient::run_cq_loop()
 
             ClientBaseRPC* rpc = static_cast<ClientBaseRPC*>(tag);
 
-            if (released_rpc_map_.find(rpc) != released_rpc_map_.end())
+            if (dead_rpc_id_set_.find(rpc->obj_id_) != dead_rpc_id_set_.end())
             {
-                cout << "RPC id=" << released_rpc_map_[rpc] << " has been released!" << endl;
+                std::cout << "[E][CQ] Next: result: "<<  result << " status: " << status
+                          << ", session_id_=" << rpc->session_id_ 
+                          << ", rpc_id_=" << rpc->rpc_id_ 
+                          << ", obj_id: " << rpc->obj_id_ 
+                          << std::endl;
+
+                cout << "[E] RPC id=" << rpc->obj_id_ << " has been released!" << endl;
                 continue;
             }
 
+            std::cout << "[E]result: "<<  result << " status: " << status  
+                        << ", session_id_=" << rpc->session_id_ 
+                        << ", rpc_id_=" << rpc->rpc_id_ 
+                        << ", obj_id: " << rpc->obj_id_ << std::endl;
 
-            std::cout << "After Next: result: "<<  result << " status: " << status << " obj_id: " << rpc->obj_id_ << std::endl;
+            check_dead_rpc(rpc);
 
             if (result && status)
-            {
-                
+            {            
                 rpc->process();
             }
             else
-            {                
-                released_rpc_map_[rpc] = rpc->obj_id_;
-
-                rpc->reconnect();
-
-                rpc->release();
+            {   
+                reconnect(rpc);
             }
         }
     }
@@ -286,28 +293,85 @@ void AsyncClient::run_cq_loop()
 
 void AsyncClient::add_data(Fruit* data) 
 {
-    string rpc_id = data->rpc_id;
+    string rpc_id_ = data->rpc_id;
 
-    if (client_rpc_map_.find(rpc_id) != client_rpc_map_.end())
+    if (client_rpc_map_.find(rpc_id_) != client_rpc_map_.end())
     {
-        client_rpc_map_[rpc_id]->add_data(data);
+        client_rpc_map_[rpc_id_]->add_data(data);
     }
     else
     {
-        cout << "rpc: " << rpc_id << " was not found!" << endl;
+        cout << "rpc: " << rpc_id_ << " was not found!" << endl;
     }
 }   
 
-void AsyncClient::set_client_map(RpcType rpc_id, ClientBaseRPC* client_rpc)
+void AsyncClient::set_client_map(RpcType rpc_id_, ClientBaseRPC* client_rpc)
 {
     try
     {
-        cout << "AsyncClient::set_client_map " << rpc_id << endl;
-        client_rpc_map_[rpc_id] = client_rpc;
+        cout << "AsyncClient::set_client_map " << rpc_id_ << ", obj_id: " << client_rpc->obj_id_ << endl;
+        client_rpc_map_[rpc_id_] = client_rpc;
     }
     catch(const std::exception& e)
     {
         std::cerr << "\n[E]  " << e.what() << '\n';
+    }
+    
+}
+
+void AsyncClient::reconnect(ClientBaseRPC* rpc)
+{
+    try
+    {
+        rpc->set_connected(false);             
+
+        dead_rpc_id_set_.emplace(rpc->obj_id_);
+
+        wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] = rpc;
+
+        ClientBaseRPC* new_rpc =  rpc->spawn();
+
+        // rpc->release();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+        new_rpc->process();        
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] AsyncClient::reconnect " << e.what() << '\n';
+    }
+
+}
+
+void AsyncClient::check_dead_rpc(ClientBaseRPC* rpc)
+{
+    try
+    {
+        std::cout << " BaseServer::check_dead_rpc  " << std::endl;
+
+        if (wait_to_release_rpc_map_.find(rpc->rpc_id_) != wait_to_release_rpc_map_.end()
+        && wait_to_release_rpc_map_[rpc->rpc_id_].find(rpc->session_id_) != wait_to_release_rpc_map_[rpc->rpc_id_].end()
+        && wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_])
+        {
+            if (wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] != rpc)
+            {
+
+                ClientBaseRPC* release_rpc = wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_];
+
+                cout << "WaitToRelease session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", dead obj_id=" << release_rpc->obj_id_
+                     << ", new obj_id=" << rpc->obj_id_ << endl;
+
+                release_rpc->release();
+
+                wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] = nullptr;
+            }
+
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
     }
     
 }

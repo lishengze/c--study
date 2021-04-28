@@ -40,14 +40,15 @@ class BaseRPC
 {
     public:
 
-    BaseRPC(ServerCompletionQueue* cq): cq_{cq}
+    BaseRPC(ServerCompletionQueue* cq, TestStream::AsyncService* service): 
+    cq_{cq},service_(service)
     {
         std::cout << "obj_count: " << ++obj_count << std::endl;
 
         obj_id_ = obj_count;
     }
 
-    virtual ~BaseRPC() {}
+    virtual ~BaseRPC() { cout << "Release BaseRPC " << endl; }
 
     virtual void process();
 
@@ -57,7 +58,7 @@ class BaseRPC
 
     virtual void register_request() { }
 
-    virtual void spawn() { }
+    virtual BaseRPC* spawn() { return this; }
 
     virtual void add_data(Fruit* fruit) {}
 
@@ -71,7 +72,9 @@ class BaseRPC
     enum CallStatus     { CREATE, PROCESS, FINISH };
     CallStatus          status_{CREATE};                // The current serving state.        
 
-    ServerCompletionQueue*                      cq_;
+    ServerCompletionQueue*                      cq_{nullptr};
+
+    TestStream::AsyncService*                   service_;
 
     grpc::Alarm                                 alarm_;
     
@@ -79,9 +82,9 @@ class BaseRPC
 
     static int                                  obj_count;    
 
-    SessionType                                 session_id{""};
+    SessionType                                 session_id_{""};
 
-    RpcType                                     rpc_id;
+    RpcType                                     rpc_id_{""};
 
     BaseServer*                                 server_{NULL};
 
@@ -93,7 +96,7 @@ class BaseRPC
 
     bool                                        is_read_cq_{false};
 
-    int                                         obj_id_;
+    int                                         obj_id_{0};
 
     std::mutex                                  mutex_;
 
@@ -109,9 +112,9 @@ class TestSimpleRPC:public BaseRPC
 
 public:
     TestSimpleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
-        BaseRPC{cq}, service_(service), responder_(&context_)
+        BaseRPC{cq, service_}, responder_(&context_)
     {
-        rpc_id = "ServerStreamRPC";
+        rpc_id_ = "ServerStreamRPC";
 
         process();
     }
@@ -124,14 +127,7 @@ public:
 
     virtual void register_request();
 
-    virtual void spawn() { }
-
- 
-    
 private:
-
-    TestStream::AsyncService*                   service_;
-
     ServerContext                               context_;
 
     TestRequest                                 request_;
@@ -149,9 +145,9 @@ class ServerStreamRPC:public BaseRPC
 public:
 
     ServerStreamRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
-        BaseRPC{cq}, service_(service), responder_(&context_)
+        BaseRPC{cq, service}, responder_(&context_)
     {
-        rpc_id = "ServerStreamRPC";
+        rpc_id_ = "ServerStreamRPC";
 
         process();
     }
@@ -163,12 +159,8 @@ public:
     virtual void release();    
 
     virtual void register_request();
-
-    virtual void spawn();
     
 private:
-
-    TestStream::AsyncService*                   service_;
 
     ServerContext                               context_;
 
@@ -186,14 +178,12 @@ class ServerStreamAppleRPC:public BaseRPC
 public:
 
     ServerStreamAppleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
-        BaseRPC{cq}, service_(service), responder_(&context_)
+        BaseRPC{cq, service}, responder_(&context_)
     {
-        rpc_id = "apple";
-
-        process();
+        rpc_id_ = "apple";
     }
 
-    virtual ~ServerStreamAppleRPC() { }
+    virtual ~ServerStreamAppleRPC() { cout << "Release ServerStreamAppleRPC! " << endl; }
 
     virtual void proceed();
 
@@ -201,19 +191,16 @@ public:
 
     virtual void register_request();
 
-    virtual void spawn();
+    virtual BaseRPC* spawn();
 
     void write_msg();
     
 private:
+    ServerContext                                        context_;    
 
-    TestStream::AsyncService*                   service_;
+    TestRequest                                          request_;
 
-    ServerContext                               context_;
-
-    TestRequest                                 request_;
-
-    TestResponse                                reply_;
+    TestResponse                                         reply_;
 
     ServerAsyncReaderWriter<TestResponse, TestRequest>   responder_;
 
@@ -223,79 +210,4 @@ private:
 };
 
 using ServerStreamAppleRPCPtr = boost::shared_ptr<ServerStreamAppleRPC>;
-
-
-class ServerStreamPearRPC:public BaseRPC
-{
-public:
-
-    ServerStreamPearRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
-        BaseRPC{cq}, service_(service), responder_(&context_)
-    {
-        rpc_id = "pear";
-
-        process();
-    }
-
-    virtual ~ServerStreamPearRPC() { }
-
-    virtual void proceed();
-
-    virtual void release();    
-
-    virtual void register_request();
-
-    virtual void spawn();
-    
-private:
-
-    TestStream::AsyncService*                   service_;
-
-    ServerContext                               context_;
-
-    TestRequest                                 request_;
-
-    TestResponse                                reply_;
-
-    ServerAsyncWriter<TestResponse>             responder_;
-};
-
-using ServerStreamPearRPCPtr = boost::shared_ptr<ServerStreamPearRPC>;
-
-class ServerStreamMangoRPC:public BaseRPC
-{
-public:
-
-    ServerStreamMangoRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
-        BaseRPC{cq}, service_(service), responder_(&context_)
-    {
-        rpc_id = "mango";
-
-        process();
-    }
-
-    virtual ~ServerStreamMangoRPC() { }
-
-    virtual void proceed();
-
-    virtual void release();    
-
-    virtual void register_request();
-
-    virtual void spawn();
-    
-private:
-
-    TestStream::AsyncService*                   service_;
-
-    ServerContext                               context_;
-
-    TestRequest                                 request_;
-
-    TestResponse                                reply_;
-
-    ServerAsyncWriter<TestResponse>             responder_;
-};
-
-using ServerStreamMangoRPCPtr = boost::shared_ptr<ServerStreamMangoRPC>;
 

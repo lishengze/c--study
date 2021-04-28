@@ -35,6 +35,7 @@ void BaseServer::start()
 
         server_stream_apple_ = new ServerStreamAppleRPC(&service_, cq_.get());
         server_stream_apple_->set_server(this);
+        server_stream_apple_->process();
 
         // server_stream_pear_ = new ServerStreamPearRPC(&service_, cq_.get());
         // server_stream_pear_->set_server(this);
@@ -55,11 +56,11 @@ void BaseServer::init_cq_thread()
     cq_thread_ = boost::make_shared<std::thread>(&BaseServer::run_cq_loop, this);
 }
 
-void BaseServer::set_rpc_map(SessionType session_id, RpcType rpc_id, BaseRPC* rpc)
+void BaseServer::set_rpc_map(SessionType session_id_, RpcType rpc_id_, BaseRPC* rpc)
 {
     try
     {
-        rpc_map_[session_id][rpc_id] = rpc;
+        rpc_map_[session_id_][rpc_id_] = rpc;
     }
     catch(const std::exception& e)
     {
@@ -83,25 +84,30 @@ void BaseServer::run_cq_loop()
 
             BaseRPC* rpc = static_cast<BaseRPC*>(tag);
 
-            if (released_rpc_map_.find(rpc) != released_rpc_map_.end())
+            if (dead_rpc_set_.find(rpc) != dead_rpc_set_.end())
             {
-                cout << "[E] RPC id=" << released_rpc_map_[rpc] << " has been released!" << endl;
+                cout << "[E] RPC id=" << rpc->obj_id_ << " has been released!" << endl;
+
+                std::cout << "[E][CQ] result: "<<  result << " status: " << status  
+                          << ", session_id_=" << rpc->session_id_ 
+                          << ", rpc_id_=" << rpc->rpc_id_ 
+                          << ", obj_id: " << rpc->obj_id_ 
+                          << std::endl;
+
                 continue;
             }
 
-            std::cout << "[CQ] result: "<<  result << " status: " << status  << ", obj_id: " << rpc->obj_id_ << std::endl;
+                std::cout << "[E]result: "<<  result << " status: " << status  << ", session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", obj_id: " << rpc->obj_id_ << std::endl;
 
             if (result && status)
             {                
+                check_dead_rpc(rpc);
+
                 rpc->process();
             }
             else
             {
-                released_rpc_map_[rpc] = rpc->obj_id_;
-
-                rpc->spawn();
-
-                rpc->release();
+                reconnect(rpc);
             }
         }
     }
@@ -114,4 +120,64 @@ void BaseServer::run_cq_loop()
         cout << "BaseServer::run_cq_loop unkonwn exceptions" << endl;
     }    
 
+}
+
+void BaseServer::reconnect(BaseRPC* rpc)
+{
+    try
+    {
+        dead_rpc_set_.emplace(rpc);
+
+        BaseRPC* new_rpc = rpc->spawn();
+
+        if (rpc->session_id_.length() == 0)
+        {
+            rpc->release();
+        }
+        else
+        {
+            wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] = rpc;
+        }        
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
+        new_rpc->process();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] BaseServer::reconnect " << e.what() << '\n';
+    }
+    
+}
+
+void BaseServer::check_dead_rpc(BaseRPC* rpc)
+{
+    try
+    {
+        std::cout << " BaseServer::check_dead_rpc  " << std::endl;
+
+        if (wait_to_release_rpc_map_.find(rpc->rpc_id_) != wait_to_release_rpc_map_.end()
+        && wait_to_release_rpc_map_[rpc->rpc_id_].find(rpc->session_id_) != wait_to_release_rpc_map_[rpc->rpc_id_].end()
+        && wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_])
+        {
+            if (wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] != rpc)
+            {
+
+                BaseRPC* release_rpc = wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_];
+                dead_rpc_set_.erase(release_rpc);
+
+                cout << "WaitToRelease session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", dead obj_id=" << release_rpc->obj_id_
+                     << ", new obj_id=" << rpc->obj_id_ << endl;
+                release_rpc->release();
+
+                wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] = nullptr;
+            }
+
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
 }

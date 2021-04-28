@@ -49,6 +49,10 @@ public:
 
     void set_rpc_map(SessionType session_id, RpcType rpc_id, BaseRPC* rpc);
 
+    void reconnect(BaseRPC* rpc);
+
+    void check_dead_rpc(BaseRPC* rpc);
+
     template<class DataType>
     void add_data(DataType* data) 
     {
@@ -78,16 +82,16 @@ protected:
     ServerStreamRPC*                        server_stream_rpc;   
 
     ServerStreamAppleRPC*                   server_stream_apple_;
-    ServerStreamPearRPC*                    server_stream_pear_;
-    ServerStreamMangoRPC*                   server_stream_mango_;
 
     TradeEngine*                            trade_engine_;
 
-    map<SessionType, map<RpcType, BaseRPC*>>  rpc_map_;
+    map<SessionType, map<RpcType, BaseRPC*>> rpc_map_;
 
-    map<BaseRPC*, int>                      released_rpc_map_;
+    set<BaseRPC*>                            dead_rpc_set_;
 
-    std::mutex                              cq_mutex_;
+    map<RpcType, map<SessionType, BaseRPC*>> wait_to_release_rpc_map_;
+
+    std::mutex                               cq_mutex_;
 };
 
 

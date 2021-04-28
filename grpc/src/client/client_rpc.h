@@ -36,6 +36,12 @@ using TestPackage::TestResponse;
 
 class AsyncClient;
 
+struct BaseRPCParam
+{
+    std::shared_ptr<Channel> channel;
+    CompletionQueue* cq;
+};
+
 class ClientBaseRPC
 {
     public:
@@ -56,9 +62,9 @@ class ClientBaseRPC
 
         virtual void procceed();
 
-        virtual void release();
+        virtual BaseRPCParam release();
 
-        virtual void spawn() {}
+        virtual ClientBaseRPC* spawn() { return this; }
 
         virtual void make_active();
 
@@ -67,6 +73,12 @@ class ClientBaseRPC
         virtual void add_data(Fruit* data){ }
 
         virtual void set_client_map();
+
+        virtual void set_connected(bool is_connected) {
+            is_connected_ = is_connected;
+        }
+
+        virtual bool is_connected() { return is_connected_;}
 
         void set_async_client(AsyncClient* async_client);
 
@@ -77,16 +89,16 @@ class ClientBaseRPC
     public:
         AsyncClient*                            async_client_{nullptr};
         CompletionQueue*                        cq_{nullptr};
-        std::unique_ptr<TestStream::Stub>       stub_;
-        std::shared_ptr<Channel>                channel_;       
+        std::unique_ptr<TestStream::Stub>       stub_{nullptr};
+        std::shared_ptr<Channel>                channel_{nullptr};       
 
         Alarm                                   alarm_;   
 
 
 
-        string                                  session_id_;
-        string                                  rpc_id_;        
-        int                                     obj_id_;
+        string                                  session_id_{""};
+        string                                  rpc_id_{""};        
+        int                                     obj_id_{0};
 
         string                                  cur_response_id_{""};
 
@@ -95,8 +107,9 @@ class ClientBaseRPC
         bool                                    is_request_data_updated_{true};
         bool                                    is_write_cq_{false};
         bool                                    is_start_call_{true}; 
-        bool                                    is_rsp_init_{true};
+        bool                                    is_rsp_init_{false};
         bool                                    is_released_{false};
+        bool                                    is_connected_{false};
 
         std::mutex                              mutex_;
 };
@@ -110,13 +123,11 @@ class ClientApplePRC:public ClientBaseRPC
         { 
             cout << "\n-------- Create ClientApplePRC id = " << obj_id_ << " --------"<< endl;
             rpc_id_ = "apple";
-
-            process();
         }
 
         virtual ~ClientApplePRC() { }
 
-        virtual void spawn();
+        virtual ClientBaseRPC* spawn();
 
         virtual void init_request();
 
@@ -124,7 +135,7 @@ class ClientApplePRC:public ClientBaseRPC
 
         virtual void reconnect();
 
-        virtual void release();
+        virtual BaseRPCParam release();
 
         virtual void add_data(Fruit* data);
 

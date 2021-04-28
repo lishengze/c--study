@@ -21,11 +21,11 @@ void ClientBaseRPC::process()
 {
     try
     {
-        cout << "\nClientBaseRPC::process " << endl;        
+        // cout << "\nClientBaseRPC::process " << endl;        
         
         if (status_ == CREATE)
         {
-            cout << "Status is CREATE " << endl;
+            // cout << "Status is CREATE " << endl;
 
             init_request();
 
@@ -109,12 +109,14 @@ void ClientBaseRPC::procceed()
     
 }
 
-void ClientBaseRPC::release()
+BaseRPCParam ClientBaseRPC::release()
 {
     try
     {
-       cout << " ClientBaseRPC::release " << endl;
-       delete this;
+        BaseRPCParam result;
+        cout << " ClientBaseRPC::release " << endl;
+        delete this;
+        return result;
     }
     catch(const std::exception& e)
     {
@@ -124,13 +126,25 @@ void ClientBaseRPC::release()
 }
 
 
-void ClientApplePRC::spawn()
+ClientBaseRPC* ClientApplePRC::spawn()
 {
     try
     {
-        ClientApplePRC* client_apple = new ClientApplePRC(channel_, cq_);
+        std::cout << "\n ******* Spawn A New ServerStreamAppleRPC Server For Next Client ********" << std::endl;
 
-        client_apple->set_async_client(async_client_);
+        std::shared_ptr<Channel>   channel = channel_;
+        CompletionQueue*           cq = cq_;
+        AsyncClient*               async_client = async_client_;
+
+        // ClientApplePRC* client_apple = new (this) ClientApplePRC(channel, cq);
+
+        ClientApplePRC* client_apple = new ClientApplePRC(channel, cq);
+
+        client_apple->set_async_client(async_client);
+
+        return client_apple;
+
+        // client_apple->process();
 
         // client_apple->set_client_map();
 
@@ -145,44 +159,15 @@ void ClientApplePRC::init_request()
 {
     try
     {
-        is_request_data_updated_ = true;
-
         is_rsp_init_ = false;
 
         cout << "ClientApplePRC::init_request " << endl;
 
         responder_ = stub_->PrepareAsyncServerStreamApple(&context_, cq_);
 
-        // responder_ = stub_->AsyncServerStreamApple(&context_, cq_, this);
-
-        // stub_->ServerStreamApple(&context_);
-
-        // responder_->Write(request, this);
-
-        // responder_->WritesDone(this);
-
         responder_->StartCall(this);
 
         last_cq_msg = "StartCall";
-
-        // std::this_thread::sleep_for(std::chrono::seconds(2));
-
-        // responder_->Write(request, this);
-
-        // std::this_thread::sleep_for(std::chrono::seconds(2));
-
-
-        // make_active();
-
-        // responder_->StartCall(this);
-
-        // responder_->Finish(&status, this);
-
-        // if (!status.ok())
-        // {
-        //     cout << "  " << endl;
-        // }
-
 
     }
     catch(const std::exception& e)
@@ -242,19 +227,14 @@ void ClientApplePRC::procceed()
             is_start_call_ = false;
             cout << "Is Start Call " << endl;
             last_cq_msg = "Is Start Call";
+            is_connected_ = true;
+            if (!is_rsp_init_)
+            {
+                make_active();
+
+                is_rsp_init_ = true;
+            }   
         }
-        // /* request new data */
-        // else if (is_request_data_updated_)
-        // {
-        //     cout << "First Request Data Come!" << endl;
-        //     cout << "last_cq_msg: " << last_cq_msg << endl;
-
-        //     is_request_data_updated_ = false;
-
-        //     // write_msg();
-
-        //     last_cq_msg = "First Request Data ";
-        // }
         else if (is_write_cq_)
         {
             cout << "last_cq_msg: " << last_cq_msg << endl;
@@ -279,7 +259,7 @@ void ClientApplePRC::procceed()
             
             responder_->Read(&reply, this);
 
-            if (reply.session_id().length() == 0)
+            if (reply.response_id().length() == 0)
             {
                 last_cq_msg = "Get Empty Response Data";
                 cout << "[W] Empty Response" << endl;
@@ -293,9 +273,6 @@ void ClientApplePRC::procceed()
                     << " , rsp_id="<< reply.response_id()
                     << endl;
             last_cq_msg = "Get Full Response Data";
-
-            // write_msg();     
-            // make_active();   
         }
     }
     catch(const std::exception& e)
@@ -323,11 +300,16 @@ void ClientApplePRC::reconnect()
     }    
 }
 
-void ClientApplePRC::release()
+BaseRPCParam ClientApplePRC::release()
 {
     try
     {
         std::lock_guard<std::mutex> lk(mutex_);
+
+        BaseRPCParam result;
+
+        result.channel = channel_;
+        result.cq = cq_;
 
         cout << "\n********* ClientApplePRC::release id = " << obj_id_ << " ********\n"<< endl;
         if (!is_released_)
@@ -339,6 +321,8 @@ void ClientApplePRC::release()
         {
             cout << "[E] ClientApplePRC::release id=" << obj_id_ << " has been Released!!! " << endl;
         } 
+
+        return result;
     }
     catch(const std::exception& e)
     {
@@ -352,8 +336,23 @@ void ClientApplePRC::add_data(Fruit* data)
     {
         // cout << "ClientApplePRC add_data " << endl;
 
+
+
         cout << "\n+++++++ ClientApplePRC::add_data ++++++++++" << endl;
         std::lock_guard<std::mutex> lk(mutex_);
+
+        if (!is_connected_)
+        {
+            cout << "[E] rpc_id: " << rpc_id_ << ", obj_id: " << obj_id_  << " Server was not Connected " << endl;
+            return;
+        }
+
+        if (is_released_)
+        {
+            cout << "[E] rpc_id: " << rpc_id_ << ", obj_id: " << obj_id_  <<" RPC was released " << endl;
+            return;
+        }
+
 
         
         string name = "ClientApplePRC";

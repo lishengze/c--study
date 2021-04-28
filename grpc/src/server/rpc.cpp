@@ -28,11 +28,11 @@ void BaseRPC::set_rpc_map()
     {
         if (server_)
         {
-            server_->set_rpc_map(session_id, rpc_id, this);
+            server_->set_rpc_map(session_id_, rpc_id_, this);
         }
         else
         {
-            cout << session_id << " server was not inited!" << endl;
+            cout << session_id_ << " server was not inited!" << endl;
         }
     }
     catch(const std::exception& e)
@@ -187,9 +187,9 @@ void ServerStreamRPC::proceed()
 
         cout << "From Request: id = " << request_.session_id() << ", name = " << request_.name() << ", time = " << request_.time() << endl;
 
-        if (session_id.length() == 0)
+        if (session_id_.length() == 0)
         {
-            session_id = request_.session_id();
+            session_id_ = request_.session_id();
 
             set_rpc_map();
         }
@@ -205,12 +205,12 @@ void ServerStreamRPC::proceed()
             string time = NanoTimeStr();
             reply_.set_name(name);
             reply_.set_time(time);
-            reply_.set_session_id(session_id);
+            reply_.set_session_id(session_id_);
 
             
             responder_.Write(reply_, this);
 
-            cout << "Server Response, id = " << session_id << ", name = " << name << ", time = " << time << endl;
+            cout << "Server Response, id = " << session_id_ << ", name = " << name << ", time = " << time << endl;
 
             std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));            
         }
@@ -238,181 +238,6 @@ void ServerStreamRPC::release()
     delete this;
 }
 
-void ServerStreamRPC::spawn()
-{
-    try
-    {
-        std::cout << "\n ******* Spawn A New Server For Next Client ********" << std::endl;
-        ServerStreamRPC* new_rpc = new ServerStreamRPC(service_, cq_);
-    } 
-    catch(const std::exception& e)
-    {
-        std::cerr << "\n[E]  ServerStreamRPC::spawn" << e.what() << '\n';
-    }    
-}
-
-
-
-
-void ServerStreamPearRPC::register_request()
-{
-    cout << "ServerStreamPearRPC::register_request!" << endl;
-
-    service_->RequestServerStreamPear(&context_, &request_, &responder_, cq_, cq_, this);
-}
-
-void ServerStreamPearRPC::proceed()
-{
-    try
-    {
-        cout << "\nServerStreamPearRPC::process " << endl;
-
-        cout << "From Request: id = " << request_.session_id() << " name = " << request_.name() << ", time = " << request_.time() << endl;
-
-        if (session_id.length() == 0)
-        {
-            session_id = request_.session_id();
-
-            set_rpc_map();
-        }
-
-        int sleep_secs = 2;
-
-        grpc::Status status;
-        
-        string name = "ServerStreamPearRPC";
-        string time = NanoTimeStr();
-        reply_.set_name(name);
-        reply_.set_time(time);
-        reply_.set_session_id(session_id);
-
-        std::this_thread::sleep_for(std::chrono::seconds(sleep_secs)); 
-
-        
-        responder_.Write(reply_, this);
-
-        cout << "Server Response id = " << session_id << " name = " << name << " time = " << time << endl;
-
-        // responder_.Finish(status, this);
-
-        if (!status.ok())
-        {
-            cout << "ServerStreamPearRPC Write Error: " << status.error_details() << " " << status.error_message() << endl;
-        }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr <<"ServerStreamPearRPC::process " << e.what() << '\n';
-    }
-    catch(...)
-    {
-        cout << "ServerStreamPearRPC::process unkonwn exceptions" << endl;
-    }
-}
-
-void ServerStreamPearRPC::release()
-{
-    cout << "ServerStreamPearRPC::release Obj_Count:  " << --obj_count << endl;
-    delete this;
-}
-
-void ServerStreamPearRPC::spawn()
-{
-    try
-    {
-        std::cout << "\n ******* Spawn A New ServerStreamPearRPC Server For Next Client ********" << std::endl;
-        ServerStreamPearRPC* new_rpc = new ServerStreamPearRPC(service_, cq_);
-    } 
-    catch(const std::exception& e)
-    {
-        std::cerr << "\n[E]  ServerStreamPearRPC::spawn" << e.what() << '\n';
-    }    
-}
-
-
-
-void ServerStreamMangoRPC::register_request()
-{
-    cout << "ServerStreamMangoRPC::register_request!" << endl;
-
-    service_->RequestServerStreamPear(&context_, &request_, &responder_, cq_, cq_, this);
-}
-
-void ServerStreamMangoRPC::proceed()
-{
-    try
-    {
-        cout << "\nServerStreamMangoRPC::process " << endl;
-
-        cout << "From Request: id = " << request_.session_id() << " name = " << request_.name() << ", time = " << request_.time() << endl;
-
-        if (request_.session_id().length() == 0)
-        {
-            cout << "Error Request!" << endl;
-            make_active();
-            return;
-        }
-
-        if (session_id.length() == 0)
-        {
-            session_id = request_.session_id();
-
-            set_rpc_map();
-        }
-
-        int sleep_secs = 2;
-
-        grpc::Status status;
-        
-        string name = "ServerStreamMangoRPC";
-        string time = NanoTimeStr();
-        reply_.set_name(name);
-        reply_.set_time(time);
-        reply_.set_session_id(session_id);
-
-        std::this_thread::sleep_for(std::chrono::seconds(sleep_secs)); 
-
-        
-        responder_.Write(reply_, this);
-
-        cout << "Server Response id = " << session_id << " name = " << name << " time = " << time << endl;
-
-        // responder_.Finish(status, this);
-
-        if (!status.ok())
-        {
-            cout << "ServerStreamMangoRPC Write Error: " << status.error_details() << " " << status.error_message() << endl;
-        }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr <<"ServerStreamMangoRPC::process " << e.what() << '\n';
-    }
-    catch(...)
-    {
-        cout << "ServerStreamMangoRPC::process unkonwn exceptions" << endl;
-    }
-}
-
-void ServerStreamMangoRPC::release()
-{
-    cout << "ServerStreamMangoRPC::release Obj_Count:  " << --obj_count << endl;
-    delete this;
-}
-
-void ServerStreamMangoRPC::spawn()
-{
-    try
-    {
-        std::cout << "\n ******* Spawn A New ServerStreamMangoRPC Server For Next Client ********" << std::endl;
-        ServerStreamMangoRPC* new_rpc = new ServerStreamMangoRPC(service_, cq_);
-    } 
-    catch(const std::exception& e)
-    {
-        std::cerr << "\n[E]  ServerStreamMangoRPC::spawn" << e.what() << '\n';
-    }    
-}
-
 
 void ServerStreamAppleRPC::register_request()
 {
@@ -428,7 +253,7 @@ void ServerStreamAppleRPC::write_msg()
     try
     {
         cout << "\nServerStreamAppleRPC::write_msg " << endl;
-        int sleep_secs = 3000;
+        int sleep_secs = 100;
 
         grpc::Status status;
         
@@ -436,7 +261,7 @@ void ServerStreamAppleRPC::write_msg()
         string time = NanoTimeStr();
         reply_.set_name(name);
         reply_.set_time(time);
-        reply_.set_session_id(session_id);
+        reply_.set_session_id(session_id_);
         reply_.set_obj_id(std::to_string(obj_id_));
         reply_.set_response_id(std::to_string(++rsp_id_));
 
@@ -446,7 +271,7 @@ void ServerStreamAppleRPC::write_msg()
         responder_.Write(reply_, this);
 
         cout << "[SERVER] obj_id = " 
-             << obj_id_ <<  ", session=" << session_id 
+             << obj_id_ <<  ", session=" << session_id_ 
              << ", name=" << name 
              << ", time=" << time 
              << ", rsp_id=" << rsp_id_ << endl;
@@ -471,7 +296,7 @@ void ServerStreamAppleRPC::proceed()
 {
     try
     {
-        cout << "\nServerStreamAppleRPC::process " << endl;
+        cout << "\nServerStreamAppleRPC::process obj_id = "  << obj_id_ << endl;
 
         if (is_write_cq_)
         {
@@ -482,20 +307,21 @@ void ServerStreamAppleRPC::proceed()
         {
             responder_.Read(&request_, this);
 
-            cout << "[CLIENT]: session_id=" << request_.session_id() 
+            cout << "[CLIENT]: session_id_=" << request_.session_id() 
                 << ", name=" << request_.name() 
                 << ", time=" << request_.time() 
                 << ", req_id=" << request_.request_id() << endl;
 
-            if (request_.session_id().length() == 0)
+            if (request_.request_id().length() == 0)
             {
                 cout << "Empty Request!" << endl;
+                write_msg();
                 return;
             }
 
-            if (session_id.length() == 0)
+            if (session_id_.length() == 0)
             {
-                session_id = request_.session_id();
+                session_id_ = request_.session_id();
                 set_rpc_map();
             }
 
@@ -537,15 +363,17 @@ void ServerStreamAppleRPC::release()
 
 }
 
-void ServerStreamAppleRPC::spawn()
+BaseRPC* ServerStreamAppleRPC::spawn()
 {
     try
     {
         std::cout << "\n ******* Spawn A New ServerStreamAppleRPC Server For Next Client ********" << std::endl;
         std::lock_guard<std::mutex> lk(mutex_);
-        ServerStreamAppleRPC* new_rpc = new ServerStreamAppleRPC(service_, cq_);
 
+        ServerStreamAppleRPC* new_rpc = new ServerStreamAppleRPC(service_, cq_);
         new_rpc->set_server(server_);
+
+        return new_rpc;
     } 
     catch(const std::exception& e)
     {

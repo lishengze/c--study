@@ -71,7 +71,7 @@ void TradeEngine::test_thread_fun()
 
            std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
-           async_client_->add_data(&apple);           
+        //    async_client_->add_data(&apple);           
        }
     }
     catch(const std::exception& e)

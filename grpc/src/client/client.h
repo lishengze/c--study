@@ -179,6 +179,10 @@ public:
 
     void add_data(Fruit* data);   
 
+    void reconnect(ClientBaseRPC* rpc);
+
+    void check_dead_rpc(ClientBaseRPC* rpc);
+
     std::shared_ptr<Channel>                        channel_;
 
     CompletionQueue                                 cq_;
@@ -189,9 +193,15 @@ public:
 
     map<RpcType, ClientBaseRPC*>                    client_rpc_map_;
 
-    map<ClientBaseRPC*, int>                        released_rpc_map_;
+    // map<int, ClientBaseRPC*>                        released_rpc_map_;
+
+    set<int>                                        dead_rpc_id_set_;
+
+    map<RpcType, map<SessionType, ClientBaseRPC*>>  wait_to_release_rpc_map_;    
 
     std::mutex                                      cq_mutex_;
+
+
 };
 
 using AsyncClientPtr = boost::shared_ptr<AsyncClient>;
