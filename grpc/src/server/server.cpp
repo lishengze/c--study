@@ -97,16 +97,18 @@ void BaseServer::run_cq_loop()
                 continue;
             }
 
-                std::cout << "[E]result: "<<  result << " status: " << status  << ", session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", obj_id: " << rpc->obj_id_ << std::endl;
+            std::cout << "[E] result: "<<  result << " status: " << status  << ", session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", obj_id: " << rpc->obj_id_ << std::endl;
+
+            check_dead_rpc(rpc);
 
             if (result && status)
             {                
-                check_dead_rpc(rpc);
-
                 rpc->process();
             }
             else
             {
+                record_dead_rpc(rpc);
+
                 reconnect(rpc);
             }
         }
@@ -122,22 +124,35 @@ void BaseServer::run_cq_loop()
 
 }
 
-void BaseServer::reconnect(BaseRPC* rpc)
+void BaseServer::record_dead_rpc(BaseRPC* rpc)
 {
     try
     {
         dead_rpc_set_.emplace(rpc);
-
-        BaseRPC* new_rpc = rpc->spawn();
-
-        if (rpc->session_id_.length() == 0)
+        
+        if (rpc->session_id_.length() != 0)
         {
-            rpc->release();
-        }
-        else
-        {
+            if (rpc_map_.find(rpc->session_id_) != rpc_map_.end() 
+            && rpc_map_[rpc->session_id_].find(rpc->rpc_id_) != rpc_map_[rpc->session_id_].end())
+            {
+                rpc_map_[rpc->session_id_][rpc->rpc_id_] = nullptr;
+            }
+
             wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] = rpc;
-        }        
+        }       
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] BaseServer::record_dead_rpc " << e.what() << '\n';
+    }
+
+}
+
+void BaseServer::reconnect(BaseRPC* rpc)
+{
+    try
+    {
+        BaseRPC* new_rpc = rpc->spawn();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
@@ -156,23 +171,38 @@ void BaseServer::check_dead_rpc(BaseRPC* rpc)
     {
         std::cout << " BaseServer::check_dead_rpc  " << std::endl;
 
-        if (wait_to_release_rpc_map_.find(rpc->rpc_id_) != wait_to_release_rpc_map_.end()
-        && wait_to_release_rpc_map_[rpc->rpc_id_].find(rpc->session_id_) != wait_to_release_rpc_map_[rpc->rpc_id_].end()
-        && wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_])
+        if (rpc->session_id_.length() != 0)
         {
-            if (wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] != rpc)
+            if (!dead_rpc_set_.empty() 
+            && wait_to_release_rpc_map_.find(rpc->rpc_id_) != wait_to_release_rpc_map_.end()
+            && wait_to_release_rpc_map_[rpc->rpc_id_].find(rpc->session_id_) != wait_to_release_rpc_map_[rpc->rpc_id_].end()
+            && wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_])
             {
+                if (wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] != rpc)
+                {
 
-                BaseRPC* release_rpc = wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_];
-                dead_rpc_set_.erase(release_rpc);
+                    BaseRPC* release_rpc = wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_];
+                    dead_rpc_set_.erase(release_rpc);
 
-                cout << "WaitToRelease session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", dead obj_id=" << release_rpc->obj_id_
-                     << ", new obj_id=" << rpc->obj_id_ << endl;
-                release_rpc->release();
+                    cout << "WaitToRelease session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", dead obj_id=" << release_rpc->obj_id_
+                        << ", new obj_id=" << rpc->obj_id_ << endl;
+                    release_rpc->release();
 
-                wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] = nullptr;
+                    wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] = nullptr;
+                }
             }
+        }
 
+        long cur_time = NanoTime() / NANOSECONDS_PER_SECOND;
+        for (BaseRPC* dead_rpc:dead_rpc_set_)
+        {
+            if (dead_rpc->session_id_.length() == 0 
+            && (cur_time - dead_rpc->connect_time_) > wait_to_release_time_secs_)
+            {
+                cout << "Rpc: rpc_id: " << dead_rpc->rpc_id_ << ", connect_time: " << ToSecondStr(dead_rpc->connect_time_)
+                     << ", dead_time: " << ToSecondStr(cur_time) << endl;
+                dead_rpc->release();
+            }
         }
     }
     catch(const std::exception& e)

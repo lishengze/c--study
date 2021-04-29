@@ -53,6 +53,8 @@ public:
 
     void check_dead_rpc(BaseRPC* rpc);
 
+    void record_dead_rpc(BaseRPC* rpc);
+
     template<class DataType>
     void add_data(DataType* data) 
     {
@@ -90,6 +92,8 @@ protected:
     set<BaseRPC*>                            dead_rpc_set_;
 
     map<RpcType, map<SessionType, BaseRPC*>> wait_to_release_rpc_map_;
+
+    long                                     wait_to_release_time_secs_{300};
 
     std::mutex                               cq_mutex_;
 };

@@ -281,6 +281,8 @@ void AsyncClient::run_cq_loop()
             }
             else
             {   
+                record_dead_rpc(rpc);
+                
                 reconnect(rpc);
             }
         }
@@ -323,15 +325,9 @@ void AsyncClient::reconnect(ClientBaseRPC* rpc)
 {
     try
     {
-        rpc->set_connected(false);             
-
-        dead_rpc_id_set_.emplace(rpc->obj_id_);
-
-        wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] = rpc;
+        
 
         ClientBaseRPC* new_rpc =  rpc->spawn();
-
-        // rpc->release();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
@@ -344,11 +340,32 @@ void AsyncClient::reconnect(ClientBaseRPC* rpc)
 
 }
 
+void AsyncClient::record_dead_rpc(ClientBaseRPC* rpc)
+{
+    try
+    {
+        rpc->set_connected(false);       
+
+        rpc->set_is_login(false);
+
+        dead_rpc_id_set_.emplace(rpc->obj_id_);
+
+        wait_to_release_rpc_map_[rpc->rpc_id_][rpc->session_id_] = rpc;
+
+        cout << "Recorde Dead Rpc, rpc_id=" << rpc->rpc_id_ << " ,obj_id=" << rpc->obj_id_ << endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] AsyncClient::record_dead_rpc " << e.what() << '\n';
+    }
+
+}
+
 void AsyncClient::check_dead_rpc(ClientBaseRPC* rpc)
 {
     try
     {
-        std::cout << " BaseServer::check_dead_rpc  " << std::endl;
+        // std::cout << " BaseServer::check_dead_rpc  " << std::endl;
 
         if (wait_to_release_rpc_map_.find(rpc->rpc_id_) != wait_to_release_rpc_map_.end()
         && wait_to_release_rpc_map_[rpc->rpc_id_].find(rpc->session_id_) != wait_to_release_rpc_map_[rpc->rpc_id_].end()

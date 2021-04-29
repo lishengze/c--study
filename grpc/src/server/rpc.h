@@ -62,6 +62,12 @@ class BaseRPC
 
     virtual void add_data(Fruit* fruit) {}
 
+    virtual void on_connect() {}
+
+    virtual void on_req_login() { }
+
+    virtual void rsp_login() { }
+
     void make_active();
 
    void set_server(BaseServer* server) { server_ = server;}
@@ -102,7 +108,9 @@ class BaseRPC
 
     bool                                        is_released_{false};
 
-    string                                      cur_request_id_{""};                            
+    string                                      cur_request_id_{""};               
+
+    unsigned long                               connect_time_;
 };
 
 
@@ -191,9 +199,15 @@ public:
 
     virtual void register_request();
 
+     virtual void on_connect();
+
+    virtual void on_req_login();
+
+    virtual void rsp_login();
+
     virtual BaseRPC* spawn();
 
-    void write_msg();
+    void write_msg(string message="");
     
 private:
     ServerContext                                        context_;    

@@ -27,6 +27,8 @@ message TestRequest
     string obj_id = 4;
     string rpc_id = 5;
     string request_id = 6;
+
+    string message=7;
 };
 
 
@@ -38,4 +40,6 @@ message TestResponse
     string session_id = 3;
     string obj_id = 4;
     string response_id = 6;
+
+    string message=7;
 };

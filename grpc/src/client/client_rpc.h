@@ -56,7 +56,7 @@ class ClientBaseRPC
 
         virtual ~ClientBaseRPC() { }
 
-        virtual void init_request(){ }        
+        virtual void connect(){ }        
 
         virtual void process();
 
@@ -74,12 +74,25 @@ class ClientBaseRPC
 
         virtual void set_client_map();
 
+
+        virtual void on_connected() { }
+
+        virtual void req_login() { }
+
+        virtual void on_rsp_login() { }
+
         virtual void set_connected(bool is_connected) {
             is_connected_ = is_connected;
         }
 
         virtual bool is_connected() { return is_connected_;}
 
+        virtual bool is_login() { return is_login_;}
+
+        virtual void set_is_login(bool is_login) {
+            is_login_ = is_login;
+        }
+        
         void set_async_client(AsyncClient* async_client);
 
         enum CallStatus     { CREATE, PROCESS, FINISH };
@@ -110,6 +123,7 @@ class ClientBaseRPC
         bool                                    is_rsp_init_{false};
         bool                                    is_released_{false};
         bool                                    is_connected_{false};
+        bool                                    is_login_{false};
 
         std::mutex                              mutex_;
 };
@@ -129,7 +143,13 @@ class ClientApplePRC:public ClientBaseRPC
 
         virtual ClientBaseRPC* spawn();
 
-        virtual void init_request();
+        virtual void connect();
+
+        virtual void on_connected();
+
+        virtual void req_login();
+
+        virtual void on_rsp_login();
 
         virtual void procceed();
 

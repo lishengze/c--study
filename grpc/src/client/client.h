@@ -183,6 +183,8 @@ public:
 
     void check_dead_rpc(ClientBaseRPC* rpc);
 
+    void record_dead_rpc(ClientBaseRPC* rpc);
+
     std::shared_ptr<Channel>                        channel_;
 
     CompletionQueue                                 cq_;

@@ -68,6 +68,7 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_test_2eproto::offsets[] PROTOB
   PROTOBUF_FIELD_OFFSET(::TestPackage::TestRequest, obj_id_),
   PROTOBUF_FIELD_OFFSET(::TestPackage::TestRequest, rpc_id_),
   PROTOBUF_FIELD_OFFSET(::TestPackage::TestRequest, request_id_),
+  PROTOBUF_FIELD_OFFSET(::TestPackage::TestRequest, message_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::TestPackage::TestResponse, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -78,10 +79,11 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_test_2eproto::offsets[] PROTOB
   PROTOBUF_FIELD_OFFSET(::TestPackage::TestResponse, session_id_),
   PROTOBUF_FIELD_OFFSET(::TestPackage::TestResponse, obj_id_),
   PROTOBUF_FIELD_OFFSET(::TestPackage::TestResponse, response_id_),
+  PROTOBUF_FIELD_OFFSET(::TestPackage::TestResponse, message_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::TestPackage::TestRequest)},
-  { 11, -1, sizeof(::TestPackage::TestResponse)},
+  { 12, -1, sizeof(::TestPackage::TestResponse)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -90,32 +92,33 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 };
 
 const char descriptor_table_protodef_test_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\ntest.proto\022\013TestPackage\"q\n\013TestRequest"
-  "\022\014\n\004name\030\001 \001(\t\022\014\n\004time\030\002 \001(\t\022\022\n\nsession_"
-  "id\030\003 \001(\t\022\016\n\006obj_id\030\004 \001(\t\022\016\n\006rpc_id\030\005 \001(\t"
-  "\022\022\n\nrequest_id\030\006 \001(\t\"c\n\014TestResponse\022\014\n\004"
-  "name\030\001 \001(\t\022\014\n\004time\030\002 \001(\t\022\022\n\nsession_id\030\003"
-  " \001(\t\022\016\n\006obj_id\030\004 \001(\t\022\023\n\013response_id\030\006 \001("
-  "\t2\200\006\n\nTestStream\022A\n\nTestSimple\022\030.TestPac"
-  "kage.TestRequest\032\031.TestPackage.TestRespo"
-  "nse\022I\n\020TestClientStream\022\030.TestPackage.Te"
-  "stRequest\032\031.TestPackage.TestResponse(\001\022I"
-  "\n\020TestServerStream\022\030.TestPackage.TestReq"
-  "uest\032\031.TestPackage.TestResponse0\001\022K\n\020Tes"
-  "tDoubleStream\022\030.TestPackage.TestRequest\032"
-  "\031.TestPackage.TestResponse(\0010\001\022L\n\021Server"
-  "StreamApple\022\030.TestPackage.TestRequest\032\031."
-  "TestPackage.TestResponse(\0010\001\022I\n\020ServerSt"
-  "reamPear\022\030.TestPackage.TestRequest\032\031.Tes"
-  "tPackage.TestResponse0\001\022J\n\021ServerStreamM"
-  "ango\022\030.TestPackage.TestRequest\032\031.TestPac"
-  "kage.TestResponse0\001\022L\n\021DoubleStreamApple"
-  "\022\030.TestPackage.TestRequest\032\031.TestPackage"
-  ".TestResponse(\0010\001\022K\n\020DoubleStreamPear\022\030."
-  "TestPackage.TestRequest\032\031.TestPackage.Te"
-  "stResponse(\0010\001\022L\n\021DoubleStreamMango\022\030.Te"
+  "\n\ntest.proto\022\013TestPackage\"\202\001\n\013TestReques"
+  "t\022\014\n\004name\030\001 \001(\t\022\014\n\004time\030\002 \001(\t\022\022\n\nsession"
+  "_id\030\003 \001(\t\022\016\n\006obj_id\030\004 \001(\t\022\016\n\006rpc_id\030\005 \001("
+  "\t\022\022\n\nrequest_id\030\006 \001(\t\022\017\n\007message\030\007 \001(\t\"t"
+  "\n\014TestResponse\022\014\n\004name\030\001 \001(\t\022\014\n\004time\030\002 \001"
+  "(\t\022\022\n\nsession_id\030\003 \001(\t\022\016\n\006obj_id\030\004 \001(\t\022\023"
+  "\n\013response_id\030\006 \001(\t\022\017\n\007message\030\007 \001(\t2\200\006\n"
+  "\nTestStream\022A\n\nTestSimple\022\030.TestPackage."
+  "TestRequest\032\031.TestPackage.TestResponse\022I"
+  "\n\020TestClientStream\022\030.TestPackage.TestReq"
+  "uest\032\031.TestPackage.TestResponse(\001\022I\n\020Tes"
+  "tServerStream\022\030.TestPackage.TestRequest\032"
+  "\031.TestPackage.TestResponse0\001\022K\n\020TestDoub"
+  "leStream\022\030.TestPackage.TestRequest\032\031.Tes"
+  "tPackage.TestResponse(\0010\001\022L\n\021ServerStrea"
+  "mApple\022\030.TestPackage.TestRequest\032\031.TestP"
+  "ackage.TestResponse(\0010\001\022I\n\020ServerStreamP"
+  "ear\022\030.TestPackage.TestRequest\032\031.TestPack"
+  "age.TestResponse0\001\022J\n\021ServerStreamMango\022"
+  "\030.TestPackage.TestRequest\032\031.TestPackage."
+  "TestResponse0\001\022L\n\021DoubleStreamApple\022\030.Te"
   "stPackage.TestRequest\032\031.TestPackage.Test"
-  "Response(\0010\001b\006proto3"
+  "Response(\0010\001\022K\n\020DoubleStreamPear\022\030.TestP"
+  "ackage.TestRequest\032\031.TestPackage.TestRes"
+  "ponse(\0010\001\022L\n\021DoubleStreamMango\022\030.TestPac"
+  "kage.TestRequest\032\031.TestPackage.TestRespo"
+  "nse(\0010\001b\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_test_2eproto_deps[1] = {
 };
@@ -125,7 +128,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_tes
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_test_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_test_2eproto = {
-  false, false, descriptor_table_protodef_test_2eproto, "test.proto", 1020,
+  false, false, descriptor_table_protodef_test_2eproto, "test.proto", 1055,
   &descriptor_table_test_2eproto_once, descriptor_table_test_2eproto_sccs, descriptor_table_test_2eproto_deps, 2, 0,
   schemas, file_default_instances, TableStruct_test_2eproto::offsets,
   file_level_metadata_test_2eproto, 2, file_level_enum_descriptors_test_2eproto, file_level_service_descriptors_test_2eproto,
@@ -182,6 +185,11 @@ TestRequest::TestRequest(const TestRequest& from)
     request_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_request_id(),
       GetArena());
   }
+  message_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_message().empty()) {
+    message_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_message(),
+      GetArena());
+  }
   // @@protoc_insertion_point(copy_constructor:TestPackage.TestRequest)
 }
 
@@ -193,6 +201,7 @@ void TestRequest::SharedCtor() {
   obj_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   rpc_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   request_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  message_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 TestRequest::~TestRequest() {
@@ -209,6 +218,7 @@ void TestRequest::SharedDtor() {
   obj_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   rpc_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   request_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  message_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void TestRequest::ArenaDtor(void* object) {
@@ -238,6 +248,7 @@ void TestRequest::Clear() {
   obj_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   rpc_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   request_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  message_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -300,6 +311,15 @@ const char* TestRequest::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
           auto str = _internal_mutable_request_id();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "TestPackage.TestRequest.request_id"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // string message = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58)) {
+          auto str = _internal_mutable_message();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "TestPackage.TestRequest.message"));
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -391,6 +411,16 @@ failure:
         6, this->_internal_request_id(), target);
   }
 
+  // string message = 7;
+  if (this->message().size() > 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_message().data(), static_cast<int>(this->_internal_message().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "TestPackage.TestRequest.message");
+    target = stream->WriteStringMaybeAliased(
+        7, this->_internal_message(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -449,6 +479,13 @@ size_t TestRequest::ByteSizeLong() const {
         this->_internal_request_id());
   }
 
+  // string message = 7;
+  if (this->message().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_message());
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
         _internal_metadata_, total_size, &_cached_size_);
@@ -498,6 +535,9 @@ void TestRequest::MergeFrom(const TestRequest& from) {
   if (from.request_id().size() > 0) {
     _internal_set_request_id(from._internal_request_id());
   }
+  if (from.message().size() > 0) {
+    _internal_set_message(from._internal_message());
+  }
 }
 
 void TestRequest::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
@@ -527,6 +567,7 @@ void TestRequest::InternalSwap(TestRequest* other) {
   obj_id_.Swap(&other->obj_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   rpc_id_.Swap(&other->rpc_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   request_id_.Swap(&other->request_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  message_.Swap(&other->message_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata TestRequest::GetMetadata() const {
@@ -576,6 +617,11 @@ TestResponse::TestResponse(const TestResponse& from)
     response_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_response_id(),
       GetArena());
   }
+  message_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_message().empty()) {
+    message_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_message(),
+      GetArena());
+  }
   // @@protoc_insertion_point(copy_constructor:TestPackage.TestResponse)
 }
 
@@ -586,6 +632,7 @@ void TestResponse::SharedCtor() {
   session_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   obj_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   response_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  message_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 TestResponse::~TestResponse() {
@@ -601,6 +648,7 @@ void TestResponse::SharedDtor() {
   session_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   obj_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   response_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  message_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void TestResponse::ArenaDtor(void* object) {
@@ -629,6 +677,7 @@ void TestResponse::Clear() {
   session_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   obj_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   response_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  message_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -682,6 +731,15 @@ const char* TestResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_I
           auto str = _internal_mutable_response_id();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "TestPackage.TestResponse.response_id"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
+      // string message = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58)) {
+          auto str = _internal_mutable_message();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "TestPackage.TestResponse.message"));
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -763,6 +821,16 @@ failure:
         6, this->_internal_response_id(), target);
   }
 
+  // string message = 7;
+  if (this->message().size() > 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_message().data(), static_cast<int>(this->_internal_message().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
+      "TestPackage.TestResponse.message");
+    target = stream->WriteStringMaybeAliased(
+        7, this->_internal_message(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -814,6 +882,13 @@ size_t TestResponse::ByteSizeLong() const {
         this->_internal_response_id());
   }
 
+  // string message = 7;
+  if (this->message().size() > 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_message());
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
         _internal_metadata_, total_size, &_cached_size_);
@@ -860,6 +935,9 @@ void TestResponse::MergeFrom(const TestResponse& from) {
   if (from.response_id().size() > 0) {
     _internal_set_response_id(from._internal_response_id());
   }
+  if (from.message().size() > 0) {
+    _internal_set_message(from._internal_message());
+  }
 }
 
 void TestResponse::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
@@ -888,6 +966,7 @@ void TestResponse::InternalSwap(TestResponse* other) {
   session_id_.Swap(&other->session_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   obj_id_.Swap(&other->obj_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   response_id_.Swap(&other->response_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  message_.Swap(&other->message_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata TestResponse::GetMetadata() const {

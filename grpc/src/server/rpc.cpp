@@ -248,7 +248,7 @@ void ServerStreamAppleRPC::register_request()
     service_->RequestServerStreamApple(&context_, &responder_, cq_, cq_, this);
 }
 
-void ServerStreamAppleRPC::write_msg()
+void ServerStreamAppleRPC::write_msg(string message)
 {
     try
     {
@@ -264,17 +264,19 @@ void ServerStreamAppleRPC::write_msg()
         reply_.set_session_id(session_id_);
         reply_.set_obj_id(std::to_string(obj_id_));
         reply_.set_response_id(std::to_string(++rsp_id_));
+        reply_.set_message(message);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(sleep_secs)); 
-
         
         responder_.Write(reply_, this);
 
-        cout << "[SERVER] obj_id = " 
-             << obj_id_ <<  ", session=" << session_id_ 
+        cout << "[SERVER] obj_id = " << obj_id_ 
+             << ", session=" << session_id_ 
              << ", name=" << name 
              << ", time=" << time 
-             << ", rsp_id=" << rsp_id_ << endl;
+             << ", rsp_id=" << rsp_id_ 
+             << ", message=" << message
+             << endl;
 
         // responder_.Finish(status, this);
 
@@ -310,22 +312,25 @@ void ServerStreamAppleRPC::proceed()
             cout << "[CLIENT]: session_id_=" << request_.session_id() 
                 << ", name=" << request_.name() 
                 << ", time=" << request_.time() 
-                << ", req_id=" << request_.request_id() << endl;
+                << ", obj_id=" << request_.obj_id() << endl;
 
-            if (request_.request_id().length() == 0)
+            if (request_.time().length() == 0)
             {
-                cout << "Empty Request!" << endl;
-                write_msg();
+                cout << "Client Connect!" << endl;
+
+                on_connect();
+                
                 return;
             }
 
-            if (session_id_.length() == 0)
+            if (request_.message() == "login")
             {
-                session_id_ = request_.session_id();
-                set_rpc_map();
+                on_req_login();
             }
-
-            write_msg();
+            else
+            {
+                write_msg();
+            }            
         }
     }
     catch(const std::exception& e)
@@ -336,6 +341,53 @@ void ServerStreamAppleRPC::proceed()
     {
         cout << "ServerStreamAppleRPC::process unkonwn exceptions" << endl;
     }
+}
+
+void ServerStreamAppleRPC::on_connect()
+{
+    try
+    {
+        connect_time_ = NanoTime();
+
+        write_msg("connected");
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+}
+
+void ServerStreamAppleRPC::on_req_login()
+{
+    try
+    {
+        cout << "ServerStreamAppleRPC::on_req_login " << endl;
+
+        session_id_ = request_.session_id();
+
+        set_rpc_map();
+
+        rsp_login();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] ServerStreamAppleRPC::on_login  " << e.what() << '\n';
+    }
+}
+
+void ServerStreamAppleRPC::rsp_login()
+{
+    try
+    {
+        cout << "ServerStreamAppleRPC::rsp_login " << endl;
+        write_msg("login_successfully");
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+
 }
 
 void ServerStreamAppleRPC::release()
