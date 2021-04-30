@@ -9,9 +9,18 @@ void test_simple()
     simple_rpc.start();
 }
 
+void test_syanc_server()
+{
+    SyncServer sync_server("0.0.0.0:50051");
+
+    sync_server.start();
+}
+
 void TestMain()
 {
     // TestTemplateAdd();
 
-    test_simple();
+    // test_simple();
+
+    test_syanc_server();
 }

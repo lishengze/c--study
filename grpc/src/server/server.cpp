@@ -211,3 +211,23 @@ void BaseServer::check_dead_rpc(BaseRPC* rpc)
     }
     
 }
+
+void SyncServer::start()
+{
+    try
+    {
+        SynacService service;
+
+        ServerBuilder builder;
+        builder.AddListeningPort(address_, grpc::InsecureServerCredentials());
+        builder.RegisterService(&service);
+        std::unique_ptr<Server> server(builder.BuildAndStart());
+        std::cout << "Server listening on " << address_ << std::endl;
+        server->Wait();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] SyncServer::start() " << e.what() << '\n';
+    }
+    
+}

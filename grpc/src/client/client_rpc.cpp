@@ -254,12 +254,10 @@ void ClientApplePRC::procceed()
         else
         {
             cout << "last_cq_msg: " << last_cq_msg << endl;
-
-            // TestResponse    reply;
             
             responder_->Read(&reply, this);
 
-            if (reply.response_id().length() == 0)
+            if (reply.time().length() == 0)
             {
                 last_cq_msg = "Get Empty Response Data";
                 cout << "[W] Empty Response" << endl;
@@ -300,6 +298,7 @@ void ClientApplePRC::procceed()
     }
     
 }
+
 void ClientApplePRC::on_connected()
 {
     try

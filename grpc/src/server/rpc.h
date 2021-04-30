@@ -199,7 +199,7 @@ public:
 
     virtual void register_request();
 
-     virtual void on_connect();
+    virtual void on_connect();
 
     virtual void on_req_login();
 
@@ -225,3 +225,26 @@ private:
 
 using ServerStreamAppleRPCPtr = boost::shared_ptr<ServerStreamAppleRPC>;
 
+class SynacService: public TestStream::Service
+{
+    public:
+
+    virtual ::grpc::Status TestSimple(::grpc::ServerContext* context, const ::TestPackage::TestRequest* request, ::TestPackage::TestResponse* response) { return grpc::Status();}
+    virtual ::grpc::Status TestClientStream(::grpc::ServerContext* context, ::grpc::ServerReader< ::TestPackage::TestRequest>* reader, ::TestPackage::TestResponse* response) { return grpc::Status();}
+    virtual ::grpc::Status TestServerStream(::grpc::ServerContext* context, const ::TestPackage::TestRequest* request, ::grpc::ServerWriter< ::TestPackage::TestResponse>* writer) { return grpc::Status();}
+    virtual ::grpc::Status TestDoubleStream(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream) { return grpc::Status();}
+    virtual ::grpc::Status ServerStreamApple(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream) ;
+    virtual ::grpc::Status ServerStreamPear(::grpc::ServerContext* context, const ::TestPackage::TestRequest* request, ::grpc::ServerWriter< ::TestPackage::TestResponse>* writer) { return grpc::Status();}
+    virtual ::grpc::Status ServerStreamMango(::grpc::ServerContext* context, const ::TestPackage::TestRequest* request, ::grpc::ServerWriter< ::TestPackage::TestResponse>* writer) { return grpc::Status();}
+    virtual ::grpc::Status DoubleStreamApple(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream) { return grpc::Status();}
+    virtual ::grpc::Status DoubleStreamPear(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream) { return grpc::Status();}
+    virtual ::grpc::Status DoubleStreamMango(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream) { return grpc::Status();}
+
+    void on_connect(grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream);
+
+    void on_req_login(grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream);
+
+    void rsp_login(grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream);
+
+    void write_msg(grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream, string message="");    
+};

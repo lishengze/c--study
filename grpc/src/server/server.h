@@ -98,8 +98,15 @@ protected:
     std::mutex                               cq_mutex_;
 };
 
+class SynacService;
+class SyncServer
+{
+public:
+    SyncServer(string address):address_(address) { }
 
-// class SyncServer
-// {
+    void start();
 
-// };
+
+private:
+    string                                  address_;
+};

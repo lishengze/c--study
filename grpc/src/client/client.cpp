@@ -282,7 +282,7 @@ void AsyncClient::run_cq_loop()
             else
             {   
                 record_dead_rpc(rpc);
-                
+
                 reconnect(rpc);
             }
         }
@@ -324,9 +324,7 @@ void AsyncClient::set_client_map(RpcType rpc_id_, ClientBaseRPC* client_rpc)
 void AsyncClient::reconnect(ClientBaseRPC* rpc)
 {
     try
-    {
-        
-
+    {        
         ClientBaseRPC* new_rpc =  rpc->spawn();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));
