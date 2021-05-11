@@ -1,3 +1,5 @@
+#pragma once
+
 #include "rpc.h"
 
 class ServerStreamAppleRPC:public BaseRPC
@@ -26,7 +28,7 @@ public:
 
     virtual BaseRPC* spawn();
 
-    void write_msg(string message="");
+    void write_msg(string message="", string rsp_id="");
     
 private:
     ServerContext                                        context_;    

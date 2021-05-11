@@ -1,21 +1,7 @@
 
-BaseRPC* ServerStreamAppleRPC::spawn()
-{
-    try
-    {
-        std::cout << "\n ******* Spawn A New ServerStreamAppleRPC Server For Next Client ********" << std::endl;
-        std::lock_guard<std::mutex> lk(mutex_);
+#include "rpc.h"
+#include "sync_rpc.h"
 
-        ServerStreamAppleRPC* new_rpc = new ServerStreamAppleRPC(service_, cq_);
-        new_rpc->set_server(server_);
-
-        return new_rpc;
-    } 
-    catch(const std::exception& e)
-    {
-        std::cerr << "\n[E]  ServerStreamAppleRPC::spawn" << e.what() << '\n';
-    }    
-}
 
 grpc::Status SynacService::ServerStreamApple(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream) 
 { 

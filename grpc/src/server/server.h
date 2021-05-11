@@ -16,6 +16,7 @@
 #include "../include/global_declare.h"
 
 #include "rpc.h"
+#include "bi_stream_rpc.h"
 
 using grpc::Alarm;
 using grpc::Server;

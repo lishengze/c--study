@@ -32,6 +32,8 @@ using TestPackage::TestResponse;
 #include "../include/global_declare.h"
 #include "../include/data_struct.h"
 
+#include "config.h"
+
 
 
 class AsyncClient;
@@ -50,7 +52,7 @@ class ClientBaseRPC
         stub_{TestStream::NewStub(channel)},
         cq_{cq} 
         { 
-            session_id_ = "lsz";
+            session_id_ = CONFIG->get_session_id();
             obj_id_ = ++obj_count_;
         }
 
@@ -172,5 +174,8 @@ class ClientApplePRC:public ClientBaseRPC
     std::unique_ptr<grpc::ClientAsyncReaderWriter<TestRequest, TestResponse>> responder_;
 
     int  req_id_{0};
+
+    long test_start_time_;
+    long test_end_time_;
 };
 

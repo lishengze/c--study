@@ -4,6 +4,8 @@
 
 #include "time_util.h"
 
+#include "config.h"
+
 TradeEngine::~TradeEngine()
 {
     try
@@ -63,13 +65,15 @@ void TradeEngine::test_thread_fun()
        apple.name = "trade_engine";
        apple.rpc_id = "apple";
        
+       std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
     
-       while(true)
+       for (int i = 0; i < CONFIG->get_test_count(); ++i)
        {
            apple.time = NanoTimeStr();
            apple.request_id = NanoTimeStr();
 
-           std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        //    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
            async_client_->add_data(&apple);           
        }

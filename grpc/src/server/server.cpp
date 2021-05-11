@@ -76,7 +76,7 @@ void BaseServer::run_cq_loop()
         bool status;
         while(true)
         {
-            std::cout << "\n++++++++ Loop Start " << " ++++++++"<< std::endl;
+            // std::cout << "\n++++++++ Loop Start " << " ++++++++"<< std::endl;
 
             bool result = cq_->Next(&tag, &status);
 
@@ -97,7 +97,7 @@ void BaseServer::run_cq_loop()
                 continue;
             }
 
-            std::cout << "[E] result: "<<  result << " status: " << status  << ", session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", obj_id: " << rpc->obj_id_ << std::endl;
+            // std::cout << "[E] result: "<<  result << " status: " << status  << ", session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", obj_id: " << rpc->obj_id_ << std::endl;
 
             check_dead_rpc(rpc);
 
@@ -169,7 +169,7 @@ void BaseServer::check_dead_rpc(BaseRPC* rpc)
 {
     try
     {
-        std::cout << " BaseServer::check_dead_rpc  " << std::endl;
+        // std::cout << " BaseServer::check_dead_rpc  " << std::endl;
 
         if (rpc->session_id_.length() != 0)
         {
@@ -216,14 +216,14 @@ void SyncServer::start()
 {
     try
     {
-        SynacService service;
+        // SynacService service;
 
-        ServerBuilder builder;
-        builder.AddListeningPort(address_, grpc::InsecureServerCredentials());
-        builder.RegisterService(&service);
-        std::unique_ptr<Server> server(builder.BuildAndStart());
-        std::cout << "Server listening on " << address_ << std::endl;
-        server->Wait();
+        // ServerBuilder builder;
+        // builder.AddListeningPort(address_, grpc::InsecureServerCredentials());
+        // builder.RegisterService(&service);
+        // std::unique_ptr<Server> server(builder.BuildAndStart());
+        // std::cout << "Server listening on " << address_ << std::endl;
+        // server->Wait();
     }
     catch(const std::exception& e)
     {

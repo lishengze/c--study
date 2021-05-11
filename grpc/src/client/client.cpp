@@ -248,7 +248,7 @@ void AsyncClient::run_cq_loop()
         bool status;
         while(true)
         {
-            std::cout << "\n++++++++ Loop Start " << " ++++++++"<< std::endl;
+            // std::cout << "\n++++++++ Loop Start " << " ++++++++"<< std::endl;
 
             bool result = cq_.Next(&tag, &status);
 
@@ -268,10 +268,10 @@ void AsyncClient::run_cq_loop()
                 continue;
             }
 
-            std::cout << "[E]result: "<<  result << " status: " << status  
-                        << ", session_id_=" << rpc->session_id_ 
-                        << ", rpc_id_=" << rpc->rpc_id_ 
-                        << ", obj_id: " << rpc->obj_id_ << std::endl;
+            // std::cout << "[E]result: "<<  result << " status: " << status  
+            //             << ", session_id_=" << rpc->session_id_ 
+            //             << ", rpc_id_=" << rpc->rpc_id_ 
+            //             << ", obj_id: " << rpc->obj_id_ << std::endl;
 
             check_dead_rpc(rpc);
 

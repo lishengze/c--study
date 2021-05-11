@@ -20,7 +20,7 @@ void TestMain()
 {
     // TestTemplateAdd();
 
-    // test_simple();
+    test_simple();
 
-    test_syanc_server();
+    // test_syanc_server();
 }

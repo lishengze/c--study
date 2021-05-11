@@ -16,11 +16,11 @@ void ServerStreamAppleRPC::register_request()
     service_->RequestServerStreamApple(&context_, &responder_, cq_, cq_, this);
 }
 
-void ServerStreamAppleRPC::write_msg(string message)
+void ServerStreamAppleRPC::write_msg(string message, string rsp_id)
 {
     try
     {
-        cout << "\nServerStreamAppleRPC::write_msg " << endl;
+        // cout << "\nServerStreamAppleRPC::write_msg " << endl;
         int sleep_secs = 100;
 
         grpc::Status status;
@@ -31,19 +31,19 @@ void ServerStreamAppleRPC::write_msg(string message)
         reply_.set_time(time);
         reply_.set_session_id(session_id_);
         reply_.set_obj_id(std::to_string(obj_id_));
-        reply_.set_response_id(std::to_string(++rsp_id_));
+        reply_.set_response_id(rsp_id);
         reply_.set_message(message);
 
         // std::this_thread::sleep_for(std::chrono::milliseconds(sleep_secs)); 
         
         responder_.Write(reply_, this);
 
-        cout << "[SERVER] obj_id = " << obj_id_ 
-             << ", session=" << session_id_ 
-             << ", name=" << name 
+        cout << "[SERVER]: "
+             << "session_id_=" << session_id_ 
+             << ", rpc=" << rpc_id_
+             << ", rsp_id=" << rsp_id 
              << ", time=" << time 
-             << ", rsp_id=" << rsp_id_ 
-             << ", message=" << message
+             << "\n"
              << endl;
 
         // responder_.Finish(status, this);
@@ -66,21 +66,26 @@ void ServerStreamAppleRPC::proceed()
 {
     try
     {
-        cout << "\nServerStreamAppleRPC::process obj_id = "  << obj_id_ << endl;
+        // cout << "\nServerStreamAppleRPC::process obj_id = "  << obj_id_ << endl;
 
         if (is_write_cq_)
         {
             is_write_cq_ = false;
-            cout << "This is Write_CQ" << endl;
+            // cout << "This is Write_CQ" << endl;
         }
         else
         {
             responder_.Read(&request_, this);
 
             cout << "[CLIENT]: session_id_=" << request_.session_id() 
-                << ", name=" << request_.name() 
-                << ", time=" << request_.time() 
-                << ", obj_id=" << request_.obj_id() << endl;
+                 << ", rpc=" << request_.rpc_id()
+                 << ", req_id=" << request_.request_id()
+                 << ", time=" << request_.time() 
+                 << endl;
+
+                // << ", name=" << request_.name() 
+                
+                // << ", obj_id=" << request_.obj_id() << endl;
 
             // 初次连接;
             if (request_.time().length() == 0)
@@ -99,7 +104,7 @@ void ServerStreamAppleRPC::proceed()
             }
             else
             {
-                write_msg();
+                // write_msg("", request_.request_id());
             }            
         }
     }
@@ -183,4 +188,22 @@ void ServerStreamAppleRPC::release()
     }
     
 
+}
+
+BaseRPC* ServerStreamAppleRPC::spawn()
+{
+    try
+    {
+        std::cout << "\n ******* Spawn A New ServerStreamAppleRPC Server For Next Client ********" << std::endl;
+        std::lock_guard<std::mutex> lk(mutex_);
+
+        ServerStreamAppleRPC* new_rpc = new ServerStreamAppleRPC(service_, cq_);
+        new_rpc->set_server(server_);
+
+        return new_rpc;
+    } 
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E]  ServerStreamAppleRPC::spawn" << e.what() << '\n';
+    }    
 }

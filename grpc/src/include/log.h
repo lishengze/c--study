@@ -5,7 +5,7 @@
 #include <fstream>
 #include <mutex>
 #include "pandora/util/thread_safe_singleton.hpp"
-#include "pandora/util/time_util.h"
+#include "time_util.h"
 
 using std::string;
 using std::cout;
@@ -30,7 +30,7 @@ class Log
         {
             std::lock_guard<std::mutex> lk(mutex_);
             
-            cout << utrade::pandora::SecTimeStr() << " " << flag << ": " << msg << endl;
+            cout << SecTimeStr() << " " << flag << ": " << msg << endl;
 
             // if (!log_file_.is_open())
             // {
