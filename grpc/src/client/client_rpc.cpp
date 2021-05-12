@@ -7,7 +7,7 @@ void ClientBaseRPC::make_active()
 {
     try
     {
-        std::cout << " ClientBaseRPC make active " << std::endl;
+        std::cout << "ClientBaseRPC make active " << std::endl;
         gpr_timespec t = gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME);
         alarm_.Set(cq_, t, this);
     }
@@ -218,10 +218,21 @@ void ClientApplePRC::procceed()
 {
     try
     {
-        std::lock_guard<std::mutex> lk(mutex_);
-
+        
         // cout << "ClientApplePRC::procceed " << endl; 
 
+        // responder_->Read(&reply, this);
+        // if (reply.time().length() == 0)
+        // {
+        //     last_cq_msg = "Get Empty Response Data";
+        //     cout << "[W] Empty Response" << endl;
+        // }
+        // else
+        // {
+        //     process_reply(reply);
+        // }
+                 
+        // return;
 
         if (is_write_cq_)
         {
@@ -237,88 +248,50 @@ void ClientApplePRC::procceed()
 
             //     is_rsp_init_ = true;
             // }            
-        }
-        else if (is_start_call_)
-        {
-            is_start_call_ = false;
-            cout << "Is Start Call " << endl;
-            last_cq_msg = "Is Start Call";            
-            if (!is_rsp_init_)
-            {
-                make_active();
 
-                is_rsp_init_ = true;
-            }   
-        }        
+            if (!cached_request_data_.empty())
+            {
+                Fruit* first_data = cached_request_data_.front();
+                cached_request_data_.pop_front();
+
+                cout << "Restart Add Cached Data: " << first_data->request_id << endl;
+                add_data(first_data);
+            }
+        }
+        // else if (is_start_call_)
+        // {
+        //     is_start_call_ = false;
+        //     cout << "Is Start Call " << endl;
+        //     last_cq_msg = "Is Start Call";  
+
+        //     responder_->Read(&reply, this);
+        //     if (reply.time().length() == 0)
+        //     {
+        //         last_cq_msg = "Get Empty Response Data";
+        //         cout << "[W] Empty Response" << endl;
+        //         return;
+        //     }
+
+        //     if (!is_rsp_init_)
+        //     {
+        //         // make_active();
+
+        //         is_rsp_init_ = true;
+        //     }   
+        // }        
         // New Response Data Coming!
         else
         {
             // cout << "last_cq_msg: " << last_cq_msg << endl;
-            
             responder_->Read(&reply, this);
-
             if (reply.time().length() == 0)
             {
                 last_cq_msg = "Get Empty Response Data";
                 cout << "[W] Empty Response" << endl;
                 return;
             }
-            else
-            {
-                is_rsp_init_ = true;
 
-                last_cq_msg = "Get Full Response Data";
-                
-                string rsp_message = reply.message();
-                if (!is_connected_ && rsp_message == "connected")
-                {
-                    cout << "[SERVER]:"
-                            << "session_id= " << reply.session_id() 
-                            << ", rsp_id="<< reply.response_id()
-                            << ", time=" << reply.time()                        
-                            << ", msg=" << reply.message()
-                            << "\n"
-                            << endl;
-
-                    on_connected();
-
-                }
-                else if (is_connected_ && rsp_message == "login_successfully")
-                {
-                    cout << "[SERVER]:"
-                            << "session_id= " << reply.session_id() 
-                            << ", rsp_id="<< reply.response_id()
-                            << ", time=" << reply.time()                        
-                            << ", msg=" << reply.message()
-                            << "\n"
-                            << endl;
-
-                    on_rsp_login();
-                }
-                else
-                {
-                    cout << "[SERVER]:"
-                            << "session_id= " << reply.session_id() 
-                            << ", rpc=" << rpc_id_
-                            << ", rsp_id="<< reply.response_id()
-                            << ", time=" << reply.time() 
-                            << "\n"
-                            << endl;
-
-                    long rsp_id = std::stol(reply.response_id());
-
-                    if (rsp_id == CONFIG->get_test_count())
-                    {
-                        test_end_time_ = NanoTime();
-
-                        cout << "[R] Complete " << CONFIG->get_test_count() << " request cost: " 
-                            << (test_end_time_ - test_start_time_)/1000 << " microsecs" << endl;
-                    }                            
-                }
-                
-
-
-            }
+            process_reply(reply);
         }
     }
     catch(const std::exception& e)
@@ -326,6 +299,69 @@ void ClientApplePRC::procceed()
         std::cerr << "\n[E] ClientApplePRC::procceed " <<  e.what() << '\n';
     }
     
+}
+
+void ClientApplePRC::process_reply(TestResponse& reply)
+{
+    try
+    {
+        std::lock_guard<std::mutex> lk(mutex_);
+        
+        last_cq_msg = "Get Full Response Data";
+            
+        string rsp_message = reply.message();
+        if (!is_connected_ && rsp_message == "connected")
+        {
+            cout << "[SERVER]:"
+                    << "session_id= " << reply.session_id() 
+                    << ", rsp_id="<< reply.response_id()
+                    << ", time=" << reply.time()                        
+                    << ", msg=" << reply.message()
+                    << "\n"
+                    << endl;
+
+            on_connected();
+
+        }
+        else if (is_connected_ && rsp_message == "login_successfully")
+        {
+            cout << "[SERVER]:"
+                    << "session_id= " << reply.session_id() 
+                    << ", rsp_id="<< reply.response_id()
+                    << ", time=" << reply.time()                        
+                    << ", msg=" << reply.message()
+                    << "\n"
+                    << endl;
+
+            on_rsp_login();
+        }
+        else
+        {
+            cout << "[SERVER]:"
+                    << "session_id= " << reply.session_id() 
+                    << ", rpc=" << rpc_id_
+                    << ", rsp_id="<< reply.response_id()
+                    << ", time=" << reply.time() 
+                    << "\n"
+                    << endl;
+
+            long rsp_id = std::stol(reply.response_id());
+
+            if (rsp_id == CONFIG->get_test_count())
+            {
+                test_end_time_ = NanoTime();
+
+                cout << "[R] Complete " << CONFIG->get_test_count() << " request cost: " 
+                    << (test_end_time_ - test_start_time_)/1000 << " microsecs" << endl;
+            }                            
+        }
+    
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"\n[E] ClientApplePRC::process_reply " << e.what() << '\n';
+    }
+
 }
 
 void ClientApplePRC::on_connected()
@@ -450,6 +486,7 @@ void ClientApplePRC::add_data(Fruit* data)
         // cout << "ClientApplePRC add_data " << endl;
 
         // cout << "\n+++++++ ClientApplePRC::add_data ++++++++++" << endl;
+
         std::lock_guard<std::mutex> lk(mutex_);
 
         if (!is_connected_)
@@ -464,10 +501,17 @@ void ClientApplePRC::add_data(Fruit* data)
             return;
         }
 
-
         if (is_released_)
         {
             cout << "[E] rpc_id: " << rpc_id_ << ", obj_id: " << obj_id_  <<" RPC was released " << endl;
+            return;
+        }
+
+        if (is_write_cq_)
+        {
+            cached_request_data_.push_back(data);
+            // cout << "Last Write Was not Finished!" << endl;
+            cout << "Last Write Was not Finished! Cached Data " << data->request_id << endl;
             return;
         }
         
@@ -483,12 +527,14 @@ void ClientApplePRC::add_data(Fruit* data)
         request.set_time(real_data->time);
         request.set_obj_id(std::to_string(obj_id_));
         request.set_rpc_id(rpc_id_);
-        request.set_request_id(std::to_string(++req_id_));
+        // request.set_request_id(std::to_string(++req_id_));
+
+        request.set_request_id(std::to_string(real_data->request_id));
 
         cout << "[CLIENT]:"
                 << "session_id= " << request.session_id() 
                 << ", rpc=" << rpc_id_
-                << ", req_id=" << req_id_
+                << ", req_id=" << real_data->request_id
                 << ", time=" << request.time()                
                 << endl;            
 
@@ -500,12 +546,12 @@ void ClientApplePRC::add_data(Fruit* data)
         is_write_cq_ = true;
         is_request_data_updated_ = true;
 
-        if (req_id_ == 1)
+        if (real_data->request_id == 1)
         {
             test_start_time_ = NanoTime();
         }
 
-        // responder_->Write(request, this);
+        responder_->Write(request, this);
     }
     catch(const std::exception& e)
     {

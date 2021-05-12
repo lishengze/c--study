@@ -41,6 +41,12 @@ private:
 
     int  rsp_id_{0};
 
+
+    long             test_start_time_;
+    long             test_end_time_;
+
+    long             request_count_{0};              
+
     
 };
 

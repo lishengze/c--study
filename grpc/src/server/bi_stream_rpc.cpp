@@ -5,6 +5,7 @@
 #include <chrono>
 
 #include "server.h"
+#include "config.h"
 
 
 void ServerStreamAppleRPC::register_request()
@@ -104,6 +105,20 @@ void ServerStreamAppleRPC::proceed()
             }
             else
             {
+                if (request_count_ == 0) test_start_time_ = NanoTime();
+
+                if (++request_count_ == CONFIG->get_test_count())
+                {
+                    test_end_time_ = NanoTime();
+
+                    long cost_micros = (test_end_time_ - test_start_time_) /1000;
+
+                    cout << "\n[R]Get " << request_count_ << " request cost " 
+                        << cost_micros << " micros" 
+                        << " ave: " << cost_micros / request_count_ << " micros"
+                        << endl;
+                }
+
                 // write_msg("", request_.request_id());
             }            
         }

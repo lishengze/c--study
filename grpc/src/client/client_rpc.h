@@ -163,10 +163,15 @@ class ClientApplePRC:public ClientBaseRPC
 
         void write_msg();
 
+        void process_reply(TestResponse& reply);
+
     private:
 
-    TestRequest  request;
+    TestRequest  request_;
     TestResponse reply;
+
+    list<Fruit*>                                             cached_request_data_;
+    std::mutex                                               cached_data_mutex_;
 
     string                                                   last_cq_msg;
 

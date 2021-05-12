@@ -59,24 +59,35 @@ void TradeEngine::test_thread_fun()
     try
     {
     //    cout << "TradeEngine::test_thread_fun " << endl;
-       Apple apple;
 
-       apple.session_id = "lsz";
-       apple.name = "trade_engine";
-       apple.rpc_id = "apple";
        
        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
+        std::vector<Apple*> request_data;
     
        for (int i = 0; i < CONFIG->get_test_count(); ++i)
        {
-           apple.time = NanoTimeStr();
-           apple.request_id = NanoTimeStr();
+            Apple* apple = new Apple();
+
+            apple->session_id = "lsz";
+            apple->name = "trade_engine";
+            apple->rpc_id = "apple";
+
+            apple->time = NanoTimeStr();
+            apple->request_id = i+1;
 
         //    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-           async_client_->add_data(&apple);           
+        //    std::this_thread::sleep_for(std::chrono::microseconds(1));
+
+            request_data.push_back(apple);
+            async_client_->add_data(apple);           
        }
+
+    //    for (auto apple:request_data)
+    //    {
+
+    //    }
     }
     catch(const std::exception& e)
     {

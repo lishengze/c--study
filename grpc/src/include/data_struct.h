@@ -6,7 +6,7 @@ struct Fruit
 {
     SessionType session_id;
     RpcType     rpc_id{"fruit"};
-    string      request_id;
+    long        request_id;
 };
 
 struct Apple:public Fruit
