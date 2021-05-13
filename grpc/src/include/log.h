@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <mutex>
-#include "pandora/util/thread_safe_singleton.hpp"
+#include "thread_safe_singleton.hpp"
 #include "time_util.h"
 
 using std::string;
@@ -12,7 +12,7 @@ using std::cout;
 using std::endl;
 
 
-#define LOG utrade::pandora::ThreadSafeSingleton<Log>::DoubleCheckInstance()
+#define LOG ThreadSafeSingleton<Log>::DoubleCheckInstance()
 
 #define LOG_ERROR(msg) LOG->log(msg, "Error")
 #define LOG_INFO(msg) LOG->log(msg, "Info ")

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "pandora/util/thread_safe_singleton.hpp"
+#include "../include/thread_safe_singleton.hpp"
 #include "../include/global_declare.h"
-#define CONFIG utrade::pandora::ThreadSafeSingleton<Config>::DoubleCheckInstance("./config.json")
+#define CONFIG ThreadSafeSingleton<Config>::DoubleCheckInstance("./config.json")
 
 class Config
 {

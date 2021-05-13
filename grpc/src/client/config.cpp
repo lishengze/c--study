@@ -1,6 +1,6 @@
 #include "config.h"
 #include <fstream>
-#include "pandora/util/json.hpp"
+#include "../include/json.hpp"
 #include "../include/log.h"
 #include "../include/util.h"
 
