@@ -5,6 +5,8 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/alarm.h>
 
+#include "global_declare.h"
+
 using grpc::Alarm;
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
@@ -163,7 +165,9 @@ class ClientApplePRC:public ClientBaseRPC
 
         void write_msg();
 
-        void process_reply(TestResponse& reply);
+        void process_read_cq();
+
+        void process_write_cq();
 
     private:
 
@@ -182,5 +186,16 @@ class ClientApplePRC:public ClientBaseRPC
 
     long test_start_time_;
     long test_end_time_;
+
+    struct TestTime
+    {
+        long start_time_;
+        long end_time_;
+    };
+
+    std::map<long, TestTime>     test_write_cq_;
+    long                         cmp_write_count{0};
+    long                         sum_write_cq_time_{0};
+
 };
 

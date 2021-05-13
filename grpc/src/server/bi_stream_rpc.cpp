@@ -105,7 +105,7 @@ void ServerStreamAppleRPC::proceed()
             }
             else
             {
-                if (request_count_ == 0) test_start_time_ = NanoTime();
+                if (request_count_ == 0) test_start_time_ = std::stol(request_.time());
 
                 if (++request_count_ == CONFIG->get_test_count())
                 {

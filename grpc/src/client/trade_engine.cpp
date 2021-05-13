@@ -73,7 +73,7 @@ void TradeEngine::test_thread_fun()
             apple->name = "trade_engine";
             apple->rpc_id = "apple";
 
-            apple->time = NanoTimeStr();
+            apple->time = std::to_string(NanoTime());
             apple->request_id = i+1;
 
         //    std::this_thread::sleep_for(std::chrono::milliseconds(1));
