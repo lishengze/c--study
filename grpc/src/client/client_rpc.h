@@ -111,8 +111,6 @@ class ClientBaseRPC
 
         Alarm                                   alarm_;   
 
-
-
         string                                  session_id_{""};
         string                                  rpc_id_{""};        
         int                                     obj_id_{0};
@@ -189,6 +187,7 @@ class ClientApplePRC:public ClientBaseRPC
     long test_write_cq_end_time_;
 
     long                         cmp_write_count{0};
+    long                         rsp_count_{0};
 
     // struct TestTime
     // {

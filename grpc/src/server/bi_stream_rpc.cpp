@@ -106,7 +106,7 @@ void ServerStreamAppleRPC::proceed()
             else
             {
                 ++request_count_;
-                if (request_count_ % 100 == 0)
+                if (request_count_ % 1 == 0)
                 {
                     cout << "[CLIENT]: session_id_=" << request_.session_id() 
                         << ", rpc=" << request_.rpc_id()
@@ -131,7 +131,7 @@ void ServerStreamAppleRPC::proceed()
                         << endl;
                 }
 
-                // write_msg("", request_.request_id());
+                write_msg("", request_.request_id());
             }            
         }
     }

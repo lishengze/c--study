@@ -282,7 +282,6 @@ void ClientApplePRC::process_write_cq()
         {
             Fruit* first_data = cached_request_data_.front();
             cached_request_data_.pop_front();
-
             // cout << "Restart Add Cached Data: " << first_data->request_id << endl;
             add_data(first_data);
         }
@@ -338,22 +337,25 @@ void ClientApplePRC::process_read_cq()
             }
             else
             {
+                ++rsp_count_;
                 cout << "[SERVER]:"
                         << "session_id= " << reply.session_id() 
                         << ", rpc=" << rpc_id_
                         << ", rsp_id="<< reply.response_id()
+                        << ", rsp_count=" << rsp_count_
                         << ", time=" << reply.time() 
                         << "\n"
                         << endl;
 
-                long rsp_id = std::stol(reply.response_id());
-
-                if (rsp_id == CONFIG->get_test_count())
+                if (rsp_count_ == CONFIG->get_test_count())
                 {
                     test_rsp_end_time_ = NanoTime();
 
-                    cout << "[R] Complete " << CONFIG->get_test_count() << " request cost: " 
-                        << (test_rsp_end_time_ - test_start_time_)/1000 << " microsecs" << endl;
+                    long cost_time = (test_rsp_end_time_ - test_start_time_)/1000;
+
+                    cout << "[R] Complete " << CONFIG->get_test_count() 
+                        << " request cost: " << cost_time << " micros"  
+                        << " ave: " << cost_time / CONFIG->get_test_count() << " micros " << endl;
                 }                            
             }
         }
@@ -535,12 +537,12 @@ void ClientApplePRC::add_data(Fruit* data)
 
         request.set_request_id(std::to_string(real_data->request_id));
 
-        // cout << "[CLIENT]:"
-        //         << "session_id= " << request.session_id() 
-        //         << ", rpc=" << rpc_id_
-        //         << ", req_id=" << real_data->request_id
-        //         << ", time=" << request.time()                
-        //         << endl;            
+        cout << "[CLIENT]:"
+                << "session_id= " << request.session_id() 
+                << ", rpc=" << rpc_id_
+                << ", req_id=" << real_data->request_id
+                << ", time=" << request.time()                
+                << endl;            
 
         int sleep_secs = 3;
 
