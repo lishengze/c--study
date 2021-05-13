@@ -273,7 +273,7 @@ void ClientApplePRC::process_write_cq()
 
         long cur_cost_time = (end_time_ - test_write_cq_[req_id_].start_time_) /1000;
 
-        if (cur_cost_time < 0)
+        if (test_write_cq_[req_id_].start_time_ == 0 || end_time_ == 0 || cur_cost_time < 0)
         {
             cout << "\n[Error] req_id:  " << req_id_ 
                 << " start: " << test_write_cq_[req_id_].start_time_ << " " << ToCmpSecondStr(test_write_cq_[req_id_].start_time_) 
