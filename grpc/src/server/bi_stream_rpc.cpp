@@ -106,12 +106,16 @@ void ServerStreamAppleRPC::proceed()
             else
             {
                 ++request_count_;
-                cout << "[CLIENT]: session_id_=" << request_.session_id() 
-                    << ", rpc=" << request_.rpc_id()
-                    << ", req_id=" << request_.request_id()
-                    << ", req_count=" << request_count_
-                    << ", time=" << request_.time() 
-                    << endl;
+                if (request_count_ % 100 == 0)
+                {
+                    cout << "[CLIENT]: session_id_=" << request_.session_id() 
+                        << ", rpc=" << request_.rpc_id()
+                        << ", req_id=" << request_.request_id()
+                        << ", req_count=" << request_count_
+                        << ", time=" << request_.time() 
+                        << endl;
+                }
+
 
                 if (request_count_ == 1) test_start_time_ = std::stol(request_.time());
 
