@@ -78,11 +78,11 @@ void ServerStreamAppleRPC::proceed()
         {
             responder_.Read(&request_, this);
 
-            cout << "[CLIENT]: session_id_=" << request_.session_id() 
-                 << ", rpc=" << request_.rpc_id()
-                 << ", req_id=" << request_.request_id()
-                 << ", time=" << request_.time() 
-                 << endl;
+            // cout << "[CLIENT]: session_id_=" << request_.session_id() 
+            //      << ", rpc=" << request_.rpc_id()
+            //      << ", req_id=" << request_.request_id()
+            //      << ", time=" << request_.time() 
+            //      << endl;
 
                 // << ", name=" << request_.name() 
                 
@@ -105,9 +105,17 @@ void ServerStreamAppleRPC::proceed()
             }
             else
             {
-                if (request_count_ == 0) test_start_time_ = std::stol(request_.time());
+                ++request_count_;
+                // cout << "[CLIENT]: session_id_=" << request_.session_id() 
+                //     << ", rpc=" << request_.rpc_id()
+                //     << ", req_id=" << request_.request_id()
+                //     << ", req_count=" << request_count_
+                //     << ", time=" << request_.time() 
+                //     << endl;
 
-                if (++request_count_ == CONFIG->get_test_count())
+                if (request_count_ == 1) test_start_time_ = std::stol(request_.time());
+
+                if (request_count_ == CONFIG->get_test_count())
                 {
                     test_end_time_ = NanoTime();
 

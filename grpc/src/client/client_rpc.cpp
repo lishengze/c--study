@@ -267,21 +267,27 @@ void ClientApplePRC::process_write_cq()
 
         if (req_id_ == 0) return;
 
-        test_write_cq_[req_id_].end_time_ = NanoTime();
+        // test_write_cq_[req_id_].end_time_ = NanoTime();
 
-        long cur_cost_time = (test_write_cq_[req_id_].end_time_ - test_write_cq_[req_id_].start_time_) /1000;
+        long end_time_ = NanoTime();
+
+        long cur_cost_time = (end_time_ - test_write_cq_[req_id_].start_time_) /1000;
 
         if (cur_cost_time < 0)
         {
             cout << "\n[Error] req_id:  " << req_id_ 
-                << " start: " << ToCmpSecondStr(test_write_cq_[req_id_].start_time_) 
-                << " end: " << ToCmpSecondStr(test_write_cq_[req_id_].end_time_)
+                << " start: " << test_write_cq_[req_id_].start_time_ << " " << ToCmpSecondStr(test_write_cq_[req_id_].start_time_) 
+                << " end: " << end_time_ << " " << ToCmpSecondStr(end_time_)
                 << endl;
 
             ++mix_numb_;
-            return;
+            // return;
         }
-        sum_write_cq_time_ += cur_cost_time;
+        else
+        {
+            sum_write_cq_time_ += cur_cost_time;
+        }
+        
 
         // cout << "Complete Write CQ: " << req_id_ << " cost: " << cur_cost_time << " micros " << " sum cost " << sum_write_cq_time_ 
         //      << "\n" << endl;
@@ -290,7 +296,7 @@ void ClientApplePRC::process_write_cq()
         {
             cout << "\n[CQ]Complete " << CONFIG->get_test_count() << " write request cost " 
                 << sum_write_cq_time_  << " micros" 
-                << " ave: " << sum_write_cq_time_ / CONFIG->get_test_count() << " micros"
+                << " ave: " << sum_write_cq_time_ / (CONFIG->get_test_count()-mix_numb_) << " micros"
                 << endl;
         }
 
