@@ -267,36 +267,14 @@ void ClientApplePRC::process_write_cq()
 
         if (req_id_ == 0) return;
 
-        // test_write_cq_[req_id_].end_time_ = NanoTime();
 
-        long end_time_ = NanoTime();
-
-        long cur_cost_time = (end_time_ - test_write_cq_[req_id_].start_time_) /1000;
-
-        if (test_write_cq_[req_id_].start_time_ == 0 || end_time_ == 0 || cur_cost_time < 0)
+        if (++cmp_write_count == CONFIG->get_test_count())
         {
-            cout << "\n[Error] req_id:  " << req_id_ 
-                << " start: " << test_write_cq_[req_id_].start_time_ << " " << ToCmpSecondStr(test_write_cq_[req_id_].start_time_) 
-                << " end: " << end_time_ << " " << ToCmpSecondStr(end_time_)
-                << endl;
+            long sum_write_cq_time_ = (NanoTime() - test_start_time_)/1000;
 
-            ++mix_numb_;
-            // return;
-        }
-        else
-        {
-            sum_write_cq_time_ += cur_cost_time;
-        }
-        
-
-        // cout << "Complete Write CQ: " << req_id_ << " cost: " << cur_cost_time << " micros " << " sum cost " << sum_write_cq_time_ 
-        //      << "\n" << endl;
-
-        if (++cmp_write_count == CONFIG->get_test_count()-mix_numb_)
-        {
             cout << "\n[CQ]Complete " << CONFIG->get_test_count() << " write request cost " 
                 << sum_write_cq_time_  << " micros" 
-                << " ave: " << sum_write_cq_time_ / (CONFIG->get_test_count()-mix_numb_) << " micros"
+                << " ave: " << sum_write_cq_time_ / CONFIG->get_test_count() << " micros"
                 << endl;
         }
 
@@ -372,10 +350,10 @@ void ClientApplePRC::process_read_cq()
 
                 if (rsp_id == CONFIG->get_test_count())
                 {
-                    test_end_time_ = NanoTime();
+                    test_rsp_end_time_ = NanoTime();
 
                     cout << "[R] Complete " << CONFIG->get_test_count() << " request cost: " 
-                        << (test_end_time_ - test_start_time_)/1000 << " microsecs" << endl;
+                        << (test_rsp_end_time_ - test_start_time_)/1000 << " microsecs" << endl;
                 }                            
             }
         }
@@ -577,11 +555,10 @@ void ClientApplePRC::add_data(Fruit* data)
             test_start_time_ = NanoTime();
         }
 
-        TestTime cur_test_write_cq_;
-        cur_test_write_cq_.start_time_ = NanoTime();
-        req_id_ = real_data->request_id;
+        // TestTime cur_test_write_cq_;
+        // cur_test_write_cq_.start_time_ = NanoTime();
 
-        test_write_cq_[req_id_] = cur_test_write_cq_;
+        req_id_ = real_data->request_id;
 
         responder_->Write(request, this);
 

@@ -185,19 +185,22 @@ class ClientApplePRC:public ClientBaseRPC
     int  req_id_{0};
 
     long test_start_time_;
-    long test_end_time_;
+    long test_rsp_end_time_;
+    long test_write_cq_end_time_;
 
-    struct TestTime
-    {
-        long start_time_;
-        long end_time_;
-    };
-
-    std::map<long, TestTime>     test_write_cq_;
     long                         cmp_write_count{0};
-    long                         sum_write_cq_time_{0};
 
-    long                         mix_numb_{0};
+    // struct TestTime
+    // {
+    //     long start_time_;
+    //     long end_time_;
+    // };
+
+    // std::map<long, TestTime>     test_write_cq_;
+    
+    // long                         sum_write_cq_time_{0};
+
+    // long                         mix_numb_{0};
 
 };
 
