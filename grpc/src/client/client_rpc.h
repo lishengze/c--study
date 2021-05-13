@@ -197,5 +197,7 @@ class ClientApplePRC:public ClientBaseRPC
     long                         cmp_write_count{0};
     long                         sum_write_cq_time_{0};
 
+    long                         mix_numb_{0};
+
 };
 

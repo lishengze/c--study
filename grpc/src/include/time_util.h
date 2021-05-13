@@ -58,6 +58,13 @@ inline std::string ToSecondStr(long nano, const char* format="%Y-%m-%d %H:%M:%S"
     return std::string(buffer);
 }
 
+inline std::string ToCmpSecondStr(long nano, const char* format="%Y-%m-%d %H:%M:%S") {
+    string sec_str = ToSecondStr(nano);
+    long nano_secs = nano % (NANOSECONDS_PER_SECOND);
+    string result = sec_str + "." + std::to_string(nano_secs);
+    return result;
+}
+
 /**
  * dump long time to struct tm
  * @param nano nano time in long

@@ -270,12 +270,23 @@ void ClientApplePRC::process_write_cq()
         test_write_cq_[req_id_].end_time_ = NanoTime();
 
         long cur_cost_time = (test_write_cq_[req_id_].end_time_ - test_write_cq_[req_id_].start_time_) /1000;
+
+        if (cur_cost_time < 0)
+        {
+            cout << "\n[Error] req_id:  " << req_id_ 
+                << " start: " << ToCmpSecondStr(test_write_cq_[req_id_].start_time_) 
+                << " end: " << ToCmpSecondStr(test_write_cq_[req_id_].end_time_)
+                << endl;
+
+            ++mix_numb_;
+            return;
+        }
         sum_write_cq_time_ += cur_cost_time;
 
-        cout << "Complete Write CQ: " << req_id_ << " cost: " << cur_cost_time << " micros " << " sum cost " << sum_write_cq_time_ 
-             << "\n" << endl;
+        // cout << "Complete Write CQ: " << req_id_ << " cost: " << cur_cost_time << " micros " << " sum cost " << sum_write_cq_time_ 
+        //      << "\n" << endl;
 
-        if (++cmp_write_count == CONFIG->get_test_count())
+        if (++cmp_write_count == CONFIG->get_test_count()-mix_numb_)
         {
             cout << "\n[CQ]Complete " << CONFIG->get_test_count() << " write request cost " 
                 << sum_write_cq_time_  << " micros" 
@@ -540,12 +551,12 @@ void ClientApplePRC::add_data(Fruit* data)
 
         request.set_request_id(std::to_string(real_data->request_id));
 
-        cout << "[CLIENT]:"
-                << "session_id= " << request.session_id() 
-                << ", rpc=" << rpc_id_
-                << ", req_id=" << real_data->request_id
-                << ", time=" << request.time()                
-                << endl;            
+        // cout << "[CLIENT]:"
+        //         << "session_id= " << request.session_id() 
+        //         << ", rpc=" << rpc_id_
+        //         << ", req_id=" << real_data->request_id
+        //         << ", time=" << request.time()                
+        //         << endl;            
 
         int sleep_secs = 3;
 
