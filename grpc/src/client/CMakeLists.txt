@@ -30,6 +30,7 @@ INCLUDE_DIRECTORIES("../../proto")
 
 
 LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
+LINK_DIRECTORIES("/opt/utrade/console/lib/pandora/")
 
 
 ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC} ${PROTO_SRC})
