@@ -66,18 +66,15 @@ class ClientBaseRPC
 
         virtual void procceed();
 
-        virtual BaseRPCParam release();
+        virtual void release();
 
         virtual ClientBaseRPC* spawn() { return this; }
 
         virtual void make_active();
 
-        virtual void reconnect() { }
-
         virtual void add_data(Fruit* data){ }
 
         virtual void set_client_map();
-
 
         virtual void on_connected() { }
 
@@ -96,6 +93,10 @@ class ClientBaseRPC
         virtual void set_is_login(bool is_login) {
             is_login_ = is_login;
         }
+
+        virtual void process_read_cq(){ }
+
+        virtual void process_write_cq(){ }        
         
         void set_async_client(AsyncClient* async_client);
 
@@ -112,18 +113,15 @@ class ClientBaseRPC
         Alarm                                   alarm_;   
 
         string                                  session_id_{""};
-        string                                  rpc_id_{""};        
+        string                                  rpc_id_{""};       
+
         int                                     obj_id_{0};
-
-        string                                  cur_response_id_{""};
-
         static int                              obj_count_;        
 
-        bool                                    is_request_data_updated_{true};
         bool                                    is_write_cq_{false};
-        bool                                    is_start_call_{true}; 
-        bool                                    is_rsp_init_{false};
+
         bool                                    is_released_{false};
+
         bool                                    is_connected_{false};
         bool                                    is_login_{false};
 
@@ -152,24 +150,16 @@ class ClientApplePRC:public ClientBaseRPC
         virtual void req_login();
 
         virtual void on_rsp_login();
-
-        virtual void procceed();
-
-        virtual void reconnect();
-
-        virtual BaseRPCParam release();
+        
 
         virtual void add_data(Fruit* data);
 
-        void write_msg();
+        virtual void process_read_cq();
 
-        void process_read_cq();
-
-        void process_write_cq();
+        virtual void process_write_cq();
 
     private:
 
-    TestRequest  request_;
     TestResponse reply;
 
     list<Fruit*>                                             cached_request_data_;
@@ -186,20 +176,8 @@ class ClientApplePRC:public ClientBaseRPC
     long test_rsp_end_time_;
     long test_write_cq_end_time_;
 
-    long                         cmp_write_count{0};
-    long                         rsp_count_{0};
-
-    // struct TestTime
-    // {
-    //     long start_time_;
-    //     long end_time_;
-    // };
-
-    // std::map<long, TestTime>     test_write_cq_;
-    
-    // long                         sum_write_cq_time_{0};
-
-    // long                         mix_numb_{0};
+    long test_cmp_write_count{0};
+    long test_rsp_count_{0};
 
 };
 

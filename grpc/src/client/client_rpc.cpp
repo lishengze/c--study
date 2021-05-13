@@ -100,7 +100,14 @@ void ClientBaseRPC::procceed()
 {
     try
     {
-        /* code */
+        if (is_write_cq_)
+        {
+            process_write_cq();
+        }
+        else
+        {
+            process_read_cq();
+        }
     }
     catch(const std::exception& e)
     {
@@ -109,20 +116,27 @@ void ClientBaseRPC::procceed()
     
 }
 
-BaseRPCParam ClientBaseRPC::release()
+void ClientBaseRPC::release()
 {
     try
     {
-        BaseRPCParam result;
-        cout << " ClientBaseRPC::release " << endl;
-        delete this;
-        return result;
+        std::lock_guard<std::mutex> lk(mutex_);
+
+        cout << "\n********* " << rpc_id_ <<  " release id = " << obj_id_ << " ********\n"<< endl;
+        if (!is_released_)
+        {
+            is_released_ = true;
+            delete this;
+        }
+        else
+        {
+            cout << "[E] " << rpc_id_ << " ::release id=" << obj_id_ << " has been Released!!! " << endl;
+        } 
     }
     catch(const std::exception& e)
     {
         std::cerr <<"\n[E] ClientBaseRPC::release " << e.what() << '\n';
-    }
-    
+    }    
 }
 
 
@@ -143,11 +157,6 @@ ClientBaseRPC* ClientApplePRC::spawn()
         client_apple->set_async_client(async_client);
 
         return client_apple;
-
-        // client_apple->process();
-
-        // client_apple->set_client_map();
-
     }
     catch(const std::exception& e)
     {
@@ -159,8 +168,6 @@ void ClientApplePRC::connect()
 {
     try
     {
-        is_rsp_init_ = false;
-
         cout << "ClientApplePRC::connect " << endl;
 
         responder_ = stub_->PrepareAsyncServerStreamApple(&context_, cq_);
@@ -177,85 +184,6 @@ void ClientApplePRC::connect()
     
 }
 
-void ClientApplePRC::write_msg()
-{
-    try
-    {
-        cout << "ClientApplePRC::write_msg " << endl;
-
-        string name = "ClientApplePRC";
-        string time = NanoTimeStr();
-
-        TestRequest  request;
-
-        request.set_session_id(session_id_);
-        request.set_name(name);
-        request.set_time(time);
-        request.set_obj_id(std::to_string(obj_id_));
-
-        cout << "Request: obj_id=" << obj_id_ << ", session_id= " << request.session_id() 
-                << " , name=" << request.name() 
-                << " , time=" << request.time()
-                << endl;            
-
-        int sleep_secs = 3;
-        // cout << "sleep for " << sleep_secs << " secs " << endl;
-        // std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
-
-        is_write_cq_ = true;
-
-        responder_->Write(request, this);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    
-}
-
-// Read Data;
-void ClientApplePRC::procceed()
-{
-    try
-    {
-        if (is_write_cq_)
-        {
-            process_write_cq();
-        }
-        // else if (is_start_call_)
-        // {
-        //     is_start_call_ = false;
-        //     cout << "Is Start Call " << endl;
-        //     last_cq_msg = "Is Start Call";  
-
-        //     responder_->Read(&reply, this);
-        //     if (reply.time().length() == 0)
-        //     {
-        //         last_cq_msg = "Get Empty Response Data";
-        //         cout << "[W] Empty Response" << endl;
-        //         return;
-        //     }
-
-        //     if (!is_rsp_init_)
-        //     {
-        //         // make_active();
-
-        //         is_rsp_init_ = true;
-        //     }   
-        // }        
-        // New Response Data Coming!
-        else
-        {
-            process_read_cq();
-        }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << "\n[E] ClientApplePRC::procceed " <<  e.what() << '\n';
-    }
-    
-}
-
 void ClientApplePRC::process_write_cq()
 {
     try
@@ -268,7 +196,7 @@ void ClientApplePRC::process_write_cq()
         if (req_id_ == 0) return;
 
 
-        if (++cmp_write_count == CONFIG->get_test_count())
+        if (++test_cmp_write_count == CONFIG->get_test_count())
         {
             long sum_write_cq_time_ = (NanoTime() - test_start_time_)/1000;
 
@@ -296,11 +224,12 @@ void ClientApplePRC::process_read_cq()
 {
     try
     {
-        std::lock_guard<std::mutex> lk(mutex_);
-        
-        last_cq_msg = "Get Full Response Data";
+        // cout << "ClientApplePRC::process_read_cq " << endl;
 
+        std::lock_guard<std::mutex> lk(mutex_);                
+        
         responder_->Read(&reply, this);
+
         if (reply.time().length() == 0)
         {
             last_cq_msg = "Get Empty Response Data";
@@ -309,6 +238,7 @@ void ClientApplePRC::process_read_cq()
         }
         else
         {
+            last_cq_msg = "Get Full Response Data";
             string rsp_message = reply.message();
             if (!is_connected_ && rsp_message == "connected")
             {
@@ -337,17 +267,17 @@ void ClientApplePRC::process_read_cq()
             }
             else
             {
-                ++rsp_count_;
+                ++test_rsp_count_;
                 cout << "[SERVER]:"
                         << "session_id= " << reply.session_id() 
                         << ", rpc=" << rpc_id_
                         << ", rsp_id="<< reply.response_id()
-                        << ", rsp_count=" << rsp_count_
+                        << ", rsp_count=" << test_rsp_count_
                         << ", time=" << reply.time() 
                         << "\n"
                         << endl;
 
-                if (rsp_count_ == CONFIG->get_test_count())
+                if (test_rsp_count_ == CONFIG->get_test_count())
                 {
                     test_rsp_end_time_ = NanoTime();
 
@@ -359,9 +289,6 @@ void ClientApplePRC::process_read_cq()
                 }                            
             }
         }
-
-
-    
     }
     catch(const std::exception& e)
     {
@@ -397,21 +324,10 @@ void ClientApplePRC::req_login()
         TestRequest  request;
 
         request.set_session_id(session_id_);
-        request.set_name(name);
-        request.set_time(time);
-        request.set_obj_id(std::to_string(obj_id_));
         request.set_message("login");
 
         cout << "login: obj_id=" << obj_id_ << ", session_id= " << request.session_id() 
-                << " , name=" << request.name() 
-                << " , time=" << request.time()
-                << " , obj_id=" << obj_id_
-                << " , msg=" << request.message()
-                << endl;            
-
-        int sleep_secs = 3;
-        // cout << "sleep for " << sleep_secs << " secs " << endl;
-        // std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
+             << endl;            
 
         is_write_cq_ = true;
 
@@ -435,54 +351,6 @@ void ClientApplePRC::on_rsp_login()
         std::cerr << e.what() << '\n';
     }
 
-}
-
-void ClientApplePRC::reconnect()
-{
-    try
-    {
-        std::lock_guard<std::mutex> lk(mutex_);
-
-        cout << "Client " << session_id_ << " Start Reconnect!" << endl;
-
-        std::this_thread::sleep_for(std::chrono::seconds(3));
-
-        spawn();
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }    
-}
-
-BaseRPCParam ClientApplePRC::release()
-{
-    try
-    {
-        std::lock_guard<std::mutex> lk(mutex_);
-
-        BaseRPCParam result;
-
-        result.channel = channel_;
-        result.cq = cq_;
-
-        cout << "\n********* ClientApplePRC::release id = " << obj_id_ << " ********\n"<< endl;
-        if (!is_released_)
-        {
-            is_released_ = true;
-            delete this;
-        }
-        else
-        {
-            cout << "[E] ClientApplePRC::release id=" << obj_id_ << " has been Released!!! " << endl;
-        } 
-
-        return result;
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << "\n[E] ClientApplePRC::release " << e.what() << '\n';
-    }
 }
 
 void ClientApplePRC::add_data(Fruit* data)
@@ -550,7 +418,6 @@ void ClientApplePRC::add_data(Fruit* data)
         // std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
 
         is_write_cq_ = true;
-        is_request_data_updated_ = true;
 
         if (real_data->request_id == 1)
         {

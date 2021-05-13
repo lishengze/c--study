@@ -43,6 +43,7 @@ void ServerStreamAppleRPC::write_msg(string message, string rsp_id)
              << "session_id_=" << session_id_ 
              << ", rpc=" << rpc_id_
              << ", rsp_id=" << rsp_id 
+             << ", msg=" << message
              << ", time=" << time 
              << "\n"
              << endl;
@@ -89,7 +90,7 @@ void ServerStreamAppleRPC::proceed()
                 // << ", obj_id=" << request_.obj_id() << endl;
 
             // 初次连接;
-            if (request_.time().length() == 0)
+            if (request_.session_id().length() == 0)
             {
                 cout << "Client Connect!" << endl;
 
