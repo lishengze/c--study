@@ -52,7 +52,7 @@ class BaseRPC
 
     virtual void process();
 
-    virtual void proceed() { }
+    virtual void proceed();
 
     virtual void release();
 
@@ -73,6 +73,10 @@ class BaseRPC
    void set_server(BaseServer* server) { server_ = server;}
 
    void set_rpc_map();
+
+    virtual void process_read_cq(){ }
+
+    virtual void process_write_cq() { }   
 
     
     enum CallStatus     { CREATE, PROCESS, FINISH };

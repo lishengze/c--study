@@ -1,6 +1,7 @@
 
 #include "rpc.h"
 #include "sync_rpc.h"
+#include "time_util.h"
 
 
 grpc::Status SynacService::ServerStreamApple(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::TestPackage::TestResponse, ::TestPackage::TestRequest>* stream) 

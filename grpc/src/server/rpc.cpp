@@ -45,9 +45,7 @@ void BaseRPC::set_rpc_map()
 void BaseRPC::process()
 {
     try
-    {
-        std::lock_guard<std::mutex> lk(mutex_);
-
+    {       
         if (CREATE == status_)
         {
             cout << "\nStatus is CREATE" << endl;
@@ -56,15 +54,16 @@ void BaseRPC::process()
         }
         else if (PROCESS == status_)
         {
-            // if (is_first_)
-            // {
-            //     is_first_ = false;
-            //     spawn();
-            // }
-
             // cout << "\nStatus is PROCESS" << endl;
             // status_ = FINISH;
             proceed();
+
+            if (is_first_)
+            {
+                is_first_ = false;
+                BaseRPC* next_rpc = spawn();
+                next_rpc->process();
+            }            
         }
         else if (FINISH == status_)
         {
@@ -89,6 +88,28 @@ void BaseRPC::process()
     {
         cout << "BaseRPC::process unkonwn exceptions" << endl;
     }    
+}
+
+void BaseRPC::proceed()
+{
+    try
+    {
+        std::lock_guard<std::mutex> lk(mutex_);
+        
+        if (is_write_cq_)
+        {
+            process_write_cq();
+        }
+        else
+        {
+            process_read_cq();
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+
 }
 
 void BaseRPC::release()

@@ -64,77 +64,75 @@ void ServerStreamAppleRPC::write_msg(string message, string rsp_id)
 
 }
 
-void ServerStreamAppleRPC::proceed()
+void ServerStreamAppleRPC::process_read_cq()
 {
     try
     {
-        // cout << "\nServerStreamAppleRPC::process obj_id = "  << obj_id_ << endl;
+        responder_.Read(&request_, this);
 
-        if (is_write_cq_)
+        // cout << "[CLIENT]: session_id_=" << request_.session_id() 
+        //      << ", rpc=" << request_.rpc_id()
+        //      << ", req_id=" << request_.request_id()
+        //      << ", time=" << request_.time() 
+        //      << endl;
+
+            // << ", name=" << request_.name() 
+            
+            // << ", obj_id=" << request_.obj_id() << endl;
+
+        // 初次连接;
+        if (request_.session_id().length() == 0)
         {
-            is_write_cq_ = false;
-            // cout << "This is Write_CQ" << endl;
+            cout << "Client Connect!" << endl;
+
+            on_connect();
+            
+            return;
+        }
+
+        // 登陆请求；
+        if (request_.message() == "login")
+        {
+            on_req_login();
         }
         else
         {
-            responder_.Read(&request_, this);
-
-            // cout << "[CLIENT]: session_id_=" << request_.session_id() 
-            //      << ", rpc=" << request_.rpc_id()
-            //      << ", req_id=" << request_.request_id()
-            //      << ", time=" << request_.time() 
-            //      << endl;
-
-                // << ", name=" << request_.name() 
-                
-                // << ", obj_id=" << request_.obj_id() << endl;
-
-            // 初次连接;
-            if (request_.session_id().length() == 0)
+            ++request_count_;
+            if (request_count_ % 100 == 0)
             {
-                cout << "Client Connect!" << endl;
-
-                on_connect();
-                
-                return;
+                cout << "[CLIENT]: session_id_=" << request_.session_id() 
+                    << ", rpc=" << request_.rpc_id()
+                    << ", req_id=" << request_.request_id()
+                    << ", req_count=" << request_count_
+                    << ", time=" << request_.time() 
+                    << endl;
             }
 
-            // 登陆请求；
-            if (request_.message() == "login")
+
+            string session_id = request_.session_id();
+            if (request_count_ == 1) 
             {
-                on_req_login();
+                TimeStruct time_struct;
+                time_struct.test_start_time_ = std::stol(request_.time());
+                
+                test_time[session_id] = time_struct;
             }
-            else
+
+            if (request_count_ == CONFIG->get_test_count())
             {
-                ++request_count_;
-                if (request_count_ % 1 == 0)
-                {
-                    cout << "[CLIENT]: session_id_=" << request_.session_id() 
-                        << ", rpc=" << request_.rpc_id()
-                        << ", req_id=" << request_.request_id()
-                        << ", req_count=" << request_count_
-                        << ", time=" << request_.time() 
-                        << endl;
-                }
+                test_time[session_id].test_end_time_ = NanoTime();
 
+                long cost_micros = (test_time[session_id].test_end_time_ - test_time[session_id].test_start_time_) /1000;
 
-                if (request_count_ == 1) test_start_time_ = std::stol(request_.time());
+                cout << "\n[R]Get " << session_id << " " << request_count_ << " request cost " 
+                    << cost_micros << " micros" 
+                    << " ave: " << cost_micros / request_count_ << " micros"
+                    << endl;
+            }
 
-                if (request_count_ == CONFIG->get_test_count())
-                {
-                    test_end_time_ = NanoTime();
-
-                    long cost_micros = (test_end_time_ - test_start_time_) /1000;
-
-                    cout << "\n[R]Get " << request_count_ << " request cost " 
-                        << cost_micros << " micros" 
-                        << " ave: " << cost_micros / request_count_ << " micros"
-                        << endl;
-                }
-
-                write_msg("", request_.request_id());
-            }            
-        }
+            // write_msg("", request_.request_id());
+        }            
+        
     }
     catch(const std::exception& e)
     {
@@ -144,6 +142,27 @@ void ServerStreamAppleRPC::proceed()
     {
         cout << "ServerStreamAppleRPC::process unkonwn exceptions" << endl;
     }
+}
+
+void ServerStreamAppleRPC::process_write_cq()
+{
+    try
+    {
+        //  std::lock_guard<std::mutex> lk(mutex_);
+
+        // cout << "\nServerStreamAppleRPC::process obj_id = "  << obj_id_ << endl;
+
+        is_write_cq_ = false;
+        // cout << "This is Write_CQ" << endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"ServerStreamAppleRPC::process " << e.what() << '\n';
+    }
+    catch(...)
+    {
+        cout << "ServerStreamAppleRPC::process unkonwn exceptions" << endl;
+    }    
 }
 
 void ServerStreamAppleRPC::on_connect()

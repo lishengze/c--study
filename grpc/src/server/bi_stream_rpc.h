@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rpc.h"
+#include "global_declare.h"
 
 class ServerStreamAppleRPC:public BaseRPC
 {
@@ -14,8 +15,6 @@ public:
 
     virtual ~ServerStreamAppleRPC() { cout << "Release ServerStreamAppleRPC! " << endl; }
 
-    virtual void proceed();
-
     virtual void release();    
 
     virtual void register_request();
@@ -27,6 +26,10 @@ public:
     virtual void rsp_login();
 
     virtual BaseRPC* spawn();
+
+    virtual void process_read_cq();
+
+    virtual void process_write_cq();    
 
     void write_msg(string message="", string rsp_id="");
     
@@ -41,9 +44,13 @@ private:
 
     int  rsp_id_{0};
 
+    struct TimeStruct
+    {   
+        long             test_start_time_;
+        long             test_end_time_;
+    };
 
-    long             test_start_time_;
-    long             test_end_time_;
+    map<string, TimeStruct> test_time;
 
     long             request_count_{0};              
 

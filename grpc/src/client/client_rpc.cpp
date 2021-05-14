@@ -1,5 +1,6 @@
 #include "client_rpc.h"
 #include "client.h"
+#include "time_util.h"
 
 int ClientBaseRPC::obj_count_ = 0;
 
@@ -268,14 +269,19 @@ void ClientApplePRC::process_read_cq()
             else
             {
                 ++test_rsp_count_;
-                cout << "[SERVER]:"
-                        << "session_id= " << reply.session_id() 
-                        << ", rpc=" << rpc_id_
-                        << ", rsp_id="<< reply.response_id()
-                        << ", rsp_count=" << test_rsp_count_
-                        << ", time=" << reply.time() 
-                        << "\n"
-                        << endl;
+
+                if (test_rsp_count_ % 100 == 0)
+                {
+                    cout << "[SERVER]:"
+                            << "session_id= " << reply.session_id() 
+                            << ", rpc=" << rpc_id_
+                            << ", rsp_id="<< reply.response_id()
+                            << ", rsp_count=" << test_rsp_count_
+                            << ", time=" << reply.time() 
+                            << "\n"
+                            << endl;
+                }
+
 
                 if (test_rsp_count_ == CONFIG->get_test_count())
                 {
@@ -405,12 +411,16 @@ void ClientApplePRC::add_data(Fruit* data)
 
         request.set_request_id(std::to_string(real_data->request_id));
 
-        cout << "[CLIENT]:"
-                << "session_id= " << request.session_id() 
-                << ", rpc=" << rpc_id_
-                << ", req_id=" << real_data->request_id
-                << ", time=" << request.time()                
-                << endl;            
+        if (real_data->request_id % 100 == 0)
+        {
+            cout << "[CLIENT]:"
+                    << "session_id= " << request.session_id() 
+                    << ", rpc=" << rpc_id_
+                    << ", req_id=" << real_data->request_id
+                    << ", time=" << request.time()                
+                    << endl;  
+        }
+          
 
         int sleep_secs = 3;
 
