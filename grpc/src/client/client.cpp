@@ -293,17 +293,17 @@ void AsyncClient::run_cq_loop()
     }
 }
 
-void AsyncClient::add_data(Fruit* data) 
+void AsyncClient::add_data(PackagePtr pkg) 
 {
-    string rpc_id_ = data->rpc_id;
+    string rpc_id = pkg->RpcID();
 
-    if (client_rpc_map_.find(rpc_id_) != client_rpc_map_.end())
+    if (client_rpc_map_.find(rpc_id) != client_rpc_map_.end())
     {
-        client_rpc_map_[rpc_id_]->add_data(data);
+        client_rpc_map_[rpc_id]->add_data(pkg);
     }
     else
     {
-        cout << "rpc: " << rpc_id_ << " was not found!" << endl;
+        cout << "rpc: " << rpc_id << " was not found!" << endl;
     }
 }   
 

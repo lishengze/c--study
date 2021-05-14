@@ -7,6 +7,8 @@
 
 #include "global_declare.h"
 
+#include "package_simple.h"
+
 using grpc::Alarm;
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
@@ -36,7 +38,7 @@ using TestPackage::TestResponse;
 
 #include "config.h"
 
-
+#include "package_simple.h"
 
 class AsyncClient;
 
@@ -72,7 +74,7 @@ class ClientBaseRPC
 
         virtual void make_active();
 
-        virtual void add_data(Fruit* data){ }
+        virtual void add_data(PackagePtr package){ }
 
         virtual void set_client_map();
 
@@ -150,9 +152,8 @@ class ClientApplePRC:public ClientBaseRPC
         virtual void req_login();
 
         virtual void on_rsp_login();
-        
 
-        virtual void add_data(Fruit* data);
+        virtual void add_data(PackagePtr package);
 
         virtual void process_read_cq();
 
@@ -162,7 +163,7 @@ class ClientApplePRC:public ClientBaseRPC
 
     TestResponse reply;
 
-    list<Fruit*>                                             cached_request_data_;
+    list<PackagePtr>                                         cached_request_data_;
     std::mutex                                               cached_data_mutex_;
 
     string                                                   last_cq_msg;

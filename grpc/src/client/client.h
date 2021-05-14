@@ -10,6 +10,8 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/alarm.h>
 
+#include "package_simple.h"
+
 using grpc::Alarm;
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
@@ -166,18 +168,7 @@ public:
 
     void set_client_map(RpcType rpc_id, ClientBaseRPC* client_rpc);
 
-    // template<class DataType>
-    // void add_data(DataType* data) 
-    // {
-    //     string rpc_id = data->rpc_id;
-
-    //     if (client_rpc_map_.find(rpc_id) != client_rpc_map_.end())
-    //     {
-    //         client_rpc_map_[rpc_id]->add_data(data);
-    //     }
-    // }        
-
-    void add_data(Fruit* data);   
+    void add_data(PackagePtr pkg);   
 
     void reconnect(ClientBaseRPC* rpc);
 
@@ -194,8 +185,6 @@ public:
     ClientApplePRC*                                 apple_rpc_;
 
     map<RpcType, ClientBaseRPC*>                    client_rpc_map_;
-
-    // map<int, ClientBaseRPC*>                        released_rpc_map_;
 
     set<int>                                        dead_rpc_id_set_;
 

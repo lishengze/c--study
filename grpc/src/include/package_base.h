@@ -20,6 +20,7 @@ struct PackageHead
     PackageHead() {}
     // package session identity
     std::string SessionID{""};
+    std::string RpcID{""};
     // package type (request, response or publish)
     unsigned char Type{UT_UNKNOWN};
     // message id
@@ -47,7 +48,7 @@ struct PackageBase
 {
     PackageBase()
     {
-        Head.CreateTime = utrade::pandora::NanoTime();
+        Head.CreateTime = NanoTime();
         // std::cout << "init package time " << Head.CreateTime << std::endl;
     }
     virtual ~PackageBase(){}
@@ -167,6 +168,9 @@ struct PackageBase
     unsigned int Tid(){ return Head.Tid; }
     // retrieve the strategy name
     std::string  SessionID(){ return Head.SessionID; }
+
+    std::string  RpcID(){ return Head.RpcID; }
+
     // retrieve the request identity number
     int64_t         RequestID(){ return Head.RequestID; }
     // is the last response
@@ -204,6 +208,8 @@ struct PackageBase
     void SetAccessToken(const std::string& access_token) { Head.AccessToken=access_token; }
     // set the session identity
     void SetSessionID(const std::string& session_id) { Head.SessionID=session_id; }
+
+    void SetRpcID(const std::string& rpc_id) { Head.RpcID = rpc_id; }
     // global package id
     void SetPackageID(const long& package_id) { Head.PackageID=package_id; }
     // reset the package

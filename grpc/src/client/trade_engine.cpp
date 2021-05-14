@@ -67,27 +67,28 @@ void TradeEngine::test_thread_fun()
     
        for (int i = 0; i < CONFIG->get_test_count(); ++i)
        {
-            Apple* apple = new Apple();
+           PackagePtr pkg = CreatePackage<Apple>("trade_engine", std::to_string(NanoTime()));
 
-            apple->session_id = "lsz";
-            apple->name = "trade_engine";
-            apple->rpc_id = "apple";
+           pkg->SetRequestID(i+1);
+           pkg->SetSessionID(CONFIG->get_session_id());
+           pkg->SetRpcID("apple");
 
-            apple->time = std::to_string(NanoTime());
-            apple->request_id = i+1;
+            // Apple* apple = new Apple();
+
+            // apple->name = "trade_engine";
+            // apple->rpc_id = "apple";
+
+            // apple->time = std::to_string(NanoTime());
+
 
         //    std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
         //    std::this_thread::sleep_for(std::chrono::microseconds(1));
 
-            request_data.push_back(apple);
-            async_client_->add_data(apple);           
+            // request_data.push_back(apple);
+
+            async_client_->add_data(pkg);           
        }
-
-    //    for (auto apple:request_data)
-    //    {
-
-    //    }
     }
     catch(const std::exception& e)
     {

@@ -2,6 +2,8 @@
 #include "client.h"
 #include "time_util.h"
 
+#include "package_simple.h"
+
 int ClientBaseRPC::obj_count_ = 0;
 
 void ClientBaseRPC::make_active() 
@@ -196,7 +198,6 @@ void ClientApplePRC::process_write_cq()
 
         if (req_id_ == 0) return;
 
-
         if (++test_cmp_write_count == CONFIG->get_test_count())
         {
             long sum_write_cq_time_ = (NanoTime() - test_start_time_)/1000;
@@ -209,10 +210,10 @@ void ClientApplePRC::process_write_cq()
 
         if (!cached_request_data_.empty())
         {
-            Fruit* first_data = cached_request_data_.front();
+            PackagePtr pkg = cached_request_data_.front();
             cached_request_data_.pop_front();
             // cout << "Restart Add Cached Data: " << first_data->request_id << endl;
-            add_data(first_data);
+            add_data(pkg);
         }
     }
     catch(const std::exception& e)
@@ -359,7 +360,7 @@ void ClientApplePRC::on_rsp_login()
 
 }
 
-void ClientApplePRC::add_data(Fruit* data)
+void ClientApplePRC::add_data(PackagePtr pkg)
 {
     try
     {
@@ -389,8 +390,7 @@ void ClientApplePRC::add_data(Fruit* data)
 
         if (is_write_cq_)
         {
-            cached_request_data_.push_back(data);
-            // cout << "Last Write Was not Finished!" << endl;
+            cached_request_data_.push_back(pkg);
             // cout << "Last Write Was not Finished! Cached Data " << data->request_id << endl;
             return;
         }
@@ -398,38 +398,37 @@ void ClientApplePRC::add_data(Fruit* data)
         string name = "ClientApplePRC";
         string time = NanoTimeStr();
 
-        Apple* real_data = (Apple*)(data);
+        ApplePtr real_data = GetField<Apple>(pkg);
 
         TestRequest request;
 
         request.set_session_id(session_id_);
+        request.set_rpc_id(rpc_id_);
+
         request.set_name(real_data->name);
         request.set_time(real_data->time);
         request.set_obj_id(std::to_string(obj_id_));
-        request.set_rpc_id(rpc_id_);
-        // request.set_request_id(std::to_string(++req_id_));
 
-        request.set_request_id(std::to_string(real_data->request_id));
+        request.set_request_id(std::to_string(pkg->RequestID()));
 
-        if (real_data->request_id % 100 == 0)
+        if (pkg->RequestID() % 100 == 0)
         {
             cout << "[CLIENT]:"
                     << "session_id= " << request.session_id() 
                     << ", rpc=" << rpc_id_
-                    << ", req_id=" << real_data->request_id
+                    << ", req_id=" << pkg->RequestID()
                     << ", time=" << request.time()                
                     << endl;  
         }
           
 
-        int sleep_secs = 3;
-
+        // int sleep_secs = 3;
         // cout << "sleep for " << sleep_secs << " secs " << endl;
         // std::this_thread::sleep_for(std::chrono::seconds(sleep_secs));
 
         is_write_cq_ = true;
 
-        if (real_data->request_id == 1)
+        if (pkg->RequestID() == 1)
         {
             test_start_time_ = NanoTime();
         }
@@ -437,11 +436,9 @@ void ClientApplePRC::add_data(Fruit* data)
         // TestTime cur_test_write_cq_;
         // cur_test_write_cq_.start_time_ = NanoTime();
 
-        req_id_ = real_data->request_id;
+        req_id_ = pkg->RequestID();
 
         responder_->Write(request, this);
-
-        delete data;
     }
     catch(const std::exception& e)
     {

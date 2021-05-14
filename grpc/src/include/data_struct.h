@@ -1,21 +1,24 @@
 #pragma once
 
-#include "../include/global_declare.h"
+#include "global_declare.h"
+#include "package_simple.h"
 
-struct Fruit
+
+struct Fruit:public PacakgeBaseData
 {
-    SessionType session_id;
     RpcType     rpc_id{"fruit"};
-    long        request_id;
 };
+DECLARE_PTR(Fruit);
 
 struct Apple:public Fruit
 {
-    Apple() { rpc_id = "apple";}
-
+    Apple(string name_value, string time_value):
+    name{name_value}, time{time_value}
+    { rpc_id = "apple";}
     string      name;
     string      time;
 };
+DECLARE_PTR(Apple);
 
 struct Pear:public Fruit
 {
@@ -24,6 +27,7 @@ struct Pear:public Fruit
     string      name;
     string      time;
 };
+DECLARE_PTR(Pear);
 
 struct Mango:public Fruit
 {
@@ -32,3 +36,4 @@ struct Mango:public Fruit
     string      name;
     string      time;
 };
+DECLARE_PTR(Mango);
