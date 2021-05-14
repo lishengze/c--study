@@ -17,6 +17,8 @@
 #include "data_struct.h"
 #include "../include/global_declare.h"
 
+#include "package_simple.h"
+
 using grpc::Alarm;
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -60,13 +62,17 @@ class BaseRPC
 
     virtual BaseRPC* spawn() { return this; }
 
-    virtual void add_data(Fruit* fruit) {}
+    virtual void add_data(PackagePtr pkg) {}
 
-    virtual void on_connect() {}
+    virtual void on_connect();
 
-    virtual void on_req_login() { }
+    virtual void rsp_connect();
 
-    virtual void rsp_login() { }
+    virtual void on_req_login();
+
+    virtual void rsp_login();
+
+    virtual void send_msg(string message, string rsp_id) { }
 
     void make_active();
 
@@ -76,7 +82,11 @@ class BaseRPC
 
     virtual void process_read_cq(){ }
 
-    virtual void process_write_cq() { }   
+    virtual void process_write_cq();
+
+    void set_disconnect_time(long time) {
+        disconnect_time_ = time;
+    }
 
     
     enum CallStatus     { CREATE, PROCESS, FINISH };
@@ -100,21 +110,17 @@ class BaseRPC
 
     bool                                        is_first_{true};
 
-    bool                                        is_response_data_updated_{true};
+    bool                                        is_released_{false};
 
     bool                                        is_write_cq_{false};
-
-    bool                                        is_read_cq_{false};
 
     int                                         obj_id_{0};
 
     std::mutex                                  mutex_;
 
-    bool                                        is_released_{false};
+    unsigned long                               disconnect_time_;
 
-    string                                      cur_request_id_{""};               
-
-    unsigned long                               connect_time_;
+    long                                        rsp_id_{0};
 };
 
 class TestSimpleRPC:public BaseRPC

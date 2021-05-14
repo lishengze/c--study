@@ -10,8 +10,8 @@ service TestStream
     rpc TestDoubleStream(stream TestRequest) returns (stream TestResponse);
 
     rpc ServerStreamApple(stream TestRequest) returns (stream TestResponse);
-    rpc ServerStreamPear( TestRequest) returns (stream TestResponse);
-    rpc ServerStreamMango( TestRequest) returns (stream TestResponse);
+    rpc ServerStreamPear(TestRequest) returns (stream TestResponse);
+    rpc ServerStreamMango(TestRequest) returns (stream TestResponse);
 
     rpc DoubleStreamApple(stream TestRequest) returns (stream TestResponse);
     rpc DoubleStreamPear(stream TestRequest) returns (stream TestResponse);

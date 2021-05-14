@@ -18,6 +18,8 @@
 #include "rpc.h"
 #include "bi_stream_rpc.h"
 
+#include "package_simple.h"
+
 using grpc::Alarm;
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -56,18 +58,8 @@ public:
 
     void record_dead_rpc(BaseRPC* rpc);
 
-    template<class DataType>
-    void add_data(DataType* data) 
-    {
-        string session_id = data->session_id;
-        string rpc_id = data->rpc_id;
-
-        if (rpc_map_.find(session_id) != rpc_map_.end() && rpc_map_[session_id].find(rpc_id) != rpc_map_[session_id].end())
-        {
-            // rpc_map_[session_id][rpc_id]->add_data(data);
-        }
-    }    
-
+    void add_data(PackagePtr pkg);
+  
 protected:
 
     string                                  address_;

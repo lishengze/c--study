@@ -245,7 +245,7 @@ void ClientApplePRC::process_read_cq()
             if (!is_connected_ && rsp_message == "connected")
             {
                 cout << "[SERVER]:"
-                        << "session_id= " << reply.session_id() 
+                        << "session_id=" << reply.session_id() 
                         << ", rsp_id="<< reply.response_id()
                         << ", time=" << reply.time()                        
                         << ", msg=" << reply.message()
@@ -274,15 +274,14 @@ void ClientApplePRC::process_read_cq()
                 if (test_rsp_count_ % 100 == 0)
                 {
                     cout << "[SERVER]:"
-                            << "session_id= " << reply.session_id() 
-                            << ", rpc=" << rpc_id_
-                            << ", rsp_id="<< reply.response_id()
-                            << ", rsp_count=" << test_rsp_count_
-                            << ", time=" << reply.time() 
-                            << "\n"
-                            << endl;
+                        << "session_id=" << reply.session_id() 
+                        << ", rpc=" << rpc_id_
+                        << ", rsp_id="<< reply.response_id()
+                        << ", rsp_count=" << test_rsp_count_
+                        << ", time=" << reply.time() 
+                        << "\n"
+                        << endl;
                 }
-
 
                 if (test_rsp_count_ == CONFIG->get_test_count())
                 {

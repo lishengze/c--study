@@ -7,6 +7,7 @@
 struct Fruit:public PacakgeBaseData
 {
     RpcType     rpc_id{"fruit"};
+    string      message;
 };
 DECLARE_PTR(Fruit);
 

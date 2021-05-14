@@ -129,6 +129,8 @@ void BaseServer::record_dead_rpc(BaseRPC* rpc)
     try
     {
         dead_rpc_set_.emplace(rpc);
+
+        rpc->set_disconnect_time(NanoTime());
         
         if (rpc->session_id_.length() != 0)
         {
@@ -194,15 +196,26 @@ void BaseServer::check_dead_rpc(BaseRPC* rpc)
         }
 
         long cur_time = NanoTime() / NANOSECONDS_PER_SECOND;
+
+        list<BaseRPC*> dead_rpc_list_;
+
         for (BaseRPC* dead_rpc:dead_rpc_set_)
         {
             if (dead_rpc->session_id_.length() == 0 
-            && (cur_time - dead_rpc->connect_time_) > wait_to_release_time_secs_)
+            && (cur_time - dead_rpc->disconnect_time_) > wait_to_release_time_secs_)
             {
-                cout << "Rpc: rpc_id: " << dead_rpc->rpc_id_ << ", connect_time: " << ToSecondStr(dead_rpc->connect_time_)
+                cout << "Rpc: rpc_id: " << dead_rpc->rpc_id_ 
+                     << ", connect_time: " << ToSecondStr(dead_rpc->disconnect_time_)
                      << ", dead_time: " << ToSecondStr(cur_time) << endl;
-                dead_rpc->release();
+
+                dead_rpc_list_.push_back(dead_rpc);
             }
+        }
+
+        for (BaseRPC* dead_rpc:dead_rpc_list_)
+        {
+            dead_rpc->release();
+            dead_rpc_set_.erase(dead_rpc);
         }
     }
     catch(const std::exception& e)
@@ -210,6 +223,33 @@ void BaseServer::check_dead_rpc(BaseRPC* rpc)
         std::cerr << e.what() << '\n';
     }
     
+}
+
+void BaseServer::add_data(PackagePtr pkg)
+{
+    try
+    {
+        if (rpc_map_.find(pkg->SessionID()) != rpc_map_.end())
+        {
+            if (rpc_map_[pkg->SessionID()].find(pkg->RpcID()) != rpc_map_[pkg->SessionID()].end())
+            {
+                rpc_map_[pkg->SessionID()][pkg->RpcID()]->add_data(pkg);
+            }
+            else
+            {
+                std::cout << "\n[Warning] rpc_map_ does not have rpc_id: " << pkg->RpcID() << endl;
+            }            
+        }
+        else
+        {
+            std::cout << "\n[Warning] rpc_map_ does not have session_id: " << pkg->SessionID() << endl;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] BaseServer::add_data" << e.what() << '\n';
+    }
+
 }
 
 void SyncServer::start()

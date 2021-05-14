@@ -95,7 +95,7 @@ void BaseRPC::proceed()
     try
     {
         std::lock_guard<std::mutex> lk(mutex_);
-        
+
         if (is_write_cq_)
         {
             process_write_cq();
@@ -117,7 +117,7 @@ void BaseRPC::release()
     try
     {
         std::lock_guard<std::mutex> lk(mutex_);
-        cout << "BaseRPC::release Obj_Count:  " << obj_id_ << endl;
+        cout << "Release " << rpc_id_ << " " << session_id_ << " Obj_Count:  " << obj_id_ << endl;
 
         if (!is_released_)
         {
@@ -126,14 +126,80 @@ void BaseRPC::release()
         }
         else
         {
-            cout << "[E] BaseRPC::release id=" << obj_id_ << " has been Released!!! " << endl;
+            cout << "[E] Release " << rpc_id_ << " " 
+                 << session_id_ << " Obj_Count:  " 
+                 << obj_id_ << " has been releaed " << endl;
         }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
+void BaseRPC::on_connect() 
+{
+    try
+    {
+        rsp_connect();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
+void BaseRPC::rsp_connect()
+{
+    try
+    {
+        send_msg("connected", std::to_string(rsp_id_));
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+}
+
+void BaseRPC::on_req_login() 
+{
+    try
+    {
+        set_rpc_map();
+
+        rsp_login();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+}
+
+void BaseRPC::rsp_login()
+{
+    try
+    {
+        send_msg("login_successfully", std::to_string(rsp_id_));
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
     }
     
+}
+
+void BaseRPC::process_write_cq()
+{
+    try
+    {
+        // std::lock_guard<std::mutex> lk(mutex_);
+
+        is_write_cq_ = false;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] BaseRPC::process_write_cq " << e.what() << '\n';
+    }
 }
 
 void TestSimpleRPC::register_request()
