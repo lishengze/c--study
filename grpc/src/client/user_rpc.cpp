@@ -1,146 +1,4 @@
-#include "client_rpc.h"
-#include "client.h"
-#include "time_util.h"
-
-#include "package_simple.h"
-
-int ClientBaseRPC::obj_count_ = 0;
-
-void ClientBaseRPC::make_active() 
-{
-    try
-    {
-        std::cout << "ClientBaseRPC make active " << std::endl;
-        gpr_timespec t = gpr_now(gpr_clock_type::GPR_CLOCK_REALTIME);
-        alarm_.Set(cq_, t, this);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << "\n[E]  ClientBaseRPC::make_active" << e.what() << '\n';
-    }
-}
-
-void ClientBaseRPC::process()
-{
-    try
-    {
-        // cout << "\nClientBaseRPC::process " << endl;        
-        
-        if (status_ == CREATE)
-        {
-            // cout << "Status is CREATE " << endl;
-
-            connect();
-
-            status_ = PROCESS;
-        }
-        else if (status_ == PROCESS)
-        {
-            // cout << "Status is PROCESS " << endl;
-
-            procceed();
-        }
-        else if (status_ == FINISH)
-        {
-            
-            cout << "Current Request IS Over" << endl;
-
-            status_ = PROCESS;
-        }
-        else
-        {
-            cout << "Unknown Request Status" << endl;
-        }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr <<"\n[E] ClientBaseRPC::process " << e.what() << '\n';
-    }
-    
-}
-
-void ClientBaseRPC::set_client_map()
-{
-    try
-    {
-        if (nullptr != async_client_)
-        {
-            async_client_->set_client_map(rpc_id_, this);
-        }
-        else
-        {
-            cout << "[E] async_client_ is NULL" << endl;
-        }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-}
-
-void ClientBaseRPC::set_async_client(AsyncClient* async_client)
-{
-    try
-    {
-        if (!async_client)
-        {
-            cout << "[E] async_client is NULL " << endl;
-        }
-        else
-        {
-            async_client_ = async_client;
-
-            async_client_->set_client_map(rpc_id_, this);
-        }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-}
-
-void ClientBaseRPC::procceed()
-{
-    try
-    {
-        if (is_write_cq_)
-        {
-            process_write_cq();
-        }
-        else
-        {
-            process_read_cq();
-        }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr <<"\n[E] ClientBaseRPC::procceed " << e.what() << '\n';
-    }
-    
-}
-
-void ClientBaseRPC::release()
-{
-    try
-    {
-        std::lock_guard<std::mutex> lk(mutex_);
-
-        cout << "\n********* " << rpc_id_ <<  " release id = " << obj_id_ << " ********\n"<< endl;
-        if (!is_released_)
-        {
-            is_released_ = true;
-            delete this;
-        }
-        else
-        {
-            cout << "[E] " << rpc_id_ << " ::release id=" << obj_id_ << " has been Released!!! " << endl;
-        } 
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr <<"\n[E] ClientBaseRPC::release " << e.what() << '\n';
-    }    
-}
+#include "user_rpc.h"
 
 
 ClientBaseRPC* ClientApplePRC::spawn()
@@ -155,7 +13,7 @@ ClientBaseRPC* ClientApplePRC::spawn()
 
         // ClientApplePRC* client_apple = new (this) ClientApplePRC(channel, cq);
 
-        ClientApplePRC* client_apple = new ClientApplePRC(channel, cq);
+        ClientApplePRC* client_apple = new ClientApplePRC(channel, cq, session_id_);
 
         client_apple->set_async_client(async_client);
 
@@ -186,6 +44,35 @@ void ClientApplePRC::connect()
     }
     
 }
+
+void ClientApplePRC::req_login()
+{
+    try
+    {
+        cout << "ClientApplePRC::login " << endl;
+
+        string name = "ClientApplePRC";
+        string time = NanoTimeStr();
+
+        TestRequest  request;
+
+        request.set_session_id(session_id_);
+        request.set_message("login");
+
+        cout << "login: obj_id=" << obj_id_ << ", session_id= " << request.session_id() 
+             << endl;            
+
+        is_write_cq_ = true;
+
+        responder_->Write(request, this);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] ClientApplePRC::login() "  << e.what() << '\n';
+    }
+
+}
+
 
 void ClientApplePRC::process_write_cq()
 {
@@ -299,62 +186,6 @@ void ClientApplePRC::process_read_cq()
     catch(const std::exception& e)
     {
         std::cerr <<"\n[E] ClientApplePRC::process_read_cq " << e.what() << '\n';
-    }
-
-}
-
-void ClientApplePRC::on_connected()
-{
-    try
-    {
-        cout << "ClientApplePRC::on_connected " << endl;
-        is_connected_ = true;
-
-        req_login();
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << "\n[E] ClientApplePRC::on_connected() "  << e.what() << '\n';
-    }
-}
-
-void ClientApplePRC::req_login()
-{
-    try
-    {
-        cout << "ClientApplePRC::login " << endl;
-
-        string name = "ClientApplePRC";
-        string time = NanoTimeStr();
-
-        TestRequest  request;
-
-        request.set_session_id(session_id_);
-        request.set_message("login");
-
-        cout << "login: obj_id=" << obj_id_ << ", session_id= " << request.session_id() 
-             << endl;            
-
-        is_write_cq_ = true;
-
-        responder_->Write(request, this);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << "\n[E] ClientApplePRC::login() "  << e.what() << '\n';
-    }
-
-}
-
-void ClientApplePRC::on_rsp_login()
-{
-    try
-    {
-        is_login_ = true;
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
     }
 
 }

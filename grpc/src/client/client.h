@@ -144,8 +144,8 @@ class AsyncClient
 {
 public:
 
-    AsyncClient(std::shared_ptr<Channel> channel):
-                channel_{channel}
+    AsyncClient(std::shared_ptr<Channel> channel, string session_id):
+                channel_{channel}, session_id_{session_id}
     {
         // cout << "Client connect: " << stub_-> 
     }
@@ -179,6 +179,8 @@ public:
     std::shared_ptr<Channel>                        channel_;
 
     CompletionQueue                                 cq_;
+
+    string                                          session_id_;
     
     boost::shared_ptr<std::thread>                  cq_thread_{nullptr};   
 
@@ -192,6 +194,7 @@ public:
 
     std::mutex                                      cq_mutex_;
 
+    
 
 };
 

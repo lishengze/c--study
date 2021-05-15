@@ -4,7 +4,8 @@
 #include "../include/global_declare.h"
 #include "../include/time_util.h"
 
-#include "client_rpc.h"
+#include "user_rpc.h"
+#include "base_rpc.h"
 
 BaseClient::~BaseClient()
 {
@@ -196,8 +197,6 @@ void ServerStreamClient::request()
 }
 
 
-
-
 void AsyncClient::start()
 {
     try
@@ -217,7 +216,7 @@ void AsyncClient::start()
 
 void AsyncClient::init_rpc_client()
 {
-    apple_rpc_ = new ClientApplePRC(channel_, &cq_);
+    apple_rpc_ = new ClientApplePRC(channel_, &cq_, session_id_);
 
     apple_rpc_->set_async_client(this);
 

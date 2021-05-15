@@ -10,20 +10,16 @@ public:
     ServerStreamAppleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
         BaseRPC{cq, service}, responder_(&context_)
     {
-        rpc_id_ = "apple";
+        rpc_id_ = "ServerStreamApple";
     }
 
     virtual ~ServerStreamAppleRPC() { cout << "Release ServerStreamAppleRPC! " << endl; }
-
-    // virtual void release();    
 
     virtual void register_request();
 
     virtual BaseRPC* spawn();
 
     virtual void process_read_cq();
-
-    // virtual void process_write_cq();    
 
     virtual void add_data(PackagePtr pkg);
 
@@ -51,56 +47,44 @@ private:
 
 using ServerStreamAppleRPCPtr = boost::shared_ptr<ServerStreamAppleRPC>;
 
-// class DoubleStreamMangoRPC:public BaseRPC
-// {
-// public:
+class DoubleStreamAppleRPC:public BaseRPC
+{
+public:
 
-//     DoubleStreamMangoRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
-//                          BaseRPC{cq, service}, responder_(&context_)
-//     {
-//         rpc_id_ = "apple";
-//     }
+    DoubleStreamAppleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
+        BaseRPC{cq, service}, responder_(&context_)
+    {
+        rpc_id_ = "DoubleStreamApple";
+    }
 
-//     virtual ~DoubleStreamMangoRPC() { cout << "Release DoubleStreamMangoRPC! " << endl; }
+    virtual ~DoubleStreamAppleRPC() { cout << "Release DoubleStreamAppleRPC! " << endl; }
 
-//     virtual void release();    
+    virtual void register_request();
 
-//     virtual void register_request();
+    virtual BaseRPC* spawn();
 
-//     virtual void on_connect();
+    virtual void process_read_cq();
 
-//     virtual void on_req_login();
+    virtual void add_data(PackagePtr pkg);
 
-//     virtual void rsp_login();
-
-//     virtual BaseRPC* spawn();
-
-//     virtual void process_read_cq();
-
-//     virtual void process_write_cq();    
-
-//     virtual void add_data(PackagePtr pkg);
-
-//     void write_msg(string message="", string rsp_id="");
+    virtual void send_msg(string message, string rsp_id);
     
-// private:
-//     ServerContext                                        context_;    
+private:
+    ServerContext                                        context_;    
 
-//     TestRequest                                          request_;
+    TestRequest                                          request_;
 
-//     TestResponse                                         reply_;
+    TestResponse                                         reply_;
 
-//     ServerAsyncReaderWriter<TestResponse, TestRequest>   responder_;
+    ServerAsyncReaderWriter<TestResponse, TestRequest>   responder_;
 
-//     int  rsp_id_{0};
+    struct TimeStruct
+    {   
+        long             test_start_time_;
+        long             test_end_time_;
+    };
 
-//     struct TimeStruct
-//     {   
-//         long             test_start_time_;
-//         long             test_end_time_;
-//     };
+    map<string, TimeStruct> test_time;
 
-//     map<string, TimeStruct> test_time;
-
-//     long             request_count_{0};        
-// };
+    long             request_count_{0};                  
+};

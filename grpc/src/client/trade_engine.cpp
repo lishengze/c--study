@@ -41,14 +41,16 @@ void TradeEngine::init_client()
 {
     try
     {
-        async_client_ = boost::make_shared<AsyncClient>(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
+        async_client_ = boost::make_shared<AsyncClient>(grpc::CreateChannel("localhost:50051", 
+                                                                            grpc::InsecureChannelCredentials()),
+                                                        CONFIG->get_session_id());
 
         async_client_->start();
 
         /* code */
     }
     catch(const std::exception& e)
-    {
+    {       
         std::cerr << e.what() << '\n';
     }
     

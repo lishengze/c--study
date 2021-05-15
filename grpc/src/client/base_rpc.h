@@ -51,12 +51,12 @@ struct BaseRPCParam
 class ClientBaseRPC
 {
     public:
-        ClientBaseRPC(std::shared_ptr<Channel> channel, CompletionQueue* cq): 
+        ClientBaseRPC(std::shared_ptr<Channel> channel, CompletionQueue* cq, string session_id): 
         channel_{channel},
         stub_{TestStream::NewStub(channel)},
-        cq_{cq} 
-        { 
-            session_id_ = CONFIG->get_session_id();
+        cq_{cq},
+        session_id_{session_id}
+        {
             obj_id_ = ++obj_count_;
         }
 
@@ -129,56 +129,3 @@ class ClientBaseRPC
 
         std::mutex                              mutex_;
 };
-
-
-class ClientApplePRC:public ClientBaseRPC
-{
-    public:
-        ClientApplePRC(std::shared_ptr<Channel> channel, CompletionQueue* cq):
-        ClientBaseRPC(channel, cq)
-        { 
-            cout << "\n-------- Create ClientApplePRC id = " << obj_id_ << " --------"<< endl;
-            rpc_id_ = "apple";
-        }
-
-        virtual ~ClientApplePRC() { }
-
-        virtual ClientBaseRPC* spawn();
-
-        virtual void connect();
-
-        virtual void on_connected();
-
-        virtual void req_login();
-
-        virtual void on_rsp_login();
-
-        virtual void add_data(PackagePtr package);
-
-        virtual void process_read_cq();
-
-        virtual void process_write_cq();
-
-    private:
-
-    TestResponse reply;
-
-    list<PackagePtr>                                         cached_request_data_;
-    std::mutex                                               cached_data_mutex_;
-
-    string                                                   last_cq_msg;
-
-    grpc::ClientContext                                      context_;
-    std::unique_ptr<grpc::ClientAsyncReaderWriter<TestRequest, TestResponse>> responder_;
-
-    int  req_id_{0};
-
-    long test_start_time_;
-    long test_rsp_end_time_;
-    long test_write_cq_end_time_;
-
-    long test_cmp_write_count{0};
-    long test_rsp_count_{0};
-
-};
-
