@@ -78,11 +78,11 @@ class ClientBaseRPC
 
         virtual void set_client_map();
 
-        virtual void on_connected() { }
+        virtual void on_connected();
 
         virtual void req_login() { }
 
-        virtual void on_rsp_login() { }
+        virtual void on_rsp_login();
 
         virtual void set_connected(bool is_connected) {
             is_connected_ = is_connected;

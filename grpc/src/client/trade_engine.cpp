@@ -73,7 +73,7 @@ void TradeEngine::test_thread_fun()
 
             pkg->SetRequestID(i+1);
             pkg->SetSessionID(CONFIG->get_session_id());
-            pkg->SetRpcID("apple");
+            pkg->SetRpcID("ServerStreamApple");
 
             async_client_->add_data(pkg);           
        }

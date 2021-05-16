@@ -3,19 +3,21 @@
 #include "../include/global_declare.h"
 #include <grpcpp/grpcpp.h>
 
+#include "config.h"
+
 void test_simple()
 {
     // TestSimpleClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
 
-    ServerStreamClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
+    // ServerStreamClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
 
-    client.start();
+    // client.start();
 }
 
 void test_client_double_stream_async()
 {
-    AsyncClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
-    client.start();
+    // AsyncClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()), CONFIG->);
+    // client.start();
 }
 
 void test_trade_engine()
