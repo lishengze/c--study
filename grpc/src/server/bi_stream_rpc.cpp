@@ -81,7 +81,7 @@ void ServerStreamAppleRPC::process_read_cq()
         // 初次连接;
         if (request_.session_id().length() == 0)
         {
-            cout << "Client Connect!" << endl;
+            // cout << "Client Connect!" << endl;
 
             on_connect();
             
@@ -282,7 +282,7 @@ void DoubleStreamAppleRPC::process_read_cq()
         // 初次连接;
         if (request_.session_id().length() == 0)
         {
-            cout << "Client Connect!" << endl;
+            // cout << "Client Connect!" << endl;
 
             on_connect();
             
