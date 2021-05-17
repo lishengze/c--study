@@ -34,6 +34,8 @@ class Log
 
             cout << flag << msg << endl;
 
+            flush(cout);
+
             if (!log_file_.is_open())
             {
                 log_file_.open(file_name_, ios_base::ate | ios_base::out | ios_base::app);
