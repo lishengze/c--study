@@ -14,9 +14,9 @@ using std::endl;
 
 #define LOG ThreadSafeSingleton<Log>::DoubleCheckInstance()
 
-#define LOG_ERROR(msg) LOG->log(msg, "Error")
-#define LOG_INFO(msg) LOG->log(msg, "Info ")
-#define LOG_DEBUG(msg) LOG->log(msg, "Debug")
+#define LOG_ERROR(msg) LOG->log(msg, "Error: ")
+#define LOG_INFO(msg) LOG->log(msg, "")
+#define LOG_DEBUG(msg) LOG->log(msg, "Debug: ")
 
 class Log
 {
@@ -30,15 +30,17 @@ class Log
         {
             std::lock_guard<std::mutex> lk(mutex_);
             
-            cout << SecTimeStr() << " " << flag << ": " << msg << endl;
+            // cout << SecTimeStr() << " " << flag << ": " << msg << endl;
 
-            // if (!log_file_.is_open())
-            // {
-            //     log_file_.open(file_name_, ios_base::ate | ios_base::out | ios_base::app);
-            // }
+            cout << flag << msg << endl;
 
-            // log_file_ << flag << ": " << msg << "\n";
-            // log_file_.close();
+            if (!log_file_.is_open())
+            {
+                log_file_.open(file_name_, ios_base::ate | ios_base::out | ios_base::app);
+            }
+
+            log_file_ << flag << msg << "\n";
+            log_file_.close();
         }
 
         ~Log()
