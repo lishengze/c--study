@@ -194,6 +194,8 @@ void BaseRPC::process_write_cq()
     {
         // std::lock_guard<std::mutex> lk(mutex_);
 
+        cout << session_id_ << " " << rpc_id_ << " is write cq" << endl;
+
         is_write_cq_ = false;
     }
     catch(const std::exception& e)
