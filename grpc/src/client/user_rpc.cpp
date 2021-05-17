@@ -130,6 +130,7 @@ void ClientApplePRC::process_read_cq()
             {
                 cout << "[SERVER]:"
                         << "session_id=" << reply.session_id() 
+                        << ", rpc_id=" << rpc_id_
                         << ", rsp_id="<< reply.response_id()
                         << ", time=" << reply.time()                        
                         << ", msg=" << reply.message()
@@ -143,6 +144,7 @@ void ClientApplePRC::process_read_cq()
             {
                 cout << "[SERVER]:"
                         << "session_id= " << reply.session_id() 
+                        << ", rpc_id=" << rpc_id_
                         << ", rsp_id="<< reply.response_id()
                         << ", time=" << reply.time()                        
                         << ", msg=" << reply.message()
@@ -173,7 +175,7 @@ void ClientApplePRC::process_read_cq()
 
                     long cost_time = (test_rsp_end_time_ - test_start_time_)/1000;
 
-                    cout << "[R] Complete " << CONFIG->get_test_count() 
+                    cout << "[R] " << ", rpc_id=" << rpc_id_<< " Complete " << CONFIG->get_test_count() 
                         << " request cost: " << cost_time << " micros"  
                         << " ave: " << cost_time / CONFIG->get_test_count() << " micros " << endl;
                 }                            
@@ -403,6 +405,7 @@ void DoubleApplePRC::process_read_cq()
             {
                 cout << "[SERVER]:"
                         << "session_id=" << reply.session_id() 
+                        << ", rpc_id=" << rpc_id_
                         << ", rsp_id="<< reply.response_id()
                         << ", time=" << reply.time()                        
                         << ", msg=" << reply.message()
@@ -416,6 +419,7 @@ void DoubleApplePRC::process_read_cq()
             {
                 cout << "[SERVER]:"
                         << "session_id= " << reply.session_id() 
+                        << ", rpc_id=" << rpc_id_
                         << ", rsp_id="<< reply.response_id()
                         << ", time=" << reply.time()                        
                         << ", msg=" << reply.message()
@@ -446,7 +450,7 @@ void DoubleApplePRC::process_read_cq()
 
                     long cost_time = (test_rsp_end_time_ - test_start_time_)/1000;
 
-                    cout << "[R] Complete " << CONFIG->get_test_count() 
+                    cout << "[R]" << ", rpc_id=" << rpc_id_<< "Complete " << CONFIG->get_test_count() 
                         << " request cost: " << cost_time << " micros"  
                         << " ave: " << cost_time / CONFIG->get_test_count() << " micros " << endl;
                 }                            
