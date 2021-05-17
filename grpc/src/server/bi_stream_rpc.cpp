@@ -134,6 +134,7 @@ void ServerStreamAppleRPC::process_read_cq()
                 cout << "\n[R]Get " << rpc_id_ << " " << session_id << " " << request_count_ << " request cost " 
                     << cost_micros << " micros" 
                     << " ave: " << cost_micros / request_count_ << " micros"
+                    << "\n"
                     << endl;
             }
 
@@ -334,6 +335,7 @@ void DoubleStreamAppleRPC::process_read_cq()
                 cout << "\n[R]Get " << rpc_id_ << " " << session_id << " " << request_count_ << " request cost " 
                     << cost_micros << " micros" 
                     << " ave: " << cost_micros / request_count_ << " micros"
+                    << "\n"
                     << endl;
             }
 

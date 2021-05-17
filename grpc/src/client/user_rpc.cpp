@@ -58,7 +58,7 @@ void ClientApplePRC::req_login()
         request.set_message("login");
 
         cout << "[Client] Login: obj_id=" << obj_id_ << ", rpc_id: " << rpc_id_ << ", session_id= " << request.session_id() 
-             << endl;            
+             << "\n" << endl;            
 
         is_write_cq_ = true;
 
@@ -331,7 +331,7 @@ void DoubleApplePRC::req_login()
         request.set_message("login");
 
         cout << "[Client] Login: obj_id=" << obj_id_ << ", rpc_id: " << rpc_id_ << ", session_id= " << request.session_id() 
-             << endl;            
+             << "\n" << endl;            
 
         is_write_cq_ = true;
 

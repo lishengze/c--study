@@ -146,7 +146,7 @@ void ClientBaseRPC::on_connected()
 {
     try
     {
-        cout << session_id_<< " " << rpc_id_ << " " << obj_id_  << " on_connected " << endl;
+        // cout << session_id_<< " " << rpc_id_ << " " << obj_id_  << " on_connected " << endl;
         is_connected_ = true;
 
         req_login();
