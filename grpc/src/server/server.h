@@ -76,6 +76,8 @@ protected:
 
     ServerStreamAppleRPC*                   server_stream_apple_;
 
+    DoubleStreamAppleRPC*                   double_stream_apple_;
+
     TradeEngine*                            trade_engine_;
 
     map<SessionType, map<RpcType, BaseRPC*>> rpc_map_;

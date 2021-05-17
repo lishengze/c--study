@@ -37,6 +37,10 @@ void BaseServer::start()
         server_stream_apple_->set_server(this);
         server_stream_apple_->process();
 
+        double_stream_apple_ = new DoubleStreamAppleRPC(&service_, cq_.get());
+        double_stream_apple_->set_server(this);
+        double_stream_apple_->process();
+
         // server_stream_pear_ = new ServerStreamPearRPC(&service_, cq_.get());
         // server_stream_pear_->set_server(this);
 

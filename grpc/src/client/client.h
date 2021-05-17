@@ -11,6 +11,7 @@
 #include <grpcpp/alarm.h>
 
 #include "package_simple.h"
+#include "user_rpc.h"
 
 using grpc::Alarm;
 using grpc::Channel;
@@ -184,7 +185,9 @@ public:
     
     boost::shared_ptr<std::thread>                  cq_thread_{nullptr};   
 
-    ClientApplePRC*                                 apple_rpc_;
+    ClientApplePRC*                                 apple_rpc_{nullptr};
+
+    DoubleApplePRC*                                 double_rpc_{nullptr};
 
     map<RpcType, ClientBaseRPC*>                    client_rpc_map_;
 

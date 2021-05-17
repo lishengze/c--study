@@ -222,8 +222,11 @@ void AsyncClient::init_rpc_client()
 
     apple_rpc_->process();
 
-    // set_client_map(apple_rpc_->rpc_id_, apple_rpc_);
+    double_rpc_ = new DoubleApplePRC(channel_, &cq_, session_id_);
 
+    double_rpc_->set_async_client(this);
+
+    double_rpc_->process();    
 }
 
 void AsyncClient::init_cq_thread()

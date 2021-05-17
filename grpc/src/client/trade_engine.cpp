@@ -75,7 +75,11 @@ void TradeEngine::test_thread_fun()
             pkg->SetSessionID(CONFIG->get_session_id());
             pkg->SetRpcID("ServerStreamApple");
 
-            async_client_->add_data(pkg);           
+            async_client_->add_data(pkg);     
+
+            pkg->SetRpcID("DoubleStreamApple");
+
+            async_client_->add_data(pkg);
        }
     }
     catch(const std::exception& e)
