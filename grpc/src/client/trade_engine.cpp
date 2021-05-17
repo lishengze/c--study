@@ -63,7 +63,7 @@ void TradeEngine::test_thread_fun()
     //    cout << "TradeEngine::test_thread_fun " << endl;
 
        
-        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
         std::vector<Apple*> request_data;
     
