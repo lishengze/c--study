@@ -161,7 +161,7 @@ void ClientBaseRPC::on_rsp_login()
 {
     try
     {
-        cout << session_id_<< " " << rpc_id_ << " " << obj_id_ << " logined!" << endl;
+        // cout << session_id_<< " " << rpc_id_ << " " << obj_id_ << " logined!" << endl;
         is_login_ = true;
     }
     catch(const std::exception& e)

@@ -193,7 +193,7 @@ BaseRPC* ServerStreamAppleRPC::spawn()
 {
     try
     {
-        std::cout << "\n ******* Spawn A New ServerStreamAppleRPC Server For Next Client ********" << std::endl;
+        std::cout << "******* Spawn A New ServerStreamAppleRPC Server For Next Client ********" << std::endl;
         std::lock_guard<std::mutex> lk(mutex_);
 
         ServerStreamAppleRPC* new_rpc = new ServerStreamAppleRPC(service_, cq_);
@@ -210,7 +210,7 @@ BaseRPC* ServerStreamAppleRPC::spawn()
 
 void DoubleStreamAppleRPC::register_request()
 {
-    cout << "DoubleStreamAppleRPC::register_request!" << endl;
+    cout << "DoubleStreamAppleRPC::register_request!\n" << endl;
 
     service_->RequestDoubleStreamApple(&context_, &responder_, cq_, cq_, this);
 }
@@ -393,7 +393,7 @@ BaseRPC* DoubleStreamAppleRPC::spawn()
 {
     try
     {
-        std::cout << "\n ******* Spawn A New DoubleStreamAppleRPC Server For Next Client ********" << std::endl;
+        std::cout << "******* Spawn A New DoubleStreamAppleRPC Server For Next Client ********" << std::endl;
         std::lock_guard<std::mutex> lk(mutex_);
 
         DoubleStreamAppleRPC* new_rpc = new DoubleStreamAppleRPC(service_, cq_);

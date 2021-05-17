@@ -48,7 +48,7 @@ void BaseRPC::process()
     {       
         if (CREATE == status_)
         {
-            cout << "\nStatus is CREATE" << endl;
+            cout << "Status is CREATE" << endl;
             status_ = PROCESS;
             register_request();
         }

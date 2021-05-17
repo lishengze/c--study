@@ -57,7 +57,7 @@ void ClientApplePRC::req_login()
         request.set_session_id(session_id_);
         request.set_message("login");
 
-        cout << "login: obj_id=" << obj_id_ << ", rpc_id: " << rpc_id_ << ", session_id= " << request.session_id() 
+        cout << "[Client] Login: obj_id=" << obj_id_ << ", rpc_id: " << rpc_id_ << ", session_id= " << request.session_id() 
              << endl;            
 
         is_write_cq_ = true;
@@ -119,7 +119,7 @@ void ClientApplePRC::process_read_cq()
         if (reply.time().length() == 0)
         {
             last_cq_msg = "Get Empty Response Data";
-            cout << "[W] Empty Response" << endl;
+            cout << "[W] " << rpc_id_ << " Empty Response" << endl;
             return;
         }
         else
@@ -330,7 +330,7 @@ void DoubleApplePRC::req_login()
         request.set_session_id(session_id_);
         request.set_message("login");
 
-        cout << "login: obj_id=" << obj_id_ << ", rpc_id: " << rpc_id_ << ", session_id= " << request.session_id() 
+        cout << "[Client] Login: obj_id=" << obj_id_ << ", rpc_id: " << rpc_id_ << ", session_id= " << request.session_id() 
              << endl;            
 
         is_write_cq_ = true;

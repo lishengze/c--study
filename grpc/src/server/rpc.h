@@ -45,7 +45,7 @@ class BaseRPC
     BaseRPC(ServerCompletionQueue* cq, TestStream::AsyncService* service): 
     cq_{cq},service_(service)
     {
-        std::cout << "obj_count: " << ++obj_count << std::endl;
+        // std::cout << "obj_count: " << ++obj_count << std::endl;
 
         obj_id_ = obj_count;
     }
