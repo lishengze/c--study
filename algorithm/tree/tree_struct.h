@@ -2,14 +2,21 @@
 
 FORWARD_DECLARE_PTR(TreeNode);
 
+using TreeNodeWptr = boost::weak_ptr<TreeNode> ;
 
 struct TreeNode
 {
     TreeNode(int value) { value_ = value; }
-    int value_;
+    int value_{0};
 
     TreeNodePtr lchild_{nullptr};
     TreeNodePtr rchild_{nullptr};
+    // TreeNodeWptr pchild_;
+
+    ~TreeNode()
+    {
+        cout << "~TreeNode: " << value_ << endl;
+    }
 };
 
 class BaseTree

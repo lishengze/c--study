@@ -4,6 +4,8 @@
 
 #include "tree/test_tree.h"
 
+#include "algo/test_algo.h"
+
 int main()
 {
     cout << "\n****** Study *****\n" << endl;
@@ -11,6 +13,8 @@ int main()
     // TestSort();
 
     TestTree();
+
+    // TestAlgo();
 
     cout << "\n" << endl;
 
