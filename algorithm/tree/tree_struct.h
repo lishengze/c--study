@@ -1,39 +1,33 @@
+#pragma once
 #include "../global_declare.h"
 
 FORWARD_DECLARE_PTR(TreeNode);
 
-using TreeNodeWptr = boost::weak_ptr<TreeNode> ;
-
 struct TreeNode
 {
+    enum TYPE
+    {
+        RED,
+        BLACK
+    };
+
     TreeNode(int value) { value_ = value; }
     int value_{0};
 
+    TYPE type_;
+
+    // using TreeNodeWptr = boost::weak_ptr<TreeNode>;
+
     TreeNodePtr lchild_{nullptr};
     TreeNodePtr rchild_{nullptr};
-    // TreeNodeWptr pchild_;
+    TreeNode* parent_{nullptr};
 
     ~TreeNode()
     {
-        cout << "~TreeNode: " << value_ << endl;
+        // cout << "~TreeNode: " << value_ << endl;
     }
 };
 
-class BaseTree
-{
-    public:
-        BaseTree(int* data, int start, int end);
-        BaseTree() {}
-
-        void init_tree(int* data, int start, int end);
-
-        TreeNodePtr get_root() { return root;}
-
-    private:
-
-
-        TreeNodePtr root{nullptr};
-};
 
 void preoder_traversal(TreeNodePtr);
 
