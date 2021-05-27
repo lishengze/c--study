@@ -12,3 +12,14 @@ void PrintData(T* data, int left, int right, string intro="")
     }
     cout << endl;
 }
+
+template<class T>
+void PrintData(vector<T>data, string intro="")
+{
+    cout << intro << endl;
+    for (auto atom:data)
+    {
+        cout << atom << " ";
+    }
+    cout << endl;
+}

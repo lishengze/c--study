@@ -17,8 +17,7 @@ class BaseTree
 
         TreeNodePtr get_root() { return root;}
 
-    private:
-
+    protected:
         TreeNodePtr root{nullptr};
 };
 

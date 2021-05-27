@@ -1,8 +1,12 @@
 #include "test.h"
 
-#include "SimplePackage.h"
+// #include "SimplePackage.h"
+
+#include "test_shared_ptr.h"
 
 void testFuncMain()
 {
-    TestPackageMain();
+    test_shared_ptr();
+
+    // TestPackageMain();
 }

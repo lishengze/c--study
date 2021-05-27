@@ -5,9 +5,9 @@
 #   2019-01-04  init version
 ##############################################################################################
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(boost-study)
+PROJECT(boost_study)
 
-SET("BIN_NAME" boost)
+SET("BIN_NAME" boost_study)
 set(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
 

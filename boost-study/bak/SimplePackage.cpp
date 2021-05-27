@@ -5,6 +5,8 @@
 
 #include "pandora/package/package_simple.h"
 
+#include "SimplePackage.h"
+
 const ID_TYPE UT_Fid_TestData = 10001;
 class TestData:public BaseData
 {

@@ -12,12 +12,25 @@
 class RBTree:public BaseTree 
 {
     public:
-        RBTree(int* data, int start, int end);
+        RBTree(const vector<int>& data);
+
         RBTree() {}
 
-        void init_rb_tree(int* data, int start, int end);     
+        void init_rb_tree(const vector<int>& data);     
 
         void turn_left(TreeNodePtr node);
 
+        void turn_left(TreeNode* node);
+
         void turn_right(TreeNodePtr node);
+
+        void turn_right(TreeNode* node);
+
+        void insert_node(int value);
+
+        void insert_simple(TreeNodePtr& parent, TreeNodePtr node);
+
+        bool insert_simple_with_height(TreeNodePtr& parent, TreeNodePtr node);
+
+        void reform_node(TreeNodePtr& node);
 };
