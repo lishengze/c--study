@@ -28,7 +28,7 @@ class RBTree:public BaseTree
 
         bool insert_simple_with_height(TreeNodePtr& parent, TreeNodePtr node);
 
-        void reform_node_bk(TreeNodePtr& node);
+        // void reform_node(TreeNodePtr& node);
 
         void reform_node_simple(TreeNodePtr& node);
 
@@ -40,6 +40,6 @@ class RBTree:public BaseTree
 
         void reset_root();
 
-        TreeNodePtr parent{nullptr};
-        TreeNodePtr grandparent{nullptr};
+        // TreeNodePtr parent{nullptr};
+        // TreeNodePtr grandparent{nullptr};
 };

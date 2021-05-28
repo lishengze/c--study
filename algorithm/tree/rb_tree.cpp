@@ -151,6 +151,8 @@ void RBTree::insert_node(int value)
 
         TreeNodePtr node = boost::make_shared<TreeNode>(value);
 
+        cout << node->get_info("+++++++ new node: ") << " use_count: " << node.use_count() << endl;
+
         node->color_type_ = COLOR_TYPE::RED;
 
         insert_simple(root, node);
@@ -355,13 +357,15 @@ void RBTree::reform_node_simple(TreeNodePtr& node)
             return;
         }
 
-        parent = node->parent_->get_shared_ptr();
-        // cout << parent->get_info("parent ") << " user_count: " << parent.use_count() << endl;
-
+        TreeNodePtr parent = node->parent_->get_shared_ptr();
+        cout << parent->get_info("++++++ parent ") << " user_count: " << parent.use_count() << endl;
+        
         if (nullptr != parent->parent_)
         {
-            grandparent = parent->parent_->get_shared_ptr();
-            // cout << grandparent->get_info("grandparent ") << " user_count: " << grandparent.use_count() << endl;
+            // TreeNodePtr grandparent = parent->parent_->get_shared_ptr();
+
+            TreeNodePtr grandparent = parent->parent_->get_shared_ptr();
+            cout << grandparent->get_info("+++++++ grandparent ") << " user_count: " << grandparent.use_count() << endl;
 
             TreeNodePtr uncle;
 
@@ -551,6 +555,7 @@ void RBTree::reset_root()
     }
 }
 
+/*
 void RBTree::reform_node_bk(TreeNodePtr& node)
 {
     try
@@ -741,3 +746,4 @@ void RBTree::reform_node_bk(TreeNodePtr& node)
     }
 
 }
+*/
