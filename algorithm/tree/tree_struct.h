@@ -30,7 +30,6 @@ struct TreeNode:public boost::enable_shared_from_this<TreeNode>
 
     TreeNodePtr get_shared_ptr()
     {
-        // boost::shared_ptr<TreeNode> sp_node(this);
         return shared_from_this();
     }
 
@@ -38,6 +37,7 @@ struct TreeNode:public boost::enable_shared_from_this<TreeNode>
     {
         if (!parent_)
         {
+            cout << "TreeNode has no parent" << endl;
             throw ("TreeNode has no parent");
         }
         else
@@ -52,6 +52,7 @@ struct TreeNode:public boost::enable_shared_from_this<TreeNode>
             }
             else
             {
+                cout << "TreeNode is not parent's child" << endl;
                 throw ("TreeNode is not parent's child");
             }
         }

@@ -42,7 +42,7 @@ void preoder_traversal(TreeNodePtr node)
     {
         if (node)
         {
-            cout << node->value_ << " ";
+            cout << node->get_info() << endl;
 
             preoder_traversal(node->lchild_);
 
@@ -65,23 +65,25 @@ void inoder_traversal(TreeNodePtr node)
         {
             inoder_traversal(node->lchild_);
 
-            cout << node->value_ << " ";        
+            cout << node->get_info() << endl;
 
-            if (node->height_)
-            {
-                cout << node->height_ << " ";
-            }                    
+            // cout << node->value_ << " ";        
 
-            if (node->color_type_ == COLOR_TYPE::BLACK)
-            {
-                cout << "B  "; 
-            }
-            else if (node->color_type_ == COLOR_TYPE::RED)
-            {
-                cout << "R ";
-            }
+            // if (node->height_)
+            // {
+            //     cout << node->height_ << " ";
+            // }                    
 
-            cout << endl;
+            // if (node->color_type_ == COLOR_TYPE::BLACK)
+            // {
+            //     cout << "B  "; 
+            // }
+            // else if (node->color_type_ == COLOR_TYPE::RED)
+            // {
+            //     cout << "R ";
+            // }
+
+            // cout << endl;
 
             inoder_traversal(node->rchild_);
         }

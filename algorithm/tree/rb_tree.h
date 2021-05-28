@@ -18,13 +18,9 @@ class RBTree:public BaseTree
 
         void init_rb_tree(const vector<int>& data);     
 
-        void turn_left(TreeNodePtr node);
+        void turn_left(TreeNodePtr& node);
 
-        void turn_left(TreeNode* node);
-
-        void turn_right(TreeNodePtr node);
-
-        void turn_right(TreeNode* node);
+        void turn_right(TreeNodePtr& node);
 
         void insert_node(int value);
 
@@ -32,5 +28,18 @@ class RBTree:public BaseTree
 
         bool insert_simple_with_height(TreeNodePtr& parent, TreeNodePtr node);
 
-        void reform_node(TreeNodePtr& node);
+        void reform_node_bk(TreeNodePtr& node);
+
+        void reform_node_simple(TreeNodePtr& node);
+
+        void UR_Set(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
+        void LR_Rotate(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
+        void LL_Rotate(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
+        void RL_Rotate(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
+        void RR_Rotate(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
+
+        void reset_root();
+
+        TreeNodePtr parent{nullptr};
+        TreeNodePtr grandparent{nullptr};
 };
