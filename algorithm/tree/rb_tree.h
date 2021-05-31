@@ -30,7 +30,7 @@ class RBTree:public BaseTree
 
         // void reform_node(TreeNodePtr& node);
 
-        void reform_node_simple(TreeNodePtr& node);
+        void reform_node(TreeNodePtr& node);
 
         void UR_Set(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
         void LR_Rotate(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
@@ -38,8 +38,23 @@ class RBTree:public BaseTree
         void RL_Rotate(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
         void RR_Rotate(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
 
+        TreeNodePtr get_node(int value);
+
+        TreeNodePtr get_max_min_node(TreeNodePtr);
+
+        TreeNodePtr get_min_max_node(TreeNodePtr);
+
+        void delete_value(int value);
+
+        TreeNodePtr delete_node(TreeNodePtr& node);
+
+        TreeNodePtr delete_node_one_child(TreeNodePtr& node, bool is_lchild=true);
+
+        void delete_node_fix_color(TreeNodePtr next_node);
+
         void reset_root();
 
-        // TreeNodePtr parent{nullptr};
-        // TreeNodePtr grandparent{nullptr};
+        TreeNodePtr parent{nullptr};
+        TreeNodePtr brother{nullptr};
+        TreeNodePtr grandparent{nullptr};
 };

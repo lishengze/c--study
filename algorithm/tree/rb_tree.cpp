@@ -83,9 +83,9 @@ void RBTree::turn_left(TreeNodePtr& node)
 
             ori_right->lchild_ = node;
 
-            cout << "[TurnLeft] " << ori_right->get_info("NP: ")
-                                  << node->get_info("NL: ")
-                                  << endl;            
+            cout << "[TurnLeft] " << ori_right->get_info("NP: ") << " use_count: " << ori_right.use_count() << " "
+                                  << node->get_info("NL: ") << " use_count: " << node.use_count()
+                                  << endl;         
         }
     }
     catch(const std::exception& e)
@@ -166,7 +166,7 @@ void RBTree::insert_node(int value)
         cout << endl;        
 
 
-        reform_node_simple(node);
+        reform_node(node);
 
         reset_root();
 
@@ -336,7 +336,7 @@ bool RBTree::insert_simple_with_height(TreeNodePtr& parent, TreeNodePtr node)
     3) U 为 空, 按照 U 为 R 来处理 -- B 节点是提供高度信息的，U 为空则没有；
         即可以当作 R， 也可以当做 B 来处理；
 */
-void RBTree::reform_node_simple(TreeNodePtr& node)
+void RBTree::reform_node(TreeNodePtr& node)
 {
     try
     {
@@ -357,14 +357,17 @@ void RBTree::reform_node_simple(TreeNodePtr& node)
             return;
         }
 
-        TreeNodePtr parent = node->parent_->get_shared_ptr();
+        // TreeNodePtr parent = node->parent_->get_shared_ptr();
+
+        parent = node->parent_->get_shared_ptr();
+
         cout << parent->get_info("++++++ parent ") << " user_count: " << parent.use_count() << endl;
         
         if (nullptr != parent->parent_)
         {
             // TreeNodePtr grandparent = parent->parent_->get_shared_ptr();
 
-            TreeNodePtr grandparent = parent->parent_->get_shared_ptr();
+            grandparent = parent->parent_->get_shared_ptr();
             cout << grandparent->get_info("+++++++ grandparent ") << " user_count: " << grandparent.use_count() << endl;
 
             TreeNodePtr uncle;
@@ -448,7 +451,7 @@ void RBTree::UR_Set(TreeNodePtr& grandparent, TreeNodePtr&parent, TreeNodePtr& u
                             << endl;              
         }
                    
-        reform_node_simple(grandparent);
+        reform_node(grandparent);
     }
     catch(const std::exception& e)
     {
@@ -467,7 +470,7 @@ void RBTree::LR_Rotate(TreeNodePtr& grandparent, TreeNodePtr&parent, TreeNodePtr
         cout << endl;
 
         turn_left(parent);
-        reform_node_simple(parent);        
+        reform_node(parent);        
     }
     catch(const std::exception& e)
     {
@@ -509,7 +512,7 @@ void RBTree::RL_Rotate(TreeNodePtr& grandparent, TreeNodePtr&parent, TreeNodePtr
         cout << endl;
                            
         turn_right(parent);
-        reform_node_simple(parent);
+        reform_node(parent);
     }
     catch(const std::exception& e)
     {
@@ -538,6 +541,319 @@ void RBTree::RR_Rotate(TreeNodePtr& grandparent, TreeNodePtr&parent, TreeNodePtr
         std::cerr << e.what() << '\n';
     }
 
+}
+
+
+TreeNodePtr RBTree::get_node(int value)
+{
+    try
+    {
+        TreeNodePtr result = nullptr;
+
+        TreeNodePtr node = root;
+        while(nullptr != node)
+        {
+            if (node->value_ > value)
+            {
+                node = node->lchild_;
+            }
+            else if (node->value_ < value)
+            {
+                node = node->rchild_;
+            }
+            else
+            {
+                result = node;
+                break;
+            }
+        }
+
+        return result;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+}
+
+TreeNodePtr RBTree::get_max_min_node(TreeNodePtr)
+{
+    try
+    {
+        TreeNodePtr result = nullptr;
+
+        TreeNodePtr node = root->lchild_;
+
+        while(nullptr != node)
+        {
+            node = node->rchild_;
+        }
+
+        result = node;
+
+        return result;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
+TreeNodePtr RBTree::get_min_max_node(TreeNodePtr)
+{
+    try
+    {
+        TreeNodePtr result = nullptr;
+
+        TreeNodePtr node = root->rchild_;
+
+        while(nullptr != node)
+        {
+            node = node->lchild_;
+        }
+
+        result = node;
+
+        return result;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
+void RBTree::delete_value(int value)
+{
+    try
+    {
+        TreeNodePtr target_node = get_node(value);
+
+        TreeNodePtr next_code = delete_node(target_node);
+
+        if (!target_node || target_node->parent_ == nullptr || target_node->color_type_ == COLOR_TYPE::RED)
+        {
+            return;
+        }
+
+        delete_node_fix_color(next_code);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
+TreeNodePtr RBTree::delete_node(TreeNodePtr& target_node)
+{
+    try
+    {
+        TreeNodePtr next_code = nullptr;
+
+        if (nullptr != target_node)
+        {
+            if (target_node->lchild_ && target_node->rchild_)
+            {
+                TreeNodePtr replace_node = get_min_max_node(target_node);
+                target_node->value_ = replace_node->value_;
+
+                target_node = replace_node;
+            }
+
+            if (target_node->lchild_)
+            {
+                next_code = delete_node_one_child(target_node, true);
+            }
+            else if (target_node->rchild_)
+            {
+                next_code = delete_node_one_child(target_node, false);
+            }
+            else if (nullptr == target_node->lchild_ && nullptr == target_node->rchild_)
+            {
+                if (target_node->parent_ == nullptr)
+                {
+                    root = nullptr;
+                }
+                else
+                {
+                    // 需要进行颜色调整;
+                    if (target_node->parent_->lchild_.get() == target_node.get())
+                    {
+                        target_node->parent_->lchild_ = nullptr;
+                    }
+                    else 
+                    {
+                        target_node->parent_->rchild_ = nullptr;
+                    }
+                }
+            }                        
+        }
+
+        return next_code;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+
+}
+
+TreeNodePtr RBTree::delete_node_one_child(TreeNodePtr& node, bool is_lchild)
+{
+    try
+    {
+        TreeNodePtr next_node;
+        if (is_lchild) next_node = node->lchild_;
+        else next_node = node->rchild_;
+
+        if (node->parent_ == nullptr)
+        {
+            root = next_node;
+            root->color_type_ = COLOR_TYPE::BLACK;
+        }        
+        else
+        {            
+            // 需要进行颜色调整;
+            parent = node->parent_->get_shared_ptr();
+            next_node->parent_ = parent.get();
+
+            if (parent->lchild_.get() == node.get())
+            {
+                parent->lchild_ = next_node;                
+            }
+            else if (parent->rchild_.get() == node.get())
+            {
+                parent->rchild_ = next_node;
+            }
+        }
+
+        return next_node;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
+void RBTree::delete_node_fix_color(TreeNodePtr node)
+{
+    try
+    {
+        if (node == nullptr || node->color_type_ == COLOR_TYPE::BLACK)
+        {
+            parent = node->parent_->get_shared_ptr();
+
+            if (parent->lchild_.get() == node.get())
+            {
+                brother = parent->rchild_;
+
+                if (brother == nullptr)
+                {
+                    std::cerr << "[E] " << parent->get_info("P ") << " has no rchild" << endl;
+                }
+
+                if (brother->color_type_ == COLOR_TYPE::BLACK)
+                {
+                    if (!brother->lchild_)
+                    {
+                        if (brother->rchild_->color_type_ == COLOR_TYPE::RED)
+                        {
+                            //3
+                        }
+                        else
+                        {
+                            // 1
+                        }
+                    }
+                    else if (!brother->rchild_)
+                    {
+                        if (brother->lchild_->color_type_ == COLOR_TYPE::RED)
+                        {
+                            // 2
+                        }
+                        else
+                        {
+                            // 1
+                        }
+                    }
+                    else
+                    {
+                        // 1
+                        if (brother->lchild_->color_type_ == COLOR_TYPE::BLACK && brother->rchild_->color_type_ == COLOR_TYPE::BLACK)
+                        {
+                            brother->color_type_ = COLOR_TYPE::RED;
+                            delete_node_fix_color(parent);
+
+                            return;
+                        } //2
+                        else if (brother->lchild_->color_type_ == COLOR_TYPE::RED && brother->rchild_->color_type_ == COLOR_TYPE::BLACK)
+                        {
+                            brother->lchild_->color_type_ = COLOR_TYPE::BLACK;
+                            brother->color_type_ = COLOR_TYPE::RED;
+                            turn_right(brother);
+
+                            delete_node_one_child(node);
+                        } //3
+                        else if (brother->rchild_->color_type_ == COLOR_TYPE::RED)
+                        {
+                            brother->color_type_ = parent->color_type_;
+                            parent->color_type_ = COLOR_TYPE::BLACK;
+                            brother->rchild_->color_type_ = COLOR_TYPE::BLACK;
+                            turn_left(parent);
+                        }
+                        // brother rchild red;
+                    }
+                }
+                else if (brother->color_type_ == COLOR_TYPE::RED) // ?
+                {
+                    parent->color_type_ = COLOR_TYPE::RED;
+                    brother->color_type_ = COLOR_TYPE::BLACK;
+                    turn_left(parent);
+
+                    delete_node_fix_color(node);
+                } 
+                else
+                {
+                    std::cerr << brother->get_info("brother unknown color: ") << endl;
+                }
+            }
+            else if (parent->rchild_.get() == node.get())
+            {
+                brother = parent->lchild_;
+
+                if (brother == nullptr)
+                {
+                    std::cerr << "[E] " << parent->get_info("P ") << " has no rchild" << endl;
+                }
+
+                if (brother->color_type_ == COLOR_TYPE::BLACK)
+                {
+
+                }
+                else if (brother->color_type_ == COLOR_TYPE::RED)
+                {
+
+                }
+                else
+                {
+                    std::cerr << brother->get_info("brother unknown color: ") << endl;
+                }
+            }
+            else
+            {
+
+            }
+        }
+        else
+        {
+            node->color_type_ = COLOR_TYPE::BLACK;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
 }
 
 void RBTree::reset_root()
