@@ -24,11 +24,15 @@ void test_rb_tree()
 
     // vector<int> data = {10,9,8,7,6,5,4,3,2,1};
 
-    vector<int> data = {1,4,8,6,5,7,2,10,9};
+    // vector<int> data = {1,4,8,6,5,7,2,10,9};
+
+    vector<int> data = {5, 12, 15, 19, 25, 32, 39, 45, 60};
 
     PrintData(data, "ori_data");
     
     RBTree tree(data);
+
+    tree.delete_value(19);
 }
 
 

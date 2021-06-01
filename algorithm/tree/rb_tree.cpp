@@ -166,7 +166,7 @@ void RBTree::insert_node(int value)
         cout << endl;        
 
 
-        reform_node(node);
+        insert_node_fix_color(node);
 
         reset_root();
 
@@ -336,11 +336,11 @@ bool RBTree::insert_simple_with_height(TreeNodePtr& parent, TreeNodePtr node)
     3) U 为 空, 按照 U 为 R 来处理 -- B 节点是提供高度信息的，U 为空则没有；
         即可以当作 R， 也可以当做 B 来处理；
 */
-void RBTree::reform_node(TreeNodePtr& node)
+void RBTree::insert_node_fix_color(TreeNodePtr& node)
 {
     try
     {
-        cout <<"\n" << node->get_info("reform_node: ") << endl;
+        cout <<"\n" << node->get_info("insert_node_fix_color: ") << endl;
         if (nullptr == node->parent_) 
         {
             node->color_type_ = COLOR_TYPE::BLACK;
@@ -451,7 +451,7 @@ void RBTree::UR_Set(TreeNodePtr& grandparent, TreeNodePtr&parent, TreeNodePtr& u
                             << endl;              
         }
                    
-        reform_node(grandparent);
+        insert_node_fix_color(grandparent);
     }
     catch(const std::exception& e)
     {
@@ -470,7 +470,7 @@ void RBTree::LR_Rotate(TreeNodePtr& grandparent, TreeNodePtr&parent, TreeNodePtr
         cout << endl;
 
         turn_left(parent);
-        reform_node(parent);        
+        insert_node_fix_color(parent);        
     }
     catch(const std::exception& e)
     {
@@ -512,7 +512,7 @@ void RBTree::RL_Rotate(TreeNodePtr& grandparent, TreeNodePtr&parent, TreeNodePtr
         cout << endl;
                            
         turn_right(parent);
-        reform_node(parent);
+        insert_node_fix_color(parent);
     }
     catch(const std::exception& e)
     {
@@ -577,15 +577,15 @@ TreeNodePtr RBTree::get_node(int value)
     
 }
 
-TreeNodePtr RBTree::get_max_min_node(TreeNodePtr)
+TreeNodePtr RBTree::get_max_min_node(TreeNodePtr target_node)
 {
     try
     {
         TreeNodePtr result = nullptr;
 
-        TreeNodePtr node = root->lchild_;
+        TreeNodePtr node = target_node->lchild_;
 
-        while(nullptr != node)
+        while(nullptr != node->rchild_)
         {
             node = node->rchild_;
         }
@@ -600,15 +600,15 @@ TreeNodePtr RBTree::get_max_min_node(TreeNodePtr)
     }    
 }
 
-TreeNodePtr RBTree::get_min_max_node(TreeNodePtr)
+TreeNodePtr RBTree::get_min_max_node(TreeNodePtr target_node)
 {
     try
     {
         TreeNodePtr result = nullptr;
 
-        TreeNodePtr node = root->rchild_;
+        TreeNodePtr node = target_node->rchild_;
 
-        while(nullptr != node)
+        while(nullptr != node->lchild_)
         {
             node = node->lchild_;
         }
@@ -629,14 +629,30 @@ void RBTree::delete_value(int value)
     {
         TreeNodePtr target_node = get_node(value);
 
-        TreeNodePtr next_code = delete_node(target_node);
+        if (nullptr != target_node)
+        {            
+            cout << target_node->get_info("target_node: ") << endl;
+            TreeNodePtr next_code = delete_node(target_node);
 
-        if (!target_node || target_node->parent_ == nullptr || target_node->color_type_ == COLOR_TYPE::RED)
-        {
-            return;
+            if (nullptr == target_node || target_node->parent_ == nullptr || target_node->color_type_ == COLOR_TYPE::RED || nullptr == next_code)
+            {
+            }
+            else
+            {
+                delete_node_fix_color(next_code);
+            }
+
+            cout << "**** deleve value: "<< value << endl;
+            inoder_traversal(root);
+            cout << endl;
+
+            cout << "preorder" <<endl;
+            preoder_traversal(root);
+            cout << endl;   
         }
 
-        delete_node_fix_color(next_code);
+
+
     }
     catch(const std::exception& e)
     {
@@ -658,8 +674,10 @@ TreeNodePtr RBTree::delete_node(TreeNodePtr& target_node)
                 target_node->value_ = replace_node->value_;
 
                 target_node = replace_node;
-            }
 
+                cout << target_node->get_info("replace node: ") << endl;
+            }
+            
             if (target_node->lchild_)
             {
                 next_code = delete_node_one_child(target_node, true);
@@ -672,11 +690,12 @@ TreeNodePtr RBTree::delete_node(TreeNodePtr& target_node)
             {
                 if (target_node->parent_ == nullptr)
                 {
+                    target_node = nullptr;
                     root = nullptr;
                 }
                 else
                 {
-                    // 需要进行颜色调整;
+                    // 被删除的节点是叶子节点，直接删除即可;
                     if (target_node->parent_->lchild_.get() == target_node.get())
                     {
                         target_node->parent_->lchild_ = nullptr;
@@ -685,6 +704,8 @@ TreeNodePtr RBTree::delete_node(TreeNodePtr& target_node)
                     {
                         target_node->parent_->rchild_ = nullptr;
                     }
+
+                    target_node = nullptr;
                 }
             }                        
         }
@@ -739,13 +760,19 @@ void RBTree::delete_node_fix_color(TreeNodePtr node)
 {
     try
     {
-        if (node == nullptr || node->color_type_ == COLOR_TYPE::BLACK)
+        if (node->color_type_ == COLOR_TYPE::BLACK)
         {
+            
             parent = node->parent_->get_shared_ptr();
+
+            cout << node->get_info("Replace Node: ") 
+                 << parent->get_info("parent: ")
+                 << endl;
 
             if (parent->lchild_.get() == node.get())
             {
                 brother = parent->rchild_;
+                cout << brother->get_info("brother: ") << endl;
 
                 if (brother == nullptr)
                 {
@@ -754,54 +781,40 @@ void RBTree::delete_node_fix_color(TreeNodePtr node)
 
                 if (brother->color_type_ == COLOR_TYPE::BLACK)
                 {
-                    if (!brother->lchild_)
+                    if (nullptr == brother->lchild_ && nullptr == brother->rchild_)
                     {
-                        if (brother->rchild_->color_type_ == COLOR_TYPE::RED)
-                        {
-                            //3
-                        }
-                        else
-                        {
-                            // 1
-                        }
-                    }
-                    else if (!brother->rchild_)
-                    {
-                        if (brother->lchild_->color_type_ == COLOR_TYPE::RED)
-                        {
-                            // 2
-                        }
-                        else
-                        {
-                            // 1
-                        }
+                        std::cerr << "Brother has no child: " << brother->get_info("") << endl;
                     }
                     else
                     {
-                        // 1
-                        if (brother->lchild_->color_type_ == COLOR_TYPE::BLACK && brother->rchild_->color_type_ == COLOR_TYPE::BLACK)
-                        {
-                            brother->color_type_ = COLOR_TYPE::RED;
-                            delete_node_fix_color(parent);
-
-                            return;
-                        } //2
-                        else if (brother->lchild_->color_type_ == COLOR_TYPE::RED && brother->rchild_->color_type_ == COLOR_TYPE::BLACK)
+                        if (nullptr != brother->lchild_ && brother->lchild_->color_type_ == COLOR_TYPE::RED)
                         {
                             brother->lchild_->color_type_ = COLOR_TYPE::BLACK;
                             brother->color_type_ = COLOR_TYPE::RED;
                             turn_right(brother);
 
                             delete_node_one_child(node);
-                        } //3
-                        else if (brother->rchild_->color_type_ == COLOR_TYPE::RED)
+                        }
+                        else if (nullptr != brother->rchild_ && brother->rchild_->color_type_ == COLOR_TYPE::RED)
                         {
                             brother->color_type_ = parent->color_type_;
                             parent->color_type_ = COLOR_TYPE::BLACK;
                             brother->rchild_->color_type_ = COLOR_TYPE::BLACK;
                             turn_left(parent);
                         }
-                        // brother rchild red;
+                        else
+                        {
+                            if (parent->color_type_ == COLOR_TYPE::BLACK)
+                            {
+                                brother->color_type_ = COLOR_TYPE::RED;
+                                delete_node_fix_color(parent);
+                            }
+                            else
+                            {
+                                parent->color_type_ = COLOR_TYPE::BLACK;
+                                brother->color_type_ = COLOR_TYPE::RED;
+                            }
+                        }
                     }
                 }
                 else if (brother->color_type_ == COLOR_TYPE::RED) // ?
@@ -819,7 +832,7 @@ void RBTree::delete_node_fix_color(TreeNodePtr node)
             }
             else if (parent->rchild_.get() == node.get())
             {
-                brother = parent->lchild_;
+               brother = parent->lchild_;
 
                 if (brother == nullptr)
                 {
@@ -828,12 +841,50 @@ void RBTree::delete_node_fix_color(TreeNodePtr node)
 
                 if (brother->color_type_ == COLOR_TYPE::BLACK)
                 {
+                    if (nullptr == brother->lchild_ && nullptr == brother->rchild_)
+                    {
+                        std::cerr << "Brother has no child: " << brother->get_info("") << endl;
+                    }
+                    else
+                    {
+                        if (nullptr != brother->rchild_ && brother->rchild_->color_type_ == COLOR_TYPE::RED)
+                        {
+                            brother->lchild_->color_type_ = COLOR_TYPE::BLACK;
+                            brother->color_type_ = COLOR_TYPE::RED;
+                            turn_left(brother);
 
+                            delete_node_one_child(node);
+                        }
+                        else if (nullptr != brother->lchild_ && brother->lchild_->color_type_ == COLOR_TYPE::RED)
+                        {
+                            brother->color_type_ = parent->color_type_;
+                            parent->color_type_ = COLOR_TYPE::BLACK;
+                            brother->rchild_->color_type_ = COLOR_TYPE::BLACK;
+                            turn_right(parent);
+                        }
+                        else
+                        {
+                            if (parent->color_type_ == COLOR_TYPE::BLACK)
+                            {
+                                brother->color_type_ = COLOR_TYPE::RED;
+                                delete_node_fix_color(parent);
+                            }
+                            else
+                            {
+                                parent->color_type_ = COLOR_TYPE::BLACK;
+                                brother->color_type_ = COLOR_TYPE::RED;
+                            }
+                        }
+                    }
                 }
-                else if (brother->color_type_ == COLOR_TYPE::RED)
+                else if (brother->color_type_ == COLOR_TYPE::RED) // ?
                 {
+                    parent->color_type_ = COLOR_TYPE::RED;
+                    brother->color_type_ = COLOR_TYPE::BLACK;
+                    turn_right(parent);
 
-                }
+                    delete_node_fix_color(node);
+                } 
                 else
                 {
                     std::cerr << brother->get_info("brother unknown color: ") << endl;
@@ -852,8 +903,7 @@ void RBTree::delete_node_fix_color(TreeNodePtr node)
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
-    }
-    
+    }    
 }
 
 void RBTree::reset_root()
@@ -870,196 +920,3 @@ void RBTree::reset_root()
         std::cerr << e.what() << '\n';
     }
 }
-
-/*
-void RBTree::reform_node_bk(TreeNodePtr& node)
-{
-    try
-    {
-        cout <<"\n" << node->get_info("reform_node: ") << endl;
-        if (nullptr == node->parent_) 
-        {
-            node->color_type_ = COLOR_TYPE::BLACK;
-            root = node;
-            cout << root->get_info("root: ") << endl;
-            return;
-        }
-        
-        if (node->parent_->color_type_ == COLOR_TYPE::BLACK) 
-        {
-            cout << node->get_info("node:")
-                 << node->parent_->get_info("parent:")
-                 << endl; 
-            return;
-        }
-
-        // TreeNode* parent = node->parent_;
-
-        parent = node->parent_->get_shared_ptr();
-        // cout << parent->get_info("parent ") << " user_count: " << parent.use_count() << endl;
-
-        if (nullptr != parent->parent_)
-        {
-
-            // TreeNode* grandparent = parent->parent_;
-
-            grandparent = parent->parent_->get_shared_ptr();
-            // cout << grandparent->get_info("grandparent ") << " user_count: " << grandparent.use_count() << endl;
-
-            TreeNodePtr uncle;
-
-            // parent is on the left tree;
-            if (grandparent->lchild_.get() == parent.get())
-            {
-                uncle = grandparent->rchild_;
-                if (nullptr != uncle)
-                {
-                    if (uncle->color_type_ == COLOR_TYPE::RED)
-                    {
-                        parent->color_type_ = COLOR_TYPE::BLACK;
-                        uncle->color_type_ = COLOR_TYPE::BLACK;
-                        grandparent->color_type_ = COLOR_TYPE::RED;
-                        cout << "[REL] " << grandparent->get_info("gp:")
-                                        << parent->get_info("parent:")
-                                        << uncle->get_info("uncle:")
-                                        << node->get_info("node:")
-                                        << endl;
-
-                        reform_node(grandparent);
-                    }
-                    else 
-                    {
-                        // LR
-                        if (parent->rchild_.get() == node.get()) 
-                        {
-                            cout << "[LR] " << grandparent->get_info("gp:")
-                                          << parent->get_info("parent:")
-                                          << uncle->get_info("uncle:")
-                                          << node->get_info("node:")
-                                          << endl;                            
-                            turn_left(parent);
-                            reform_node(parent);
-                        }
-                        else // LL
-                        {
-                            cout << "[LL] " << grandparent->get_info("gp:")
-                                          << parent->get_info("parent:")
-                                          << uncle->get_info("uncle:")
-                                          << node->get_info("node:")
-                                          << endl;                               
-                            parent->color_type_ = COLOR_TYPE::BLACK;
-                            grandparent->color_type_ = COLOR_TYPE::RED;
-                            turn_right(grandparent);
-                        }
-                    }
-                } 
-                else
-                {
-                    // LR
-                    if (parent->rchild_.get() == node.get())
-                    {
-                        cout << "[LR] " << grandparent->get_info("gp:")
-                                        << parent->get_info("parent:")
-                                        << node->get_info("node:")
-                                        << endl;                           
-                        turn_left(parent);
-                        reform_node(parent);
-                    }
-                    else // LL
-                    {
-                        cout << "[LL] " << grandparent->get_info("gp:")
-                                        << parent->get_info("parent:")
-                                        << node->get_info("node:")
-                                        << endl;                            
-                        parent->color_type_ = COLOR_TYPE::BLACK;
-                        grandparent->color_type_ = COLOR_TYPE::RED;
-                        turn_right(grandparent);
-                    }
-                }
-            }
-            else
-            {
-                uncle = grandparent->lchild_;
-                if (nullptr != uncle)
-                {
-                    if (uncle->color_type_ == COLOR_TYPE::RED)
-                    {
-                        parent->color_type_ = COLOR_TYPE::BLACK;
-                        uncle->color_type_ = COLOR_TYPE::BLACK;
-                        grandparent->color_type_ = COLOR_TYPE::RED;
-                        cout << "[RER] " << grandparent->get_info("gp:")
-                                        << parent->get_info("parent:")
-                                        << uncle->get_info("uncle:")
-                                        << node->get_info("node:")
-                                        << endl;                        
-                        reform_node(grandparent);
-                    }   
-                    else
-                    {
-                        // RL
-                        if (parent->lchild_.get() == node.get())
-                        {
-                            cout << "[RLU] " << grandparent->get_info("gp:")
-                                            << parent->get_info("parent:")
-                                            << uncle->get_info("uncle:")
-                                            << node->get_info("node:")
-                                            << endl;                                
-                            turn_right(parent);
-                            reform_node(parent);
-                        }
-                        else // RR
-                        {
-                            cout << "[RRU] " << grandparent->get_info("gp:")
-                                          << parent->get_info("parent:")
-                                          << uncle->get_info("uncle:")
-                                          << node->get_info("node:")
-                                          << endl;                                  
-                            parent->color_type_ = COLOR_TYPE::BLACK;
-                            grandparent->color_type_ = COLOR_TYPE::RED;
-                            turn_left(grandparent);                        
-                        }
-                    }   
-                } 
-                else
-                {
-                    cout << "uncle is null " << endl; 
-                    // RL
-                    if (parent->lchild_.get() == node.get())
-                    {
-                        cout << "[RL] " << grandparent->get_info("gp:")
-                                        << parent->get_info("parent:")
-                                        << node->get_info("node:")
-                                        << endl;                          
-                        turn_right(parent);
-                        reform_node(parent);
-                    }
-                    else // RR
-                    {
-                        cout << "[RR] " << grandparent->get_info("gp:")
-                                        << parent->get_info("parent:")
-                                        << node->get_info("node:")
-                                        << endl;                         
-                        parent->color_type_ = COLOR_TYPE::BLACK;
-                        grandparent->color_type_ = COLOR_TYPE::RED;
-                        turn_left(grandparent);    
-
-                        cout << "[RR_E] " << grandparent->get_info("gp:")
-                                        << parent->get_info("parent:")
-                                        << node->get_info("node:")
-                                        << endl;                                               
-                    }                    
-                }        
-            }
-        }
-        else
-        {
-            std::cerr << node->parent_->value_ << " 's parent is null!" << endl;
-        }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-
-}
-*/

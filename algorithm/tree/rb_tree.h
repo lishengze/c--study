@@ -28,9 +28,9 @@ class RBTree:public BaseTree
 
         bool insert_simple_with_height(TreeNodePtr& parent, TreeNodePtr node);
 
-        // void reform_node(TreeNodePtr& node);
+        // void insert_node_fix_color(TreeNodePtr& node);
 
-        void reform_node(TreeNodePtr& node);
+        void insert_node_fix_color(TreeNodePtr& node);
 
         void UR_Set(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
         void LR_Rotate(TreeNodePtr& G, TreeNodePtr&P, TreeNodePtr& U, TreeNodePtr& N);
