@@ -392,3 +392,111 @@ void AsyncClient::check_dead_rpc(ClientBaseRPC* rpc)
     }
     
 }
+
+void SyncClient::start()
+{
+    try
+    {
+        thread_ = boost::make_shared<std::thread>(&SyncClient::thread_main, this);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] SyncClient::start " << e.what() << '\n';
+    }
+    
+    
+}
+
+SyncClient::~SyncClient()
+{
+    if (nullptr != thread_)
+    {
+        if (thread_->joinable())
+        {
+            thread_->join();
+        }
+    }
+}
+
+void SyncClient::thread_main()
+{
+    try
+    {
+        request_();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "\n[E] SyncClient::thread_main" << e.what() << '\n';
+    }    
+}
+
+void SyncClient::request_()
+{
+    try
+    {
+        grpc::ClientContext  context;
+        std::unique_ptr<TestPackage::TestStream::Stub>  stub{TestStream::NewStub(channel_)};
+
+        std::unique_ptr<ClientReaderWriter<TestRequest, TestResponse>> responder = stub->DoubleStreamApple(&context);
+
+        switch(channel_->GetState(true)) {
+            case GRPC_CHANNEL_IDLE: {
+                std::cout << "[SyncClient] status is GRPC_CHANNEL_IDLE" << endl;
+                break;
+            }
+            case GRPC_CHANNEL_CONNECTING: {                
+                std::cout << "[SyncClient] status is GRPC_CHANNEL_CONNECTING" << endl;
+                break;
+            }
+            case GRPC_CHANNEL_READY: {           
+                std::cout << "[SyncClient] status is GRPC_CHANNEL_READY" << endl;
+                break;
+            }
+            case GRPC_CHANNEL_TRANSIENT_FAILURE: {         
+                std::cout << "[SyncClient] status is GRPC_CHANNEL_TRANSIENT_FAILURE" << endl;
+                return;
+            }
+            case GRPC_CHANNEL_SHUTDOWN: {        
+                std::cout << "[SyncClient] status is GRPC_CHANNEL_SHUTDOWN" << endl;
+                break;
+            }
+        }
+
+        string name = "ClientApplePRC";
+        string time = NanoTimeStr();
+        string rpc_id = "DoubleStreamApple";
+
+        TestRequest request;
+
+        request.set_session_id(session_id_);
+        request.set_rpc_id(rpc_id_);
+
+        request.set_name(name);
+        request.set_time(time);
+        request.set_obj_id("1");
+
+        request.set_request_id("1");
+
+        responder->Write(request);
+
+        TestResponse reply;
+
+        while (responder->Read(&reply))
+        {
+                cout << "[SERVER]:"
+                        << "session_id=" << reply.session_id() 
+                        << ", rpc_id=" << rpc_id
+                        << ", rsp_id="<< reply.response_id()
+                        << ", time=" << reply.time()                        
+                        << ", msg=" << reply.message()
+                        << "\n"
+                        << endl;
+
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+

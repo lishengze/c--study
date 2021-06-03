@@ -317,6 +317,10 @@ void DoubleStreamAppleRPC::process_read_cq()
         }
         else
         {
+            if (session_id_.length() == 0 && request_.session_id().length() != 0)
+            {
+                set_rpc_map();
+            }
             ++request_count_;
             if (request_count_ % 100 == 0)
             {

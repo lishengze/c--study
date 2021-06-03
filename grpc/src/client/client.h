@@ -202,3 +202,31 @@ public:
 };
 
 using AsyncClientPtr = boost::shared_ptr<AsyncClient>;
+
+
+class SyncClient
+{
+    public:
+        SyncClient(std::shared_ptr<Channel> channel, string session_id):
+        channel_(channel), session_id_{session_id} 
+        {
+
+        }
+
+        ~SyncClient();
+
+        void start();
+
+        void thread_main();
+
+        void request_();
+
+private:
+
+    boost::shared_ptr<std::thread>      thread_{nullptr};
+    std::shared_ptr<Channel>            channel_{nullptr};
+    string                              session_id_{""};
+    string                              rpc_id_{"DoubleStreamApple"};
+};
+
+using SyncClientPtr = boost::shared_ptr<SyncClient>;
