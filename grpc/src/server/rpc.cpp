@@ -28,6 +28,8 @@ void BaseRPC::set_rpc_map()
     {
         if (server_)
         {
+            cout << "set rpc map " << endl;
+
             server_->set_rpc_map(session_id_, rpc_id_, this);
         }
         else
@@ -197,6 +199,15 @@ void BaseRPC::process_write_cq()
         // cout << session_id_ << " " << rpc_id_ << " is write cq" << endl;
 
         is_write_cq_ = false;
+
+        if (cache_pkg_list_.size() > 0)
+        {
+            while(cache_pkg_list_.size())
+            {
+                response(cache_pkg_list_.front());
+                cache_pkg_list_.pop_front();
+            }
+        }
     }
     catch(const std::exception& e)
     {

@@ -58,7 +58,15 @@ public:
 
     void record_dead_rpc(BaseRPC* rpc);
 
-    void add_data(PackagePtr pkg);
+    void response(PackagePtr pkg);
+
+    void on_req_server_apple(PackagePtr pkg);
+
+    void on_req_double_apple(PackagePtr pkg);
+
+    void register_spi(TradeEngine* trade_engine);
+
+    
   
 protected:
 
@@ -74,11 +82,7 @@ protected:
 
     boost::shared_ptr<std::thread>          cq_thread_{nullptr};
 
-    ServerStreamAppleRPC*                   server_stream_apple_;
-
-    DoubleStreamAppleRPC*                   double_stream_apple_;
-
-    TradeEngine*                            trade_engine_;
+    TradeEngine*                            trade_engine_{nullptr};          // 用于传递请求的数据;
 
     map<SessionType, map<RpcType, BaseRPC*>> rpc_map_;
 
@@ -89,7 +93,17 @@ protected:
     long                                     wait_to_release_time_secs_{300};
 
     std::mutex                               cq_mutex_;
+
+
+
+    ServerStreamAppleRPC*                   server_stream_apple_{nullptr};
+
+    DoubleStreamAppleRPC*                   double_stream_apple_{nullptr};
+
+
 };
+
+DECLARE_PTR(BaseServer);
 
 class SynacService;
 class SyncServer

@@ -478,6 +478,12 @@ void SyncClient::request_()
         request.set_request_id("1");
 
         responder->Write(request);
+        cout << "[CLIENT]:"
+                << "session_id= " << request.session_id() 
+                << ", rpc=" << rpc_id_
+                << ", req_id=" << request.request_id()
+                << ", time=" << request.time()                
+                << endl;  
 
         TestResponse reply;
 

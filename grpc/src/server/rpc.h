@@ -16,7 +16,6 @@
 #include "cpp/test.grpc.pb.h"
 #include "data_struct.h"
 #include "../include/global_declare.h"
-
 #include "package_simple.h"
 
 using grpc::Alarm;
@@ -62,7 +61,7 @@ class BaseRPC
 
     virtual BaseRPC* spawn() { return this; }
 
-    virtual void add_data(PackagePtr pkg) {}
+    virtual void response(PackagePtr pkg) {}
 
     virtual void on_connect();
 
@@ -106,7 +105,7 @@ class BaseRPC
 
     RpcType                                     rpc_id_{""};
 
-    BaseServer*                                 server_{NULL};
+    BaseServer*                                 server_{nullptr};
 
     bool                                        is_first_{true};
 
@@ -121,4 +120,6 @@ class BaseRPC
     unsigned long                               disconnect_time_;
 
     long                                        rsp_id_{0};
+
+    list<PackagePtr>                            cache_pkg_list_;
 };

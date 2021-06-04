@@ -21,7 +21,7 @@ public:
 
     virtual void process_read_cq();
 
-    virtual void add_data(PackagePtr pkg);
+    virtual void response(PackagePtr pkg);
 
     virtual void send_msg(string message, string rsp_id);
     
@@ -65,7 +65,7 @@ public:
 
     virtual void process_read_cq();
 
-    virtual void add_data(PackagePtr pkg);
+    virtual void response(PackagePtr pkg);
 
     virtual void send_msg(string message, string rsp_id);
     

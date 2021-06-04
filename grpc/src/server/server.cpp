@@ -55,6 +55,18 @@ void BaseServer::start()
     }    
 }
 
+void BaseServer::register_spi(TradeEngine* trade_engine)
+{
+    try
+    {
+        trade_engine_ = trade_engine;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
 void BaseServer::init_cq_thread()
 {
     cq_thread_ = boost::make_shared<std::thread>(&BaseServer::run_cq_loop, this);
@@ -229,7 +241,7 @@ void BaseServer::check_dead_rpc(BaseRPC* rpc)
     
 }
 
-void BaseServer::add_data(PackagePtr pkg)
+void BaseServer::response(PackagePtr pkg)
 {
     try
     {
@@ -237,7 +249,7 @@ void BaseServer::add_data(PackagePtr pkg)
         {
             if (rpc_map_[pkg->SessionID()].find(pkg->RpcID()) != rpc_map_[pkg->SessionID()].end())
             {
-                rpc_map_[pkg->SessionID()][pkg->RpcID()]->add_data(pkg);
+                rpc_map_[pkg->SessionID()][pkg->RpcID()]->response(pkg);
             }
             else
             {
@@ -251,7 +263,39 @@ void BaseServer::add_data(PackagePtr pkg)
     }
     catch(const std::exception& e)
     {
-        std::cerr << "\n[E] BaseServer::add_data" << e.what() << '\n';
+        std::cerr << "\n[E] BaseServer::response" << e.what() << '\n';
+    }
+
+}
+
+void BaseServer::on_req_server_apple(PackagePtr pkg)
+{
+    try
+    {
+        if (trade_engine_)
+        {
+
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+
+}
+
+void BaseServer::on_req_double_apple(PackagePtr pkg)
+{
+    try
+    {
+        if (trade_engine_)
+        {
+            
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
     }
 
 }

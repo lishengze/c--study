@@ -109,7 +109,7 @@ void ServerStreamAppleRPC::process_read_cq()
         else
         {
             ++request_count_;
-            if (request_count_ % 100 == 0)
+            if (request_count_ % 1 == 0)
             {
                 stringstream s_obj;
 
@@ -161,7 +161,7 @@ void ServerStreamAppleRPC::process_read_cq()
     }
 }
 
-void ServerStreamAppleRPC::add_data(PackagePtr pkg)
+void ServerStreamAppleRPC::response(PackagePtr pkg)
 {
     try
     {
@@ -272,7 +272,6 @@ void DoubleStreamAppleRPC::send_msg(string message, string rsp_id)
     {
         std::cerr <<"\n[E] ServerStreamAppleRPC::write_msg " << e.what() << '\n';
     }
-
 }
 
 void DoubleStreamAppleRPC::process_read_cq()
@@ -317,16 +316,17 @@ void DoubleStreamAppleRPC::process_read_cq()
         }
         else
         {
-            if (session_id_.length() == 0 && request_.session_id().length() != 0)
+            if (session_id_ == "" && request_.session_id() != "")
             {
+                session_id_ = request_.session_id();
                 set_rpc_map();
             }
-            ++request_count_;
-            if (request_count_ % 100 == 0)
+
+            if (++request_count_ % 1 == 0)
             {
                 stringstream s_obj;
 
-                s_obj << "[CLIENT]: session_id_=" << request_.session_id() 
+                s_obj << "[CLIENT]: session_id_=" << request_.session_id() << ", local_session: " << session_id_ 
                     << ", rpc=" << request_.rpc_id()
                     << ", req_id=" << request_.request_id()
                     << ", req_count=" << request_count_
@@ -362,7 +362,13 @@ void DoubleStreamAppleRPC::process_read_cq()
                 LOG_INFO(s_obj.str());
             }
 
-            // write_msg("", request_.request_id());
+            // int test_count = 10;
+            // while(test_count)
+            // {
+            //     send_msg("TestCount", std::to_string(test_count));
+            //     --test_count;
+            //     std::this_thread::sleep_for(std::chrono::seconds(1));
+            // }            
         }            
         
     }
@@ -376,10 +382,17 @@ void DoubleStreamAppleRPC::process_read_cq()
     }
 }
 
-void DoubleStreamAppleRPC::add_data(PackagePtr pkg)
+void DoubleStreamAppleRPC::response(PackagePtr pkg)
 {
     try
     {
+        if (is_write_cq_)
+        {
+            cache_pkg_list_.push_back(pkg);
+            cout << "cache DoubleStreamAppleRPC " << pkg->RequestID() << endl;
+            return;
+        }
+        
         grpc::Status status;
 
         ApplePtr apple = GetField<Apple>(pkg);
@@ -390,8 +403,6 @@ void DoubleStreamAppleRPC::add_data(PackagePtr pkg)
         reply_.set_obj_id(std::to_string(obj_id_));
         reply_.set_response_id(std::to_string(++rsp_id_));
 
-        responder_.Write(reply_, this);
-
         cout << "[SERVER]: "
              << "session_id_=" << session_id_ 
              << ", rpc=" << rpc_id_
@@ -400,6 +411,8 @@ void DoubleStreamAppleRPC::add_data(PackagePtr pkg)
              << ", time=" << apple->time 
              << "\n"
              << endl;
+
+        responder_.Write(reply_, this);
 
         is_write_cq_ = true;
 
