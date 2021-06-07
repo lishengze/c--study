@@ -7,10 +7,14 @@ void TradeEngine::start()
 
     if (server_)
     {
+        // ServerSpiPtr cur_ptr = shared_from_this();
+
+        server_->register_spi(this);
+
         server_->start();
     }
 
-    thread_ = boost::make_shared<std::thread>(&TradeEngine::thread_main, this);
+    // thread_ = boost::make_shared<std::thread>(&TradeEngine::thread_main, this);
 }
 
 void TradeEngine::thread_main()
@@ -43,20 +47,55 @@ void TradeEngine::on_req_server_apple(PackagePtr pkg)
 {
     try
     {
-        /* code */
+        if (pkg)
+        {
+            ApplePtr apple_data = GetField<Apple>(pkg);
+
+            if (apple_data)
+            {
+                cout << "TradeEngine::on_req_server_apple "<< "name: " << apple_data->name << " "
+                     << "time: " << apple_data->time 
+                     << endl;                                   
+            }
+            else
+            {
+                cout << "[W] TradeEngine::on_req_server_apple apple_data is null" << endl;
+            }
+        }
+        else
+        {
+            cout << "[W] TradeEngine::on_req_server_apple  pkg is null" << endl;
+        }
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
-    }
-    
+    }    
 }
 
 void TradeEngine::on_req_double_apple(PackagePtr pkg)
 {
     try
     {
-        /* code */
+        if (pkg)
+        {
+            ApplePtr apple_data = GetField<Apple>(pkg);
+
+            if (apple_data)
+            {
+                cout << "TradeEngine::on_req_double_apple " << "name: " << apple_data->name << " "
+                        << "time: " << apple_data->time 
+                        << endl;                                   
+            }
+            else
+            {
+                cout << "[W] TradeEngine::on_req_double_apple apple_data is null" << endl;
+            }                
+        }
+        else
+        {
+            cout << "[W] TradeEngine::on_req_double_apple  pkg is null" << endl;
+        }
     }
     catch(const std::exception& e)
     {

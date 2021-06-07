@@ -5,6 +5,8 @@
 #include "global_declare.h"
 #include "json.hpp"
 
+#include "test_vp.h"
+
 void test_json()
 {
     try
@@ -41,5 +43,7 @@ void TestMain()
 
     // test_data_structure();
 
-    TestString();
+    // TestString();q
+
+    test_vp_main();
 }

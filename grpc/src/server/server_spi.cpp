@@ -8,6 +8,10 @@ void ServerSpi::rsp_server_apple(PackagePtr pkg)
         {
             server_->response(pkg);
         }
+        else
+        {
+            cout << "[W] Server is Null " << endl;
+        }
     }
     catch(const std::exception& e)
     {
@@ -24,6 +28,10 @@ void ServerSpi::rsp_double_apple(PackagePtr pkg)
         {
             server_->response(pkg);
         }
+        else
+        {
+            cout << "[W] Server is Null " << endl;
+        }        
     }
     catch(const std::exception& e)
     {

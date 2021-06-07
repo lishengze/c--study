@@ -75,7 +75,7 @@ class BaseRPC
 
     void make_active();
 
-   void set_server(BaseServer* server) { server_ = server;}
+   void register_server(BaseServer* server) { server_ = server;}
 
    void set_rpc_map();
 

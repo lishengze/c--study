@@ -23,5 +23,5 @@ private:
     SyncClientPtr                        sync_client_;
     boost::shared_ptr<std::thread>       test_thread_{nullptr};
 
-    bool                                 is_async_{false};
+    bool                                 is_async_{true};
 };

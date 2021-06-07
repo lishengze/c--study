@@ -71,17 +71,6 @@ void ServerStreamAppleRPC::process_read_cq()
     try
     {
         responder_.Read(&request_, this);
-
-        // cout << "[CLIENT]: session_id_=" << request_.session_id() 
-        //      << ", rpc=" << request_.rpc_id()
-        //      << ", req_id=" << request_.request_id()
-        //      << ", time=" << request_.time() 
-        //      << endl;
-
-            // << ", name=" << request_.name() 
-            
-            // << ", obj_id=" << request_.obj_id() << endl;
-
         // 初次连接;
         if (request_.session_id().length() == 0)
         {
@@ -92,14 +81,7 @@ void ServerStreamAppleRPC::process_read_cq()
             return;
         }
 
-        // cout << "[CLIENT]: session_id_=" << request_.session_id() 
-        //      << ", rpc=" << request_.rpc_id()
-        //      << ", req_id=" << request_.request_id()
-        //      << ", time=" << request_.time() 
-        //      << ", msg=" << request_.message() 
-        //      << endl;        
-
-        // 登陆请求；
+        // 登陆请求 - 针对异步客户端;
         if (request_.message() == "login")
         {
             session_id_ = request_.session_id();
@@ -108,6 +90,12 @@ void ServerStreamAppleRPC::process_read_cq()
         }
         else
         {
+            if (session_id_ == "" && request_.session_id() != "")
+            {
+                session_id_ = request_.session_id();
+                set_rpc_map();
+            }
+
             ++request_count_;
             if (request_count_ % 1 == 0)
             {
@@ -121,7 +109,6 @@ void ServerStreamAppleRPC::process_read_cq()
                     << "\n";
                 LOG_INFO(s_obj.str());
             }
-
 
             string session_id = request_.session_id();
             if (request_count_ == 1) 
@@ -147,7 +134,19 @@ void ServerStreamAppleRPC::process_read_cq()
                 LOG_INFO(s_obj.str());
             }
 
-            // write_msg("", request_.request_id());
+            string name = request_.name();
+            string time = request_.time();
+
+            PackagePtr pkg = CreatePackage<Apple>(name, time);
+
+            if (server_)
+            {
+                server_->on_req_server_apple(pkg);
+            }
+            else
+            {
+                cout << "ServerStreamAppleRPC::process_read_cq server is null" << endl;
+            }
         }            
         
     }
@@ -207,7 +206,7 @@ BaseRPC* ServerStreamAppleRPC::spawn()
         std::lock_guard<std::mutex> lk(mutex_);
 
         ServerStreamAppleRPC* new_rpc = new ServerStreamAppleRPC(service_, cq_);
-        new_rpc->set_server(server_);
+        new_rpc->register_server(server_);
 
         return new_rpc;
     } 
@@ -280,16 +279,6 @@ void DoubleStreamAppleRPC::process_read_cq()
     {
         responder_.Read(&request_, this);
 
-        // cout << "[CLIENT]: session_id_=" << request_.session_id() 
-        //      << ", rpc=" << request_.rpc_id()
-        //      << ", req_id=" << request_.request_id()
-        //      << ", time=" << request_.time() 
-        //      << endl;
-
-            // << ", name=" << request_.name() 
-            
-            // << ", obj_id=" << request_.obj_id() << endl;
-
         // 初次连接;
         if (request_.session_id().length() == 0)
         {
@@ -300,14 +289,7 @@ void DoubleStreamAppleRPC::process_read_cq()
             return;
         }
 
-        // cout << "[CLIENT]: session_id_=" << request_.session_id() 
-        //      << ", rpc=" << request_.rpc_id()
-        //      << ", req_id=" << request_.request_id()
-        //      << ", time=" << request_.time() 
-        //      << ", msg=" << request_.message() 
-        //      << endl;        
-
-        // 登陆请求；
+        // 登陆请求 - 针对异步客户端;
         if (request_.message() == "login")
         {
             session_id_ = request_.session_id();
@@ -326,7 +308,7 @@ void DoubleStreamAppleRPC::process_read_cq()
             {
                 stringstream s_obj;
 
-                s_obj << "[CLIENT]: session_id_=" << request_.session_id() << ", local_session: " << session_id_ 
+                s_obj << "[CLIENT]: session_id_=" << request_.session_id()
                     << ", rpc=" << request_.rpc_id()
                     << ", req_id=" << request_.request_id()
                     << ", req_count=" << request_count_
@@ -335,7 +317,6 @@ void DoubleStreamAppleRPC::process_read_cq()
 
                 LOG_INFO(s_obj.str());
             }
-
 
             string session_id = request_.session_id();
             if (request_count_ == 1) 
@@ -361,14 +342,20 @@ void DoubleStreamAppleRPC::process_read_cq()
 
                 LOG_INFO(s_obj.str());
             }
+      
+            string name = request_.name();
+            string time = request_.time();
 
-            // int test_count = 10;
-            // while(test_count)
-            // {
-            //     send_msg("TestCount", std::to_string(test_count));
-            //     --test_count;
-            //     std::this_thread::sleep_for(std::chrono::seconds(1));
-            // }            
+            PackagePtr pkg = CreatePackage<Apple>(name, time);
+
+            if (server_)
+            {
+                server_->on_req_double_apple(pkg);
+            }
+            else
+            {
+                cout << "DoubleStreamAppleRPC::process_read_cq server is null" << endl;
+            }      
         }            
         
     }
@@ -435,7 +422,7 @@ BaseRPC* DoubleStreamAppleRPC::spawn()
         std::lock_guard<std::mutex> lk(mutex_);
 
         DoubleStreamAppleRPC* new_rpc = new DoubleStreamAppleRPC(service_, cq_);
-        new_rpc->set_server(server_);
+        new_rpc->register_server(server_);
 
         return new_rpc;
     } 

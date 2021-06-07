@@ -8,6 +8,10 @@
 
 #include "rpc.h"
 
+#include "server_spi.h"
+
+#include "trade_engine.h"
+
 
 BaseServer::~BaseServer()
 {
@@ -34,18 +38,18 @@ void BaseServer::start()
         // server_stream_rpc = new ServerStreamRPC(&service_, cq_.get());
 
         server_stream_apple_ = new ServerStreamAppleRPC(&service_, cq_.get());
-        server_stream_apple_->set_server(this);
+        server_stream_apple_->register_server(this);
         server_stream_apple_->process();
 
         double_stream_apple_ = new DoubleStreamAppleRPC(&service_, cq_.get());
-        double_stream_apple_->set_server(this);
+        double_stream_apple_->register_server(this);
         double_stream_apple_->process();
 
         // server_stream_pear_ = new ServerStreamPearRPC(&service_, cq_.get());
-        // server_stream_pear_->set_server(this);
+        // server_stream_pear_->register_server(this);
 
         // server_stream_mango_ = new ServerStreamMangoRPC(&service_, cq_.get());
-        // server_stream_mango_->set_server(this);
+        // server_stream_mango_->register_server(this);
 
         init_cq_thread();
     }
@@ -55,11 +59,39 @@ void BaseServer::start()
     }    
 }
 
-void BaseServer::register_spi(TradeEngine* trade_engine)
+void BaseServer::register_spi(ServerSpi* server_spi)
 {
     try
     {
-        trade_engine_ = trade_engine;
+        server_spi_ = server_spi;
+
+        cout << "server_spi class: " << server_spi_->get_class_name() 
+            //  << ", " << sizeof(server_spi_) << ", " <<  static_cast<void *>(server_spi_) 
+             << endl;
+
+
+            // printf("虚表地址:%p\n", *(int *)this);  
+
+            // cout << "第一个虚函数地址: " <<  *(int *)*(int *)(this);
+
+            // printf("第一个虚函数地址:%p\n", *(int *)*(int *)(this));  
+            // printf("第二个虚函数地址:%p\n", *((int *)*(int *)(this) + 1));              
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
+void BaseServer::register_spi(ServerSpiPtr server_spi)
+{
+    try
+    {
+        // server_spi_ = server_spi;
+
+        cout << "server_spi class: " << server_spi_->get_class_name() 
+            //  << ", " << sizeof(server_spi_) << ", " <<  static_cast<void *>(server_spi_) 
+             << endl;
     }
     catch(const std::exception& e)
     {
@@ -272,9 +304,32 @@ void BaseServer::on_req_server_apple(PackagePtr pkg)
 {
     try
     {
-        if (trade_engine_)
+        if (server_spi_)
         {
+            server_spi_ = dynamic_cast<TradeEngine*>(server_spi_);
 
+            // server_spi_ = (TradeEngine*)server_spi_;
+
+            if (server_spi_)
+            {
+                cout << "server_spi class: " << server_spi_->get_class_name() 
+                    //  << ", " << sizeof(server_spi_) << ", " <<  static_cast<void *>(server_spi_) 
+                     << endl;
+            // printf("虚表地址:%p\n", *(int *)this);  
+            // printf("第一个虚函数地址:%p\n", *(int *)*(int *)(this));  
+            // printf("第二个虚函数地址:%p\n", *((int *)*(int *)(this) + 1));  
+
+                server_spi_->on_req_server_apple(pkg);
+            }
+            else
+            {
+                cout << "sever_spi_ trans to trade_engine failed" << endl;
+            }
+
+        }
+        else
+        {
+            cout << "BaseServer::on_req_server_apple server_spi_ is null" << endl;
         }
     }
     catch(const std::exception& e)
@@ -288,10 +343,20 @@ void BaseServer::on_req_double_apple(PackagePtr pkg)
 {
     try
     {
-        if (trade_engine_)
+        if (server_spi_)
         {
-            
+            cout << "server_spi class: " << server_spi_->get_class_name() 
+                //  << ", " << sizeof(server_spi_) << ", " <<  static_cast<void *>(server_spi_) 
+                 << endl;
+            // printf("虚表地址:%p\n", *(int *)this);  
+            // printf("第一个虚函数地址:%p\n", *(int *)*(int *)this);  
+            // printf("第二个虚函数地址:%p\n", *((int *)*(int *)this + 1));  
+            server_spi_->on_req_double_apple(pkg);
         }
+        else
+        {
+            cout << "BaseServer::on_req_double_apple server_spi_ is null" << endl;
+        }        
     }
     catch(const std::exception& e)
     {

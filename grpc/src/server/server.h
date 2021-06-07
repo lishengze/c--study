@@ -33,7 +33,10 @@ using TestPackage::TestStream;
 using TestPackage::TestRequest;
 using TestPackage::TestResponse;
 
-class TradeEngine;
+// class ServerSpi;
+
+FORWARD_DECLARE_PTR(ServerSpi);
+
 
 class BaseServer
 {
@@ -64,7 +67,9 @@ public:
 
     void on_req_double_apple(PackagePtr pkg);
 
-    void register_spi(TradeEngine* trade_engine);
+    void register_spi(ServerSpi* server_spi);
+
+    void register_spi(ServerSpiPtr server_spi);
 
     
   
@@ -82,7 +87,9 @@ protected:
 
     boost::shared_ptr<std::thread>          cq_thread_{nullptr};
 
-    TradeEngine*                            trade_engine_{nullptr};          // 用于传递请求的数据;
+    ServerSpi*                              server_spi_{nullptr};          // 用于传递请求的数据;
+
+    // ServerSpiPtr                            server_spi_{nullptr};
 
     map<SessionType, map<RpcType, BaseRPC*>> rpc_map_;
 
@@ -93,8 +100,6 @@ protected:
     long                                     wait_to_release_time_secs_{300};
 
     std::mutex                               cq_mutex_;
-
-
 
     ServerStreamAppleRPC*                   server_stream_apple_{nullptr};
 
