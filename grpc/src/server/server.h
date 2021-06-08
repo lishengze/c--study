@@ -71,8 +71,22 @@ public:
 
     void register_spi(ServerSpiPtr server_spi);
 
-    
-  
+    ServerSpi* get_spi() {
+        if (*(int *)server_spi_ != server_spi_vptb_)
+        {
+            cout << "ServerSpi Changed: ori vptb: " << server_spi_vptb_ 
+                 << ". changed vptb: " << *(int *)server_spi_ 
+                 << endl;
+
+            *(int *)server_spi_ = server_spi_vptb_;
+        }
+        return server_spi_;
+    }
+
+    int                                     server_spi_vptb_;
+    ServerSpi*                              server_spi_;          // 用于传递请求的数据;
+    mutex                                   server_spi_mutex_;
+
 protected:
 
     string                                  address_;
@@ -87,7 +101,6 @@ protected:
 
     boost::shared_ptr<std::thread>          cq_thread_{nullptr};
 
-    ServerSpi*                              server_spi_{nullptr};          // 用于传递请求的数据;
 
     // ServerSpiPtr                            server_spi_{nullptr};
 

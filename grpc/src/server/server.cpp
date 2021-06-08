@@ -13,8 +13,12 @@
 #include "trade_engine.h"
 
 
+// ServerSpi*  BaseServer::server_spi_ = nullptr;
+
 BaseServer::~BaseServer()
 {
+    cout << "\n~BaseServer" << endl;
+
     if (cq_thread_ && cq_thread_->joinable())
     {
         cq_thread_->join();
@@ -65,17 +69,12 @@ void BaseServer::register_spi(ServerSpi* server_spi)
     {
         server_spi_ = server_spi;
 
-        cout << "server_spi class: " << server_spi_->get_class_name() 
-            //  << ", " << sizeof(server_spi_) << ", " <<  static_cast<void *>(server_spi_) 
-             << endl;
+        server_spi_vptb_ = *(int *)server_spi;
 
-
-            // printf("虚表地址:%p\n", *(int *)this);  
-
-            // cout << "第一个虚函数地址: " <<  *(int *)*(int *)(this);
-
-            // printf("第一个虚函数地址:%p\n", *(int *)*(int *)(this));  
-            // printf("第二个虚函数地址:%p\n", *((int *)*(int *)(this) + 1));              
+        // cout << "server_spi class: " << server_spi_->get_class_name()         
+        //      << " ori_vp: " << *(int *)server_spi_ 
+        //     //  << ", " << sizeof(server_spi_) << ", " <<  static_cast<void *>(server_spi_) 
+        //      << endl;       
     }
     catch(const std::exception& e)
     {
@@ -101,7 +100,22 @@ void BaseServer::register_spi(ServerSpiPtr server_spi)
 
 void BaseServer::init_cq_thread()
 {
+    // cout << "[init_cq_thread] cq loop server_spi class: " << server_spi_->get_class_name() 
+    //      << " thread_id: " << std::this_thread::get_id() 
+    //      << " server_spi: " << server_spi_
+    //      << " vp: " << *(int *)server_spi_ 
+    //      << endl;
+
     cq_thread_ = boost::make_shared<std::thread>(&BaseServer::run_cq_loop, this);
+
+    cq_thread_->join();
+
+    // int test_sleep_secs = 10;
+    // std::cout << "\n\n****** BaseServer::init_cq_thread sleep " << test_sleep_secs << " secs " << std::endl;
+    // std::this_thread::sleep_for(std::chrono::seconds(test_sleep_secs));
+    // std::cout << "\n***** SLEEP END!" << endl;
+
+    // run_cq_loop();
 }
 
 void BaseServer::set_rpc_map(SessionType session_id_, RpcType rpc_id_, BaseRPC* rpc)
@@ -120,6 +134,14 @@ void BaseServer::run_cq_loop()
 {
     try
     {
+        // cout << "[CQ Start]: " << get_spi()->get_class_name() 
+        //      << " thread_id: " << std::this_thread::get_id() 
+        //      << " server_spi: " << server_spi_
+        //      << " vp: " << *(int *)server_spi_ 
+        //      << endl;
+
+        get_spi();
+
         void* tag;
         bool status;
         while(true)
@@ -129,6 +151,11 @@ void BaseServer::run_cq_loop()
             bool result = cq_->Next(&tag, &status);
 
             std::lock_guard<std::mutex> lk(cq_mutex_);
+
+            // cout << "cq loop server_spi class: " << server_spi_->get_class_name() 
+            //      << " thread_id: " << std::this_thread::get_id() 
+            //      << " vp: " << *(int *)server_spi_ 
+            //      << endl;            
 
             BaseRPC* rpc = static_cast<BaseRPC*>(tag);
 
@@ -306,26 +333,7 @@ void BaseServer::on_req_server_apple(PackagePtr pkg)
     {
         if (server_spi_)
         {
-            server_spi_ = dynamic_cast<TradeEngine*>(server_spi_);
-
-            // server_spi_ = (TradeEngine*)server_spi_;
-
-            if (server_spi_)
-            {
-                cout << "server_spi class: " << server_spi_->get_class_name() 
-                    //  << ", " << sizeof(server_spi_) << ", " <<  static_cast<void *>(server_spi_) 
-                     << endl;
-            // printf("虚表地址:%p\n", *(int *)this);  
-            // printf("第一个虚函数地址:%p\n", *(int *)*(int *)(this));  
-            // printf("第二个虚函数地址:%p\n", *((int *)*(int *)(this) + 1));  
-
-                server_spi_->on_req_server_apple(pkg);
-            }
-            else
-            {
-                cout << "sever_spi_ trans to trade_engine failed" << endl;
-            }
-
+            server_spi_->on_req_server_apple(pkg);
         }
         else
         {
@@ -345,12 +353,6 @@ void BaseServer::on_req_double_apple(PackagePtr pkg)
     {
         if (server_spi_)
         {
-            cout << "server_spi class: " << server_spi_->get_class_name() 
-                //  << ", " << sizeof(server_spi_) << ", " <<  static_cast<void *>(server_spi_) 
-                 << endl;
-            // printf("虚表地址:%p\n", *(int *)this);  
-            // printf("第一个虚函数地址:%p\n", *(int *)*(int *)this);  
-            // printf("第二个虚函数地址:%p\n", *((int *)*(int *)this + 1));  
             server_spi_->on_req_double_apple(pkg);
         }
         else

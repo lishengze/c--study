@@ -1,4 +1,4 @@
-#include "trade_engin.h"
+#include "client_api.h"
 
 #include "data_struct.h"
 
@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-TradeEngine::~TradeEngine()
+ClientApi::~ClientApi()
 {
     try
     {
@@ -22,7 +22,7 @@ TradeEngine::~TradeEngine()
     
 }
 
-void TradeEngine::start()
+void ClientApi::start()
 {
     try
     {
@@ -43,7 +43,7 @@ void TradeEngine::start()
     }    
 }
 
-void TradeEngine::init_async_client()
+void ClientApi::init_async_client()
 {
     try
     {
@@ -53,7 +53,7 @@ void TradeEngine::init_async_client()
 
         async_client_->start();
 
-        test_thread_ = boost::make_shared<std::thread>(&TradeEngine::test_thread_fun, this);
+        // test_thread_ = boost::make_shared<std::thread>(&ClientApi::test_thread_fun, this);
     }
     catch(const std::exception& e)
     {
@@ -62,7 +62,7 @@ void TradeEngine::init_async_client()
     
 }
 
-void TradeEngine::init_sync_client()
+void ClientApi::init_sync_client()
 {
     try
     {
@@ -77,36 +77,4 @@ void TradeEngine::init_sync_client()
         std::cerr << e.what() << '\n';
     }
     
-}
-
-void TradeEngine::test_thread_fun()
-{
-    try
-    {
-    //    cout << "TradeEngine::test_thread_fun " << endl;
-
-       
-        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-
-        std::vector<Apple*> request_data;
-    
-       for (int i = 0; i < CONFIG->get_test_count(); ++i)
-       {
-            PackagePtr pkg = CreatePackage<Apple>("trade_engine", std::to_string(NanoTime()));
-
-            pkg->SetRequestID(i+1);
-            pkg->SetSessionID(CONFIG->get_session_id());
-            pkg->SetRpcID("ServerStreamApple");
-
-            async_client_->add_data(pkg);
-
-            // pkg->SetRpcID("DoubleStreamApple");
-
-            // async_client_->add_data(pkg);
-       }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
 }

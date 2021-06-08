@@ -11,10 +11,11 @@ FORWARD_DECLARE_PTR(TradeEngine);
 class TradeEngine:public ServerSpi
 {
 public:
-    TradeEngine() {        
-    }
+    TradeEngine() { }
 
-    
+    virtual ~TradeEngine() {        
+        cout << "\n~TradeEngine" << endl;
+    }
 
     void start();
 
@@ -35,6 +36,4 @@ public:
 
 private:
     boost::shared_ptr<std::thread>      thread_{nullptr};
-
-
 };

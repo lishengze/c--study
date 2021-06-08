@@ -1,25 +1,16 @@
-#include "trade_engine.h"
-#include "config.h"
+#include "test_spi.h"
+#include "../server/config.h"
 
-void TradeEngine::start()
+void TestServerSpi::start()
 {
     CONFIG;
 
     start_server(this);
-
-    // if (server_)
-    // {
-    //     // ServerSpiPtr cur_ptr = shared_from_this();
-
-    //     server_->register_spi(this);
-
-    //     server_->start();
-    // }
-
-    // thread_ = boost::make_shared<std::thread>(&TradeEngine::thread_main, this);
+    
+    // thread_ = boost::make_shared<std::thread>(&TestServerSpi::thread_main, this);
 }
 
-void TradeEngine::thread_main()
+void TestServerSpi::thread_main()
 {
     int test_count = 10;
 
@@ -45,7 +36,7 @@ void TradeEngine::thread_main()
     }
 }
 
-void TradeEngine::on_req_server_apple(PackagePtr pkg)
+void TestServerSpi::on_req_server_apple(PackagePtr pkg)
 {
     try
     {
@@ -55,18 +46,18 @@ void TradeEngine::on_req_server_apple(PackagePtr pkg)
 
             if (apple_data)
             {
-                cout << "TradeEngine::on_req_server_apple "<< "name: " << apple_data->name << " "
+                cout << "TestServerSpi::on_req_server_apple "<< "name: " << apple_data->name << " "
                      << "time: " << apple_data->time 
                      << endl;                                   
             }
             else
             {
-                cout << "[W] TradeEngine::on_req_server_apple apple_data is null" << endl;
+                cout << "[W] TestServerSpi::on_req_server_apple apple_data is null" << endl;
             }
         }
         else
         {
-            cout << "[W] TradeEngine::on_req_server_apple  pkg is null" << endl;
+            cout << "[W] TestServerSpi::on_req_server_apple  pkg is null" << endl;
         }
     }
     catch(const std::exception& e)
@@ -75,7 +66,7 @@ void TradeEngine::on_req_server_apple(PackagePtr pkg)
     }    
 }
 
-void TradeEngine::on_req_double_apple(PackagePtr pkg)
+void TestServerSpi::on_req_double_apple(PackagePtr pkg)
 {
     try
     {
@@ -85,18 +76,18 @@ void TradeEngine::on_req_double_apple(PackagePtr pkg)
 
             if (apple_data)
             {
-                cout << "TradeEngine::on_req_double_apple " << "name: " << apple_data->name << " "
+                cout << "TestServerSpi::on_req_double_apple " << "name: " << apple_data->name << " "
                         << "time: " << apple_data->time 
                         << endl;                                   
             }
             else
             {
-                cout << "[W] TradeEngine::on_req_double_apple apple_data is null" << endl;
+                cout << "[W] TestServerSpi::on_req_double_apple apple_data is null" << endl;
             }                
         }
         else
         {
-            cout << "[W] TradeEngine::on_req_double_apple  pkg is null" << endl;
+            cout << "[W] TestServerSpi::on_req_double_apple  pkg is null" << endl;
         }
     }
     catch(const std::exception& e)

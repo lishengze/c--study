@@ -11,8 +11,23 @@ public:
 
     ServerSpi()
     {
-        server_ = boost::make_shared<BaseServer>("0.0.0.0:50051");
+        server_ = boost::make_shared<BaseServer>("0.0.0.0:50051");        
     }
+
+    ~ServerSpi()
+    {
+        if (server_thread_)
+        {
+            if (server_thread_->joinable())
+            {
+                server_thread_->join();
+            }
+        }
+    }
+
+    void start_server(ServerSpi* server_spi);
+
+    void server_main(ServerSpi* server_spi);
 
     ServerSpiPtr get_shared_ptr()
     {
@@ -40,4 +55,6 @@ public:
 protected:
 
     BaseServerPtr                       server_{nullptr};
+
+    boost::shared_ptr<std::thread>      server_thread_;
 };

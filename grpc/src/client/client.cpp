@@ -235,6 +235,10 @@ void AsyncClient::init_cq_thread()
     {
         cq_thread_ = boost::make_shared<std::thread>(&AsyncClient::run_cq_loop, this);
 
+        if (cq_thread_->joinable())
+        {
+            cq_thread_->join();
+        }
     }
     catch(const std::exception& e)
     {

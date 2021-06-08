@@ -23,7 +23,7 @@ void test_syanc_server()
 
 void test_trade_engine()
 {
-    TradeEngine trade;
+    TradeEnginePtr trade = boost::make_shared<TradeEngine>();
 
     // printf("虚表地址:%p\n", *(int *)&trade);  
     // printf("第一个虚函数地址:%p\n", *(int *)*(int *)&trade);  
@@ -40,7 +40,9 @@ void test_trade_engine()
 
     // ((void(*)(void))faddr)();  
 
-    trade.start();
+    // trade.start();
+
+    trade->start();
 }
 
 void TestMain()
