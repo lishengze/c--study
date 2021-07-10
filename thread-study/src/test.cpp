@@ -7,6 +7,7 @@
 // #include "control_compute.h"
 
 #include "thread_pool.h"
+#include "id/id.h"
 
 void testFuncMain()
 {
@@ -20,5 +21,7 @@ void testFuncMain()
 
     // TestControlCompute();
 
-    TestThreadPool();
+    // TestThreadPool();
+
+    TestIDMain();
 }

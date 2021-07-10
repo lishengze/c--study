@@ -5,9 +5,9 @@
 #   2019-01-04  init version
 ##############################################################################################
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(thread)
+PROJECT(server)
 
-SET("BIN_NAME" thread)
+SET("BIN_NAME" server)
 set(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
 
@@ -17,25 +17,17 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 
-AUX_SOURCE_DIRECTORY(./id ID_SRC)
 AUX_SOURCE_DIRECTORY(. MAIN_SRC)
 
 FIND_PACKAGE(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 
                                      chrono regex program_options unit_test_framework locale REQUIRED)
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-
-# INCLUDE_DIRECTORIES("../../../component/pandora")
-# INCLUDE_DIRECTORIES("../server")
-# INCLUDE_DIRECTORIES("../include")
-# INCLUDE_DIRECTORIES("../../proto")
-
+INCLUDE_DIRECTORIES("../include/")
 
 
 LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
-LINK_DIRECTORIES("../lib/")
 
-
-SET(ALL_SRC ${ID_SRC} ${MAIN_SRC})
+SET(ALL_SRC ${MAIN_SRC})
 
 # generate bin
 ADD_EXECUTABLE(${BIN_NAME} ${ALL_SRC})
