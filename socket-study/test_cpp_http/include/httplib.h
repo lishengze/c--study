@@ -7278,6 +7278,7 @@ inline Client::Client(const char *scheme_host_port,
       cli_ = detail::make_unique<SSLClient>(host.c_str(), port,
                                             client_cert_path, client_key_path);
       is_ssl_ = is_ssl;
+      cout << "is_ssl_ " << endl;
 #endif
     } else {
       cli_ = detail::make_unique<ClientImpl>(host.c_str(), port,
