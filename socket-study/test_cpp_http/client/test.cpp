@@ -90,9 +90,48 @@ void test_b2c2()
     }
 }
 
+void test_b2c2_query_order()
+{
+    string uri = "https://api.uat.b2c2.net";
+    httplib::Client cli(uri.c_str());
+
+    cli.enable_server_certificate_verification(false);
+    
+    httplib::Headers header;
+    string token = "eabe0596c453786c0ecee81978140fad58daf881";
+    header.emplace("Authorization", string("Token ") + token);
+    header.emplace("Content-Type", "application/json");
+    // header.emplace("Accept-Encoding", "gzip, deflate");
+    // header.emplace("Accept", "*/*");
+    // header.emplace("User-Agent", "python-requests/2.22.0");
+    // header.emplace("Connection", "keep-alive");
+
+    cli.set_default_headers(header);
+    
+    cli.Get("/order/111", header);
+
+    if (auto res = cli.Get("/order/111",header))
+    {
+      cout << "\n\nResponse Info:   " << endl;
+      cout << res->status << endl;
+      httplib::Headers& headers = res->headers;
+      for(auto iter:headers)
+      {
+        cout << iter.first << ": " << iter.second << endl;
+      }
+      cout <<"body: " << res->body << endl;
+    }
+    else
+    {
+      cout << "error code: " << res.error() << std::endl;
+    }  
+}
+
 void TestMain()
 {
     test_b2c2();
+
+    test_b2c2_query_order();
 
     // test_simple_http_client();
 }
