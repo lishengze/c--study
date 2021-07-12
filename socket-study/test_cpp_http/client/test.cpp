@@ -109,7 +109,7 @@ void test_b2c2_query_order()
 
     cli.set_default_headers(header);
     
-    cli.Get("/order/111", header);
+    // cli.Get("/order/111", header);
 
     if (auto res = cli.Get("/order/111", header))
     {
