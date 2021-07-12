@@ -70,8 +70,11 @@ void test_b2c2()
     request["order_type"] = "FOK";
     request["price"] = 0.64;
 
+
+
     if (auto res = cli.Post("/order", header, request.dump(), "application/json"))
     {
+      cout << "\n\nResponse Info:   " << endl;
       cout << res->status << endl;
       httplib::Headers& headers = res->headers;
       for(auto iter:headers)
