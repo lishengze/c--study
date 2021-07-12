@@ -54,8 +54,10 @@ void test_b2c2()
     string token = "eabe0596c453786c0ecee81978140fad58daf881";
     header.emplace("Authorization", string("Token ") + token);
     header.emplace("Content-Type", "application/json");
-    header.emplace("Accept-Encoding", "gzip");
+    header.emplace("Accept-Encoding", "gzip, deflate");
     header.emplace("Accept", "*/*");
+    header.emplace("User-Agent", "python-requests/2.22.0");
+    header.emplace("Connection", "keep-alive");
 
     cli.set_default_headers(header);
     
