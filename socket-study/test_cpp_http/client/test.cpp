@@ -1,6 +1,7 @@
 #include "../include/global_declare.h"
 #include "test.h"
 
+#define CPPHTTPLIB_ZLIB_SUPPORT
 #define CPPHTTPLIB_OPENSSL_SUPPORT
 
 #include "httplib.h"
