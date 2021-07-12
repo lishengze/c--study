@@ -5837,6 +5837,13 @@ inline std::unique_ptr<Response> ClientImpl::send_with_content_provider(
       req.is_chunked_content_provider_ = true;
       req.headers.emplace("Transfer-Encoding", "chunked");
     } else {
+
+      cout << "\n\n------- req.headers -------" << endl;
+      for (auto iter:req.headers)
+      {
+        cout << iter.first << ": " << iter.second << endl;
+      }
+
       cout << "req.body " << req.body << ", content_length " << content_length << endl;
       req.body.assign(body, content_length);
       cout << "req.body " << req.body << ", content_length: " << content_length << endl;
