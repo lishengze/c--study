@@ -45,7 +45,7 @@ void test_b2c2()
 {
     // #define CPPHTTPLIB_OPENSSL_SUPPORT
 
-    string uri = "https://api.uat.b2c2.net/order/";
+    string uri = "https://api.uat.b2c2.net/";
     httplib::Client cli(uri.c_str());
 
     cli.enable_server_certificate_verification(false);
@@ -65,12 +65,14 @@ void test_b2c2()
     request["order_type"] = "FOK";
     request["price"] = 0.64;
 
-    // cli.set_proxy("127.0.0.1", 7890);
-
     if (auto res = cli.Post("/order", header, request.dump(), "application/json"))
     {
       cout << res->status << endl;
-      cout << res->get_header_value("Content-Type") << endl;
+      httplib::Headers& headers = res->headers;
+      for(auto iter:headers)
+      {
+        cout << iter.first << ": " << iter.second << endl;
+      }
       cout << res->body << endl;
     }
     else
