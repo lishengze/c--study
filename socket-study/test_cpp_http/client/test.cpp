@@ -45,15 +45,15 @@ void test_b2c2()
 {
     // #define CPPHTTPLIB_OPENSSL_SUPPORT
 
-    string uri = "https://api.uat.b2c2.net";
-    httplib::Client cli("https://api.uat.b2c2.net");
+    string uri = "https://api.uat.b2c2.net/order/";
+    httplib::Client cli(uri.c_str());
 
     cli.enable_server_certificate_verification(false);
     
     httplib::Headers header;
     string token = "eabe0596c453786c0ecee81978140fad58daf881";
     header.emplace("Authorization", string("Token ") + token);
-    // header.emplace("Content-Type", "application/json");
+    header.emplace("Content-Type", "application/json");
 
     cli.set_default_headers(header);
     
