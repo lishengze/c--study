@@ -1,10 +1,13 @@
 #include "../include/global_declare.h"
 #include "test.h"
+
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+
 #include "httplib.h"
 
 #include "pandora/util/json.hpp"
 
-#define CPPHTTPLIB_OPENSSL_SUPPORT
+
 
 #define CA_CERT_FILE "./ca-bundle.crt"
 
@@ -40,8 +43,11 @@ void test_simple_http_client()
 
 void test_b2c2()
 {
+    // #define CPPHTTPLIB_OPENSSL_SUPPORT
+
     string uri = "https://api.uat.b2c2.net";
     httplib::Client cli("https://api.uat.b2c2.net");
+
     // cli.enable_server_certificate_verification(false);
     
     httplib::Headers header;
@@ -60,7 +66,7 @@ void test_b2c2()
     request["price"] = 0.64;
 
     // cli.set_proxy("127.0.0.1", 7890);
-    
+
     if (auto res = cli.Post("/order", header, request.dump(), "application/json"))
     {
       cout << res->status << endl;

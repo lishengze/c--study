@@ -7237,12 +7237,15 @@ inline Client::Client(const char *scheme_host_port,
 
   std::cmatch m;
   if (std::regex_match(scheme_host_port, m, re)) {
+    std::cout << "m[1] " << m[1] << std::endl;
     auto scheme = m[1].str();
 
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
     if (!scheme.empty() && (scheme != "http" && scheme != "https")) {
+      cout << "CPPHTTPLIB_OPENSSL_SUPPORT" << endl;
 #else
     if (!scheme.empty() && scheme != "http") {
+      std::cout << "Only http " << std::endl;
 #endif
       std::string msg = "'" + scheme + "' scheme is not supported.";
       throw std::invalid_argument(msg);
