@@ -111,7 +111,7 @@ void test_b2c2_query_order()
     
     // cli.Get("/order/111", header);
 
-    if (auto res = cli.Get("/order/111", header))
+    if (auto res = cli.Get("/trade", header))
     {
       cout << "\n\nResponse Info:   " << endl;
       cout << res->status << endl;
