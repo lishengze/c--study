@@ -5434,20 +5434,20 @@ inline bool ClientImpl::send(Request &req, Response &res, Error &error) {
     if (!is_alive) {
       if (!create_and_connect_socket(socket_, error)) { return false; }
 
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-      // TODO: refactoring
-      if (is_ssl()) {
-        auto &scli = static_cast<SSLClient &>(*this);
-        if (!proxy_host_.empty() && proxy_port_ != -1) {
-          bool success = false;
-          if (!scli.connect_with_proxy(socket_, res, success, error)) {
-            return success;
-          }
-        }
+// #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+//       // TODO: refactoring
+//       if (is_ssl()) {
+//         auto &scli = static_cast<SSLClient &>(*this);
+//         if (!proxy_host_.empty() && proxy_port_ != -1) {
+//           bool success = false;
+//           if (!scli.connect_with_proxy(socket_, res, success, error)) {
+//             return success;
+//           }
+//         }
 
-        if (!scli.initialize_ssl(socket_, error)) { return false; }
-      }
-#endif
+//         if (!scli.initialize_ssl(socket_, error)) { return false; }
+//       }
+// #endif
     }
 
     // Mark the current socket as being in use so that it cannot be closed by
