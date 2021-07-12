@@ -5998,6 +5998,15 @@ inline Result ClientImpl::Get(const char *path, const Headers &headers,
   req.headers = headers;
   req.progress = std::move(progress);
 
+  cout << "req.method: " << req.method << ", \n"
+       << "req.path: " << req.path << ", \n"
+       << "------ headers: \n";
+  for (auto iter:req.headers)
+  {
+    cout << iter.first << ", " << iter.second << endl;
+  }
+  cout << "----- end" << endl;
+         
   return send_(std::move(req));
 }
 
