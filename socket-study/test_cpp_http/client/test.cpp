@@ -48,7 +48,7 @@ void test_b2c2()
     string uri = "https://api.uat.b2c2.net";
     httplib::Client cli("https://api.uat.b2c2.net");
 
-    // cli.enable_server_certificate_verification(false);
+    cli.enable_server_certificate_verification(false);
     
     httplib::Headers header;
     string token = "eabe0596c453786c0ecee81978140fad58daf881";
