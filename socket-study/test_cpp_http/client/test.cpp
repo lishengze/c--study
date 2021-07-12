@@ -45,7 +45,7 @@ void test_b2c2()
 {
     // #define CPPHTTPLIB_OPENSSL_SUPPORT
 
-    string uri = "https://api.uat.b2c2.net/";
+    string uri = "https://api.uat.b2c2.net";
     httplib::Client cli(uri.c_str());
 
     cli.enable_server_certificate_verification(false);
