@@ -64,12 +64,13 @@ void test_b2c2()
     
     nlohmann::json request;
     request["client_order_id"] = "11";
-    request["quantity"] = 10;
+    request["quantity"] = "10";
     request["side"] = "buy";
     request["instrument"] = "XRP.SPOT";
     request["order_type"] = "FOK";
-    request["price"] = 0.64;
-
+    request["price"] = "0.64";
+    request["valid_until"] = "2021-07-12T09:37:59";
+    request["executing_unit"] = "risk-adding-strategy";
 
 
     if (auto res = cli.Post("/order", header, request.dump(), "application/json"))
