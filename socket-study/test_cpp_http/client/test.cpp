@@ -92,6 +92,7 @@ void test_b2c2()
 
 void test_b2c2_query_order()
 {
+    cout << "test_b2c2_query_order " << endl;
     string uri = "https://api.uat.b2c2.net";
     httplib::Client cli(uri.c_str());
 
@@ -110,7 +111,7 @@ void test_b2c2_query_order()
     
     cli.Get("/order/111", header);
 
-    if (auto res = cli.Get("/order/111",header))
+    if (auto res = cli.Get("/order/111", header))
     {
       cout << "\n\nResponse Info:   " << endl;
       cout << res->status << endl;
