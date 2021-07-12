@@ -130,7 +130,7 @@ void test_b2c2_query_order()
 
 void TestMain()
 {
-    test_b2c2();
+    // test_b2c2();
 
     test_b2c2_query_order();
 
