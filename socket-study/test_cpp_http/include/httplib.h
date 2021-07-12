@@ -5824,17 +5824,22 @@ inline std::unique_ptr<Response> ClientImpl::send_with_content_provider(
 #endif
   {
     if (content_provider) {
+      cout << "content_provider " << endl;
+
       req.content_length_ = content_length;
       req.content_provider_ = std::move(content_provider);
       req.is_chunked_content_provider_ = false;
     } else if (content_provider_without_length) {
+      cout << "content_provider_without_length " << endl;
       req.content_length_ = 0;
       req.content_provider_ = detail::ContentProviderAdapter(
           std::move(content_provider_without_length));
       req.is_chunked_content_provider_ = true;
       req.headers.emplace("Transfer-Encoding", "chunked");
     } else {
+      cout << "req.body " << req.body << ", content_length " << content_length << endl;
       req.body.assign(body, content_length);
+      cout << "req.body " << req.body << ", content_length: " << content_length << endl;
       ;
     }
   }
@@ -5852,6 +5857,15 @@ inline Result ClientImpl::send_with_content_provider(
   req.method = method;
   req.headers = headers;
   req.path = path;
+
+  cout << "req.method: " << req.method << ", \n"
+       << "req.path: " << req.path << ", \n"
+       << "------- req head start"  << endl;
+  for (auto iter:req.headers)
+  {
+    cout << iter.first << ": " << iter.second << endl;
+  }
+  cout << " end ------------\n" << endl;
 
   auto error = Error::Success;
 
