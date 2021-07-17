@@ -42,7 +42,7 @@ void test_simple_http_client()
 }
 
 
-void test_b2c2()
+void test_b2c2_create_order()
 {
     // #define CPPHTTPLIB_OPENSSL_SUPPORT
 
@@ -130,9 +130,9 @@ void test_b2c2_query_order()
 
 void TestMain()
 {
-    // test_b2c2();
+    test_b2c2_create_order();
 
-    test_b2c2_query_order();
+    // test_b2c2_query_order();
 
     // test_simple_http_client();
 }
