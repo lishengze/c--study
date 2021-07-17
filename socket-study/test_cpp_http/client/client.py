@@ -40,7 +40,9 @@ def test_b2c2_insert_order():
     print(response.request.body)
 
     print("\n\n---- response.headers ----")
-    print(response.headers)
+    for item in response.headers:
+        print("%s : %s" % (str(item), str(response.headers[item])))
+    # print(response.headers)
 
     print("\n\n---- response.content ----")
     print(response.content)
