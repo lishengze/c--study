@@ -33,17 +33,16 @@ def test_b2c2_insert_order():
 
     response = requests.post('https://api.uat.b2c2.net/order/', json=post_data, headers=headers)
 
-    print("\n---- response.request.headers ----")
+    print("\n\n---- response.request.headers ----")
     print(response.request.headers)
 
-    print("\n----- response.request.body -----");
+    print("\n\n----- response.request.body -----");
     print(response.request.body)
 
-    print("\n---- response.headers ----")
+    print("\n\n---- response.headers ----")
     print(response.headers)
 
-
-
+    print("\n\n---- response.content ----")
     print(response.content)
 
 if __name__ == "__main__":
