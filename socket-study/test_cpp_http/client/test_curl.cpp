@@ -466,6 +466,7 @@ int test_post_https()
 		/* Check for errors */
 		if (res != CURLE_OK)
         {
+            cout << "\n+++++++++++  curl response " << res << endl;
             fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         }
 			
