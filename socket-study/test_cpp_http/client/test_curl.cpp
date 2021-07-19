@@ -436,7 +436,7 @@ int test_post_https()
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, false);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HttpsReturnMsg);	//对返回的数据进行操作的函数地址
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);					//这是HttpsReturnMsg的第四个参数值
-        curl_easy_setopt(pCurl, CURLOPT_VERBOSE, 1L); 
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); 
  
 		/* example.com is redirected, so we tell libcurl to follow redirection */
 		// curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
