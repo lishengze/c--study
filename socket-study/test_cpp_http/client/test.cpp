@@ -41,7 +41,6 @@ void test_simple_http_client()
 //   }
 }
 
-
 void test_b2c2_create_order()
 {
     // #define CPPHTTPLIB_OPENSSL_SUPPORT
