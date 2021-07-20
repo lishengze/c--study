@@ -462,6 +462,8 @@ int test_post_https()
  
 		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
+
+		cout << "Returen Response " << res << endl;
  
 		/* Check for errors */
 		if (res != CURLE_OK)
