@@ -404,9 +404,12 @@ int test_post_https()
 		// sprintf(Url, "https://yq.aliyun.com/articles/629830?spm=a2c4e.11153940.blogcont630369.18.3dca5d3c1QHa9l");
 
 		curl_slist *pList = NULL;
-		pList = curl_slist_append(pList, "Accept:application/json, text/plain, */*");
-		pList = curl_slist_append(pList, "Content-Type:application/json;charset=UTF-8");
+		// pList = curl_slist_append(pList, "Accept:application/json, text/plain, */*");
+		// pList = curl_slist_append(pList, "Content-Type:application/json;charset=UTF-8");
 		pList = curl_slist_append(pList, "Authorization:Token eabe0596c453786c0ecee81978140fad58daf881");
+
+		pList = curl_slist_append(pList, "Accept:*/*");
+		pList = curl_slist_append(pList, "Content-Type:application/json");		
  
 		// string appKey = "12345678";
 		// string appSecret = "TEST1234ABCD5678AAAA";
