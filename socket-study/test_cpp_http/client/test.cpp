@@ -63,10 +63,10 @@ void test_b2c2_create_order()
     cli.set_default_headers(header);
     
     nlohmann::json request;
-    request["client_order_id"] = "11";
+    request["client_order_id"] = "111";
     request["quantity"] = "10";
     request["side"] = "buy";
-    request["instrument"] = "XRP.SPOT";
+    request["instrument"] = "XRPUSD.SPOT";
     request["order_type"] = "FOK";
     request["price"] = "0.64";
     request["valid_until"] = "2021-07-12T09:37:59";

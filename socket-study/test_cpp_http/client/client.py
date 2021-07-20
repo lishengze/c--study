@@ -11,7 +11,7 @@ def test_b2c2_insert_order():
     headers = {'Authorization': 'Token %s' % api_token,
                'Content-Type': 'application/json'}
 
-    uuid = str("112")
+    uuid = str("115")
     quantity = '30'
     side = 'buy'
     instrument = 'XRPUSD.SPOT'
