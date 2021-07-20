@@ -5,11 +5,11 @@
 int main()
 {
     cout << "Test Cpp-Http " << endl;
-    TestMain();
+    // TestMain();
 
     // std::this_thread::sleep_for(std::chrono::seconds(3));
 
-    // TestCurl();
+    TestCurl();
 
     return 1;
 }
