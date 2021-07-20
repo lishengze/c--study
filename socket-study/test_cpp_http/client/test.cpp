@@ -73,7 +73,7 @@ void test_b2c2_create_order()
     request["executing_unit"] = "risk-adding-strategy";
 
 
-    if (auto res = cli.Post("/order", header, request.dump(), "application/json"))
+    if (auto res = cli.Post("/order/", header, request.dump(), "application/json"))
     {
       cout << "\n\nResponse Info:   " << endl;
       cout << res->status << endl;
