@@ -400,7 +400,7 @@ int test_post_https()
 	if (curl)
 	{
 		// 参考连接：https://yq.aliyun.com/articles/629830?spm=a2c4e.11153940.blogcont630369.18.3dca5d3c1QHa9l
-		string Url = "https://api.uat.b2c2.net";
+		string Url = "https://api.uat.b2c2.net/order/";
 		// sprintf(Url, "https://yq.aliyun.com/articles/629830?spm=a2c4e.11153940.blogcont630369.18.3dca5d3c1QHa9l");
 
 		curl_slist *pList = NULL;
