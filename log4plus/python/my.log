@@ -1,0 +1,5 @@
+test_log.py - 11 - 07/28/2021 17:35:21 PM - DEBUG - This is a debug log.
+test_log.py - 12 - 07/28/2021 17:35:21 PM - INFO - This is a info log.
+test_log.py - 13 - 07/28/2021 17:35:21 PM - WARNING - This is a warning log.
+test_log.py - 14 - 07/28/2021 17:35:21 PM - ERROR - This is a error log.
+test_log.py - 15 - 07/28/2021 17:35:21 PM - CRITICAL - This is a critical log.

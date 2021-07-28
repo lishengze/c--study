@@ -1,0 +1,2 @@
+2021-07-28 18:18:02,863 - ERROR - test_log.py[:36] - error message
+2021-07-28 18:18:02,863 - CRITICAL - test_log.py[:37] - critical message
