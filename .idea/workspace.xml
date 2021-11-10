@@ -12,19 +12,61 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f9d4a4ff-1c48-4b56-88d7-61bdbfc6b96b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/component" beforeDir="false" afterPath="$PROJECT_DIR$/component" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/component/comm/test_comm_lib_client/test_client.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/component/comm/test_comm_lib_client/test_client.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/grpc/src/client/trade_engin.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/trade_engin.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/proto/cpp/test.grpc.pb.cc" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/proto/cpp/test.grpc.pb.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/proto/cpp/test.grpc.pb.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/proto/cpp/test.grpc.pb.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/proto/cpp/test.pb.cc" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/proto/cpp/test.pb.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/proto/cpp/test.pb.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/proto/cpp/test.pb.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/proto/test.proto" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/proto/test.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/base_rpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/base_rpc.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/base_rpc.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/base_rpc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/client.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/client.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/client.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/client.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/config.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/config.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/config.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/config.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/trade_engin.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/trade_engine.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/user_rpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/user_rpc.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/client/user_rpc.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/client/user_rpc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/channel.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/channel.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/data_struct.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/data_struct.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/global_declare.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/global_declare.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/json.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/json.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/log.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/log.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/package_base.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/package_base.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/package_simple.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/package_simple.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/thread_safe_singleton.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/thread_safe_singleton.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/time_util.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/time_util.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/include/util.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/include/util.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/src/server/bi_stream_rpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/bi_stream_rpc.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/bi_stream_rpc.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/bi_stream_rpc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/config.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/config.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/config.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/config.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/data_console.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/data_console.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/data_console.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/data_console.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/rpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/rpc.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/src/server/rpc.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/rpc.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/src/server/server.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/server.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/src/server/server.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/server.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/src/server/server_spi.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/server_spi.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/src/server/server_spi.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/server_spi.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/simple_rpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/simple_rpc.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/simple_rpc.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/simple_rpc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/sync_rpc.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/sync_rpc.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/sync_rpc.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/sync_rpc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/test.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/test.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/test.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/test.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/test/test_template_add.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/test/test_template_add.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/grpc/src/server/test/test_template_add.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/test/test_template_add.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/src/server/trade_engine.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/trade_engine.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/grpc/src/server/trade_engine.h" beforeDir="false" afterPath="$PROJECT_DIR$/grpc/src/server/trade_engine.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/log4plus/test.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/log4plus/test.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/algorithm/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/grpc/src/server/cmake-build-debug/" />
@@ -45,8 +87,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/grpc/src/server/server.h">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="551">
-                  <caret line="77" selection-start-line="77" selection-end-line="77" />
+                <state relative-caret-position="1824">
+                  <caret line="96" selection-start-line="96" selection-end-line="96" />
                 </state>
               </provider>
             </entry>
@@ -54,8 +96,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/grpc/src/server/server_spi.h">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="608">
-                  <caret line="32" column="10" selection-start-line="32" selection-start-column="10" selection-end-line="32" selection-end-column="10" />
+                <state relative-caret-position="1026">
+                  <caret line="54" column="10" selection-start-line="54" selection-start-column="10" selection-end-line="54" selection-end-column="10" />
                 </state>
               </provider>
             </entry>
@@ -63,8 +105,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/grpc/src/server/trade_engine.h">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="342">
-                  <caret line="22" column="62" selection-start-line="22" selection-start-column="62" selection-end-line="22" selection-end-column="62" />
+                <state relative-caret-position="114">
+                  <caret line="10" column="34" lean-forward="true" selection-start-line="10" selection-start-column="34" selection-end-line="10" selection-end-column="34" />
                 </state>
               </provider>
             </entry>
@@ -77,7 +119,7 @@
             <entry file="file://$PROJECT_DIR$/grpc/src/server/server_spi.cpp">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="570">
-                  <caret line="30" column="12" selection-start-line="30" selection-start-column="12" selection-end-line="30" selection-end-column="12" />
+                  <caret line="88" column="12" selection-start-line="88" selection-start-column="12" selection-end-line="88" selection-end-column="12" />
                 </state>
               </provider>
             </entry>
@@ -85,8 +127,8 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/grpc/src/server/server.cpp">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="172">
-                  <caret line="302" selection-start-line="302" selection-end-line="302" />
+                <state relative-caret-position="5738">
+                  <caret line="355" selection-start-line="355" selection-end-line="355" />
                 </state>
               </provider>
             </entry>
@@ -94,8 +136,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/grpc/src/server/bi_stream_rpc.cpp">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="172">
-                  <caret line="352" selection-start-line="352" selection-end-line="352" />
+                <state relative-caret-position="115">
+                  <caret line="349" lean-forward="true" selection-start-line="349" selection-end-line="349" />
                 </state>
               </provider>
             </entry>
@@ -103,7 +145,7 @@
           <file pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/grpc/src/server/rpc.cpp">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="172">
+                <state relative-caret-position="1178">
                   <caret line="62" selection-start-line="62" selection-end-line="62" />
                 </state>
               </provider>
@@ -163,32 +205,6 @@
               <item name="server" type="b2602c69:ProjectViewProjectNode" />
               <item name="c--study" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="server" type="b2602c69:ProjectViewProjectNode" />
-              <item name="c--study" type="462c0819:PsiDirectoryNode" />
-              <item name="grpc" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="server" type="b2602c69:ProjectViewProjectNode" />
-              <item name="c--study" type="462c0819:PsiDirectoryNode" />
-              <item name="grpc" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="server" type="b2602c69:ProjectViewProjectNode" />
-              <item name="c--study" type="462c0819:PsiDirectoryNode" />
-              <item name="grpc" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="server" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="server" type="b2602c69:ProjectViewProjectNode" />
-              <item name="c--study" type="462c0819:PsiDirectoryNode" />
-              <item name="grpc" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="server" type="462c0819:PsiDirectoryNode" />
-              <item name="build" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
@@ -199,7 +215,7 @@
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/grpc/src/server/cmake-build-debug" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../Git/bcts_quote" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
@@ -241,16 +257,17 @@
       <workItem from="1622114574653" duration="3006000" />
       <workItem from="1622533164365" duration="1306000" />
       <workItem from="1623053084552" duration="1598000" />
+      <workItem from="1629358856406" duration="94000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="5910000" />
+    <option name="totallyTimeSpent" value="6004000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="-37" width="1920" height="1117" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.15581644" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.15741728" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -300,12 +317,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/grpc/src/server/server.cpp</url>
-          <line>280</line>
+          <line>335</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/grpc/src/server/server.cpp</url>
-          <line>301</line>
+          <line>355</line>
           <option name="timeStamp" value="10" />
         </line-breakpoint>
       </breakpoints>
@@ -345,13 +362,6 @@
             <element signature="e#14439#15087#0" />
             <element signature="e#15090#15703#0" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/algorithm/main.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="399">
-          <caret line="21" column="1" selection-start-line="21" selection-start-column="1" selection-end-line="21" selection-end-column="1" />
         </state>
       </provider>
     </entry>
@@ -403,13 +413,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/grpc/src/server/server_spi.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="570">
-          <caret line="30" column="12" selection-start-line="30" selection-start-column="12" selection-end-line="30" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/algorithm/tree/tree_struct.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="570">
@@ -417,45 +420,59 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/grpc/src/server/rpc.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="172">
-          <caret line="62" selection-start-line="62" selection-end-line="62" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/grpc/src/server/server.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="172">
-          <caret line="302" selection-start-line="302" selection-end-line="302" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/grpc/src/server/bi_stream_rpc.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="172">
-          <caret line="352" selection-start-line="352" selection-end-line="352" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/grpc/src/server/server.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="551">
-          <caret line="77" selection-start-line="77" selection-end-line="77" />
+        <state relative-caret-position="1824">
+          <caret line="96" selection-start-line="96" selection-end-line="96" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/grpc/src/server/server_spi.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="608">
-          <caret line="32" column="10" selection-start-line="32" selection-start-column="10" selection-end-line="32" selection-end-column="10" />
+        <state relative-caret-position="1026">
+          <caret line="54" column="10" selection-start-line="54" selection-start-column="10" selection-end-line="54" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/grpc/src/server/server_spi.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="570">
+          <caret line="88" column="12" selection-start-line="88" selection-start-column="12" selection-end-line="88" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/grpc/src/server/server.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5738">
+          <caret line="355" selection-start-line="355" selection-end-line="355" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/grpc/src/server/rpc.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1178">
+          <caret line="62" selection-start-line="62" selection-end-line="62" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/algorithm/main.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="399">
+          <caret line="21" column="1" selection-start-line="21" selection-start-column="1" selection-end-line="21" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/grpc/src/server/bi_stream_rpc.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="115">
+          <caret line="349" lean-forward="true" selection-start-line="349" selection-end-line="349" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/grpc/src/server/trade_engine.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="22" column="62" selection-start-line="22" selection-start-column="62" selection-end-line="22" selection-end-column="62" />
+        <state relative-caret-position="114">
+          <caret line="10" column="34" lean-forward="true" selection-start-line="10" selection-start-column="34" selection-end-line="10" selection-end-column="34" />
         </state>
       </provider>
     </entry>

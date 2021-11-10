@@ -63,13 +63,23 @@ class BaseRPC
 
     virtual void response(PackagePtr pkg) {}
 
+    virtual void read_data(){ }
+
+    virtual bool is_connect_init() { return false;}
+
     virtual void on_connect();
 
     virtual void rsp_connect();
 
+    virtual bool is_login_request() { return false;}
+
     virtual void on_req_login();
 
     virtual void rsp_login();
+
+    virtual void init_session_id(){ }
+
+    virtual void process_business_request() { }
 
     virtual void send_msg(string message, string rsp_id) { }
 
@@ -79,7 +89,7 @@ class BaseRPC
 
    void set_rpc_map();
 
-    virtual void process_read_cq(){ }
+    virtual void process_read_cq();
 
     virtual void process_write_cq();
 

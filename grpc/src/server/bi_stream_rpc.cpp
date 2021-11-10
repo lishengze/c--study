@@ -66,97 +66,106 @@ void ServerStreamAppleRPC::send_msg(string message, string rsp_id)
 
 }
 
-void ServerStreamAppleRPC::process_read_cq()
+void ServerStreamAppleRPC::read_data()
 {
     try
     {
         responder_.Read(&request_, this);
-        // 初次连接;
-        if (request_.session_id().length() == 0)
-        {
-            // cout << "Client Connect!" << endl;
-
-            on_connect();
-            
-            return;
-        }
-
-        // 登陆请求 - 针对异步客户端;
-        if (request_.message() == "login")
-        {
-            session_id_ = request_.session_id();
-
-            on_req_login();
-        }
-        else
-        {
-            if (session_id_ == "" && request_.session_id() != "")
-            {
-                session_id_ = request_.session_id();
-                set_rpc_map();
-            }
-
-            ++request_count_;
-            if (request_count_ % 1 == 0)
-            {
-                stringstream s_obj;
-
-                s_obj << "[CLIENT]: session_id_=" << request_.session_id() 
-                    << ", rpc=" << request_.rpc_id()
-                    << ", req_id=" << request_.request_id()
-                    << ", req_count=" << request_count_
-                    << ", time=" << request_.time() 
-                    << "\n";
-                LOG_INFO(s_obj.str());
-            }
-
-            string session_id = request_.session_id();
-            if (request_count_ == 1) 
-            {
-                TimeStruct time_struct;
-                time_struct.test_start_time_ = std::stol(request_.time());
-                
-                test_time[session_id] = time_struct;
-            }
-
-            if (request_count_ == CONFIG->get_test_count())
-            {
-                test_time[session_id].test_end_time_ = NanoTime();
-
-                long cost_micros = (test_time[session_id].test_end_time_ - test_time[session_id].test_start_time_) /1000;
-
-                stringstream s_obj;
-
-                s_obj << "[R]Get " << rpc_id_ << " " << session_id << " " << request_count_ << " request cost " 
-                    << cost_micros << " micros" 
-                    << " ave: " << cost_micros / request_count_ << " micros"
-                    << "\n";
-                LOG_INFO(s_obj.str());
-            }
-
-            string name = request_.name();
-            string time = request_.time();
-
-            PackagePtr pkg = CreatePackage<Apple>(name, time);
-
-            if (server_)
-            {
-                server_->on_req_server_apple(pkg);
-            }
-            else
-            {
-                cout << "ServerStreamAppleRPC::process_read_cq server is null" << endl;
-            }
-        }            
-        
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"ServerStreamAppleRPC::process " << e.what() << '\n';
+        std::cerr << e.what() << '\n';
     }
-    catch(...)
+
+}
+
+bool ServerStreamAppleRPC::is_connect_init() 
+{ 
+    return request_.session_id().length() == 0 ;
+}
+
+bool ServerStreamAppleRPC::is_login_request() 
+{ 
+    return request_.message() == "login";
+}
+
+void ServerStreamAppleRPC::init_session_id()
+{
+    try
     {
-        cout << "ServerStreamAppleRPC::process unkonwn exceptions" << endl;
+        session_id_ = request_.session_id();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
+void ServerStreamAppleRPC::process_business_request()
+{
+    try
+    {
+        if (session_id_ == "" && request_.session_id() != "")
+        {
+            session_id_ = request_.session_id();
+            set_rpc_map();
+        }
+
+        ++request_count_;
+        if (request_count_ % 1 == 0)
+        {
+            stringstream s_obj;
+
+            s_obj << "[CLIENT]: session_id_=" << request_.session_id() 
+                << ", rpc=" << request_.rpc_id()
+                << ", req_id=" << request_.request_id()
+                << ", req_count=" << request_count_
+                << ", time=" << request_.time() 
+                << "\n";
+            LOG_INFO(s_obj.str());
+        }
+
+        string session_id = request_.session_id();
+        if (request_count_ == 1) 
+        {
+            TimeStruct time_struct;
+            time_struct.test_start_time_ = std::stol(request_.time());
+            
+            test_time[session_id] = time_struct;
+        }
+
+        if (request_count_ == CONFIG->get_test_count())
+        {
+            test_time[session_id].test_end_time_ = NanoTime();
+
+            long cost_micros = (test_time[session_id].test_end_time_ - test_time[session_id].test_start_time_) /1000;
+
+            stringstream s_obj;
+
+            s_obj << "[R]Get " << rpc_id_ << " " << session_id << " " << request_count_ << " request cost " 
+                << cost_micros << " micros" 
+                << " ave: " << cost_micros / request_count_ << " micros"
+                << "\n";
+            LOG_INFO(s_obj.str());
+        }
+
+        string name = request_.name();
+        string time = request_.time();
+
+        PackagePtr pkg = CreatePackage<Apple>(name, time);
+
+        if (server_)
+        {
+            server_->on_req_server_apple(pkg);
+        }
+        else
+        {
+            cout << "ServerStreamAppleRPC::process_read_cq server is null" << endl;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
     }
 }
 
@@ -273,99 +282,106 @@ void DoubleStreamAppleRPC::send_msg(string message, string rsp_id)
     }
 }
 
-void DoubleStreamAppleRPC::process_read_cq()
+void DoubleStreamAppleRPC::read_data()
 {
     try
     {
         responder_.Read(&request_, this);
-
-        // 初次连接;
-        if (request_.session_id().length() == 0)
-        {
-            // cout << "Client Connect!" << endl;
-
-            on_connect();
-            
-            return;
-        }
-
-        // 登陆请求 - 针对异步客户端;
-        if (request_.message() == "login")
-        {
-            session_id_ = request_.session_id();
-
-            on_req_login();
-        }
-        else
-        {
-            if (session_id_ == "" && request_.session_id() != "")
-            {
-                session_id_ = request_.session_id();
-                set_rpc_map();
-            }
-
-            if (++request_count_ % 1 == 0)
-            {
-                stringstream s_obj;
-
-                s_obj << "[CLIENT]: session_id_=" << request_.session_id()
-                    << ", rpc=" << request_.rpc_id()
-                    << ", req_id=" << request_.request_id()
-                    << ", req_count=" << request_count_
-                    << ", time=" << request_.time() 
-                    << "\n";
-
-                LOG_INFO(s_obj.str());
-            }
-
-            string session_id = request_.session_id();
-            if (request_count_ == 1) 
-            {
-                TimeStruct time_struct;
-                time_struct.test_start_time_ = std::stol(request_.time());
-                
-                test_time[session_id] = time_struct;
-            }
-
-            if (request_count_ == CONFIG->get_test_count())
-            {
-                test_time[session_id].test_end_time_ = NanoTime();
-
-                long cost_micros = (test_time[session_id].test_end_time_ - test_time[session_id].test_start_time_) /1000;
-
-                stringstream s_obj;
-
-                s_obj << "[R]Get " << rpc_id_ << " " << session_id << " " << request_count_ << " request cost " 
-                    << cost_micros << " micros" 
-                    << " ave: " << cost_micros / request_count_ << " micros"
-                    << "\n";
-
-                LOG_INFO(s_obj.str());
-            }
-      
-            string name = request_.name();
-            string time = request_.time();
-
-            PackagePtr pkg = CreatePackage<Apple>(name, time);
-
-            if (server_)
-            {
-                server_->on_req_double_apple(pkg);
-            }
-            else
-            {
-                cout << "DoubleStreamAppleRPC::process_read_cq server is null" << endl;
-            }      
-        }            
-        
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"DoubleStreamAppleRPC::process " << e.what() << '\n';
+        std::cerr << e.what() << '\n';
     }
-    catch(...)
+}
+
+bool DoubleStreamAppleRPC::is_connect_init() 
+{ 
+    return request_.session_id().length() == 0 ;
+}
+
+bool DoubleStreamAppleRPC::is_login_request() 
+{ 
+    return request_.message() == "login";
+}
+
+void DoubleStreamAppleRPC::init_session_id()
+{
+    try
     {
-        cout << "DoubleStreamAppleRPC::process unkonwn exceptions" << endl;
+        session_id_ = request_.session_id();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }    
+}
+
+void DoubleStreamAppleRPC::process_business_request()
+{
+    try
+    {
+        if (session_id_ == "" && request_.session_id() != "")
+        {
+            session_id_ = request_.session_id();
+            set_rpc_map();
+        }
+
+        if (++request_count_ % 1 == 0)
+        {
+            stringstream s_obj;
+
+            s_obj << "[CLIENT]: session_id_=" << request_.session_id()
+                << ", rpc=" << request_.rpc_id()
+                << ", req_id=" << request_.request_id()
+                << ", req_count=" << request_count_
+                << ", time=" << request_.time() 
+                << "\n";
+
+            LOG_INFO(s_obj.str());
+        }
+
+        string session_id = request_.session_id();
+        if (request_count_ == 1) 
+        {
+            TimeStruct time_struct;
+            time_struct.test_start_time_ = std::stol(request_.time());
+            
+            test_time[session_id] = time_struct;
+        }
+
+        if (request_count_ == CONFIG->get_test_count())
+        {
+            test_time[session_id].test_end_time_ = NanoTime();
+
+            long cost_micros = (test_time[session_id].test_end_time_ - test_time[session_id].test_start_time_) /1000;
+
+            stringstream s_obj;
+
+            s_obj << "[R]Get " << rpc_id_ << " " << session_id << " " << request_count_ << " request cost " 
+                << cost_micros << " micros" 
+                << " ave: " << cost_micros / request_count_ << " micros"
+                << "\n";
+
+            LOG_INFO(s_obj.str());
+        }
+    
+        string name = request_.name();
+        string time = request_.time();
+
+        PackagePtr pkg = CreatePackage<Apple>(name, time);
+
+        if (server_)
+        {
+            server_->on_req_double_apple(pkg);
+        }
+        else
+        {
+            cout << "DoubleStreamAppleRPC::process_read_cq server is null" << endl;
+        }     
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
     }
 }
 

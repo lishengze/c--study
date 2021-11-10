@@ -163,6 +163,7 @@ void BaseRPC::rsp_connect()
     }
 }
 
+
 void BaseRPC::on_req_login() 
 {
     try
@@ -188,6 +189,43 @@ void BaseRPC::rsp_login()
         std::cerr << e.what() << '\n';
     }
     
+}
+
+void BaseRPC::process_read_cq()
+{
+    try
+    {
+        read_data();
+
+        // 初次连接;
+        if (is_connect_init())
+        {
+            // cout << "Client Connect!" << endl;
+
+            on_connect();
+            
+            return;
+        }
+
+        // 登陆请求 - 针对异步客户端;
+        if (is_login_request())
+        {
+            init_session_id();
+
+            on_req_login();
+        }
+
+        process_business_request();         
+        
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"DoubleStreamAppleRPC::process " << e.what() << '\n';
+    }
+    catch(...)
+    {
+        cout << "DoubleStreamAppleRPC::process unkonwn exceptions" << endl;
+    }
 }
 
 void BaseRPC::process_write_cq()

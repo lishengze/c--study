@@ -19,6 +19,16 @@ public:
 
     virtual BaseRPC* spawn();
 
+    virtual void read_data();
+
+    virtual bool is_connect_init();
+
+    virtual bool is_login_request();
+
+    virtual void init_session_id();
+
+    virtual void process_business_request();
+
     virtual void process_read_cq();
 
     virtual void response(PackagePtr pkg);
@@ -62,6 +72,16 @@ public:
     virtual void register_request();
 
     virtual BaseRPC* spawn();
+
+    virtual void read_data();
+
+    virtual bool is_connect_init();
+
+    virtual bool is_login_request();
+
+    virtual void init_session_id();
+
+    virtual void process_business_request();
 
     virtual void process_read_cq();
 
