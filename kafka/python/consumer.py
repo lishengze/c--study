@@ -42,10 +42,9 @@ def test_consumer():
         topic_name = 'test_topic'
         server_list = ['127.0.0.1:9093']
 
-        consumer = KafkaConsumer(bootstrap_servers=server_list, 
-                                consumer_timeout_ms = 10000,
-                                auto_offset_reset='earliest',
-                                group_id="test_consumer_4")
+        consumer = KafkaConsumer(bootstrap_servers=server_list,
+                                 auto_offset_reset='latest',
+                                 group_id="test_consumer_1")
 
 
         # consumer = KafkaConsumer(topic_name,

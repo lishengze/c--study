@@ -24,7 +24,8 @@ def test_producer():
             # producer.send(topic_name, value=msg, key=None, headers=None, partition=None, timestamp_ms=None)
 
             i = 1
-            while i <= 5:
+            data_count = 20
+            while i <= data_count:
                 i += 1
                 # msg = "producer_%d" % i
                 msg = "producer_%s" % get_datetime_str()
@@ -83,8 +84,8 @@ def test_client():
     pass
 
 def test_main():
-    # test_producer()
-    test_consumer()
+    test_producer()
+    # test_consumer()
 
 if __name__ == "__main__":
     test_main()
