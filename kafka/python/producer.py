@@ -14,15 +14,18 @@ def get_datetime_str():
 
 def test_producer():
     try:
-        producer = KafkaProducer(bootstrap_servers=['127.0.0.1:9093'])
-        if producer.bootstrap_connected():
-            topic_name = 'test_topic'
+        print("test_producer")
+        server_list = ['118.193.35.160:9117']
+        producer = KafkaProducer(bootstrap_servers=server_list)
 
+        if producer.bootstrap_connected():
+            print("producer connect %s successfully!" % (str(server_list)))
+
+            topic_name = 'test_topic'
             # msg = "python producer " + get_datetime_str()
             # msg.encode('utf-8')
             # print("send: " + msg)
             # producer.send(topic_name, value=msg, key=None, headers=None, partition=None, timestamp_ms=None)
-
             i = 1
             data_count = 20
             while i <= data_count:
@@ -34,6 +37,8 @@ def test_producer():
                 # producer.send(topic_name, value=b"test_again")
                 producer.send(topic_name, value=bytes(msg.encode()))
                 time.sleep(3)
+            else:
+                print("consumer connect server: %s failed!" % (str(server_list)))
 
     except Exception as e:
         print("exception: " + str(e))
@@ -41,7 +46,7 @@ def test_producer():
 def test_consumer():
     try:
         topic_name = 'test_topic'
-        server_list = ['127.0.0.1:9093']
+        server_list = ['118.193.35.160:9092']
 
         consumer = KafkaConsumer(bootstrap_servers=server_list, 
                                 consumer_timeout_ms = 10000,
