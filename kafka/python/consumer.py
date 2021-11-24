@@ -40,7 +40,7 @@ def test_producer():
 def test_consumer():
     try:
         topic_name = 'test_topic'
-        server_list = ['127.0.0.1:9093']
+        server_list = ['127.0.0.1:9117']
 
         consumer = KafkaConsumer(bootstrap_servers=server_list,
                                  auto_offset_reset='latest',

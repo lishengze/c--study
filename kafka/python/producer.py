@@ -15,7 +15,7 @@ def get_datetime_str():
 def test_producer():
     try:
         print("test_producer")
-        server_list = ['118.193.35.160:9117']
+        server_list = ['127.0.0.1:9117']
         producer = KafkaProducer(bootstrap_servers=server_list)
 
         if producer.bootstrap_connected():
