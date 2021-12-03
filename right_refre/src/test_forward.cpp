@@ -5,6 +5,28 @@ using std::cin;
 using std::cout;
 using std::endl;
 
+class TestRe
+{
+    public:
+        TestRe(int x): value_{x} 
+        {
+            cout << "construct" << endl;
+        }
+
+        TestRe(TestRe&& src)
+        {
+            cout << "copy construct" << endl;
+        }        
+
+        ~TestRe()
+        {
+            cout << "Deconstruct " << endl;
+        }
+
+    private:
+        int  value_{0};
+};
+
 
 void printT(int& t)
 {
@@ -28,8 +50,22 @@ void testForward(T&& value)
 
 void TestForward()
 {
-    testForward(1);
-    int x = 1;
-    testForward(x);
-    testForward(std::forward<int>(x)); // 问题？
+    // cout << "testForward(1);" << endl;
+    // testForward(1);
+    // cout << endl;
+
+    int y = 1;
+    TestRe x(y);
+
+    // cout << "testForward(x);" << endl;
+    // testForward(x);
+    // cout << endl;
+
+    cout << "testForward(std::forward<TestRe>(x));" << endl;
+    testForward(std::forward<TestRe>(x)); 
+    cout << endl;
+
+    cout << "testForward(std::move(x));" << endl;
+    testForward(std::move(x)); 
+    cout << endl;    
 }

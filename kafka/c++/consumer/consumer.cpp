@@ -48,8 +48,11 @@ void test_create_topic()
     try
     {
         kafka::Properties adclient_props ({
-            {"bootstrap.servers",  "127.0.0.1:9092"}
-        });    
+            {"bootstrap.servers",  "127.0.0.1:9092"},
+            {"client.id", "test"}
+        }); 
+
+        // kafka::Properties adclient_props;    
 
         kafka::clients::AdminClient adclient(adclient_props);
 

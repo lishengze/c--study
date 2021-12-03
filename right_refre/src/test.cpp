@@ -5,5 +5,7 @@
 void testFuncMain()
 {
     // TestForward();
-    TestEmplace();
+    // TestEmplace();
+
+    TestMoveMain();
 }

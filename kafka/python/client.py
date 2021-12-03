@@ -94,16 +94,23 @@ def test_client():
     admin_client =KafkaAdminClient(bootstrap_servers=server_list, client_id='test')
     
     topic_list = []
-    topic_list.append(NewTopic(name="example_topic", num_partitions=1, replication_factor=1))
+    topic_list.append(NewTopic(name="test-re", num_partitions=1, replication_factor=1))
     admin_client.create_topics(new_topics=topic_list, validate_only=False)
     
     print("After Create Topic: \n%s" % (str(consumer.topics())))
 
 
+
+def test_dict():
+    a = {}
+    a["c.a"] = "test"
+    print(a)
+
 def test_main():
     # test_producer()
     # test_consumer()
-    test_client()
+    # test_client()
+    test_dict()
 
 if __name__ == "__main__":
     test_main()
