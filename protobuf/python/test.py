@@ -1,7 +1,19 @@
 import  os
 import  sys
-# sys.path.append(os.getcwd()+"/proto/python")
+
+def get_grandfather_dir():
+    parent = os.path.dirname(os.path.realpath(__file__))
+    garder = os.path.dirname(parent)    
+    return garder
+
+g_proto_dir = get_grandfather_dir() +"\proto\python"
+
+print(g_proto_dir)
+# sys.path.append(g_proto_dir)
+
 from market_data_pb2 import *
+
+
 
 def TestPrtPwd():
     print("获取当前文件路径——" + os.path.realpath(__file__)) # 获取当前文件路径
@@ -24,11 +36,23 @@ def TestPrtPwd():
 
 def test_market_data():
     new_depth = Depth()
-    price = new_depth.price.add()
+    price = new_depth.price
     price.value = 10000
     price.precise = 4
     
+    new_quote = DepthQuote()
+    new_quote.asks.append(new_depth)
+
+    se_string = new_quote.SerializeToString()
+
+    print("se_string: %s" % (se_string))
     
+    trans_quote = DepthQuote()
+    trans_quote.ParseFromString(se_string)
+    print(trans_quote.asks[0].price.value)
+    print(trans_quote.asks[0].price.precise)
+
+
 
 if __name__ == "__main__":
     # TestPrtPwd()
