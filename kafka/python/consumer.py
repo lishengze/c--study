@@ -69,6 +69,8 @@ def test_consumer():
                 print(i)
                 i+=1
                 print(msg.value)
+
+                
         else:
             print("consumer connect server: %s failed!" % (str(server_list)))
 
