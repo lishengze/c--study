@@ -44,7 +44,7 @@ void test_vector_size()
 
             cout << "\n----------------" << endl;
 
-            vec.push_back(Base(i));
+            vec.push_back(Base(test_numb - i));
 
 
             cout << i << ": size: " << vec.size() << ", capacity: " << vec.capacity();
@@ -77,12 +77,16 @@ void test_vector_size()
         // vec.clear();
         // cout << "After Clear " << endl;
 
-        vector<Base> empty_vec;
-        cout << "Before Swap" << endl;
-        vec.swap(empty_vec);
-        cout << "After Swap " << endl;        
+        // vector<Base> empty_vec;
+        // cout << "Before Swap" << endl;
+        // vec.swap(empty_vec);
+        // cout << "After Swap " << endl;        
 
-        // vec.erase(vec.begin());
+        vec.erase(vec.begin());
+        cout << "After Test Erase Begin" << endl;
+
+        // vec.remove();
+
     }
     catch(const std::exception& e)
     {

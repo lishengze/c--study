@@ -9,7 +9,7 @@ project(stl)
 
 SET("BIN_NAME" stl)
 set(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto")
 
 # set(BOOST_ROOT /usr/local/boost_1_68)
 
