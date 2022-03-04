@@ -296,8 +296,7 @@ void BaseServer::check_dead_rpc(BaseRPC* rpc)
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
-    }
-    
+    }    
 }
 
 void BaseServer::response(PackagePtr pkg)
