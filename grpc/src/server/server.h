@@ -17,6 +17,7 @@
 
 #include "rpc.h"
 #include "bi_stream_rpc.h"
+#include "simple_rpc.h"
 
 #include "package_simple.h"
 
@@ -101,6 +102,8 @@ protected:
 
     boost::shared_ptr<std::thread>          cq_thread_{nullptr};
 
+    TestSimpleRPC*                          simple_rpc_{nullptr};
+
 
     // ServerSpiPtr                            server_spi_{nullptr};
 
@@ -114,9 +117,9 @@ protected:
 
     std::mutex                               cq_mutex_;
 
-    ServerStreamAppleRPC*                   server_stream_apple_{nullptr};
+    ServerStreamAppleRPC*                    server_stream_apple_{nullptr};
 
-    DoubleStreamAppleRPC*                   double_stream_apple_{nullptr};
+    DoubleStreamAppleRPC*                    double_stream_apple_{nullptr};
 
 
 };
