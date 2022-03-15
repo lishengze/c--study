@@ -83,7 +83,7 @@ public:
 
     virtual void process_business_request();
 
-    virtual void process_read_cq();
+    // virtual void process_read_cq();
 
     virtual void response(PackagePtr pkg);
 

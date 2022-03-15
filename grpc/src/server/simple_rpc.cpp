@@ -2,9 +2,20 @@
 
 void TestSimpleRPC::register_request()
 {
-    cout << "TestSimpleRPC::register_request again!" << endl;
+    try
+    {
+        cout << "TestSimpleRPC::register_request!" << endl;
 
-    service_->RequestTestSimple(&context_, &request_, &responder_, cq_, cq_, this);
+        service_->RequestTestSimple(&context_, &request_, &responder_, cq_, cq_, this);
+
+        // service_->RequestTestSimple();
+
+
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 }
 
 void TestSimpleRPC::proceed()
@@ -15,7 +26,7 @@ void TestSimpleRPC::proceed()
 
         cout << "From Request: name = " << request_.name() << ", time = " << request_.time() << endl;
 
-
+        // responder_.
 
         int sleep_secs = 2;
         cout << "Sleep " << sleep_secs << " Secs" << endl;

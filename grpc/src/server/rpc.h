@@ -57,7 +57,7 @@ class BaseRPC
 
     virtual void release();
 
-    virtual void register_request() { }
+    virtual void  register_request() { }
 
     virtual BaseRPC* spawn() { return this; }
 

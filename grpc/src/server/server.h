@@ -44,7 +44,7 @@ class BaseServer
 
 public:
 
-    BaseServer(string address):address_(address) { }
+    BaseServer(string address, string rpc_type="simple"):address_(address), rpc_type_{rpc_type} { }
 
     virtual ~BaseServer();
 
@@ -92,6 +92,8 @@ protected:
 
     string                                  address_;
 
+    string                                  rpc_type_;
+
     std::unique_ptr<ServerCompletionQueue>  cq_;
 
     std::unique_ptr<Server>                 server_;
@@ -102,8 +104,10 @@ protected:
 
     boost::shared_ptr<std::thread>          cq_thread_{nullptr};
 
-    TestSimpleRPC*                          simple_rpc_{nullptr};
 
+    //
+    TestSimpleRPC*                          simple_rpc_{nullptr};
+    ServerStreamRPC*                        server_stream_rpc_{nullptr};
 
     // ServerSpiPtr                            server_spi_{nullptr};
 

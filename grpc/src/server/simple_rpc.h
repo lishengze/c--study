@@ -9,7 +9,7 @@ public:
     TestSimpleRPC(TestStream::AsyncService* service, ServerCompletionQueue* cq):
         BaseRPC{cq, service_}, responder_(&context_)
     {
-        rpc_id_ = "ServerStreamRPC";
+        rpc_id_ = "TestSimpleRPC";
 
         process();
     }
@@ -45,7 +45,7 @@ public:
     {
         rpc_id_ = "ServerStreamRPC";
 
-        process();
+        // process();
     }
 
     virtual ~ServerStreamRPC() { }

@@ -9,9 +9,14 @@ void test_simple()
 {
     CONFIG;
 
-    BaseServer simple_rpc("0.0.0.0:50051");
+    string address = "0.0.0.0:50051";
+    string rpc_type = "simple";
+    // string rpc_type = "double_stream";
+    // string rpc_type = "server_stream";
 
-    simple_rpc.start();
+    BaseServer server(address, rpc_type);
+
+    server.start();
 }
 
 void test_syanc_server()
@@ -49,9 +54,9 @@ void TestMain()
 {
     // TestTemplateAdd();
 
-    // test_simple();
+    test_simple();
 
     // test_syanc_server();
     
-    test_trade_engine();
+    // test_trade_engine();
 }
