@@ -21,6 +21,7 @@ BaseServer::~BaseServer()
 
     if (cq_thread_ && cq_thread_->joinable())
     {
+        cout << "cq_thread join " << endl;
         cq_thread_->join();
     }
 }
@@ -37,17 +38,35 @@ void BaseServer::start()
         cq_ = builder_.AddCompletionQueue();
         server_ = builder_.BuildAndStart();
 
-        // simple_rpc = new TestSimpleRPC(&service_, cq_.get());
+        if (rpc_type_ == "simple")
+        {
+            simple_rpc_ = new TestSimpleRPC(&service_, cq_.get());
+            // simple_rpc_->process();
+
+            // simple_rpc_->register_server(this);
+            // simple_rpc_->process();
+        }
+        else if (rpc_type_ == "double_stream")
+        {
+            double_stream_apple_ = new DoubleStreamAppleRPC(&service_, cq_.get());
+            double_stream_apple_->register_server(this);
+            double_stream_apple_->process();
+        }
+        else if (rpc_type_ == "server_stream")
+        {
+            server_stream_rpc_ = new ServerStreamRPC(&service_, cq_.get());
+            server_stream_rpc_->register_server(this);
+            server_stream_rpc_->process();
+
+        }
+
 
         // server_stream_rpc = new ServerStreamRPC(&service_, cq_.get());
 
-        server_stream_apple_ = new ServerStreamAppleRPC(&service_, cq_.get());
-        server_stream_apple_->register_server(this);
-        server_stream_apple_->process();
+        // server_stream_apple_ = new ServerStreamAppleRPC(&service_, cq_.get());
+        // server_stream_apple_->register_server(this);
+        // server_stream_apple_->process();
 
-        double_stream_apple_ = new DoubleStreamAppleRPC(&service_, cq_.get());
-        double_stream_apple_->register_server(this);
-        double_stream_apple_->process();
 
         // server_stream_pear_ = new ServerStreamPearRPC(&service_, cq_.get());
         // server_stream_pear_->register_server(this);
@@ -108,7 +127,9 @@ void BaseServer::init_cq_thread()
 
     cq_thread_ = boost::make_shared<std::thread>(&BaseServer::run_cq_loop, this);
 
-    cq_thread_->join();
+    // run_cq_loop();
+
+    // cq_thread_->join();
 
     // int test_sleep_secs = 10;
     // std::cout << "\n\n****** BaseServer::init_cq_thread sleep " << test_sleep_secs << " secs " << std::endl;
@@ -140,13 +161,15 @@ void BaseServer::run_cq_loop()
         //      << " vp: " << *(int *)server_spi_ 
         //      << endl;
 
-        get_spi();
+        // get_spi();
+
+        cout << "[CQ Start]: " << endl;
 
         void* tag;
         bool status;
         while(true)
         {
-            // std::cout << "\n++++++++ Loop Start " << " ++++++++"<< std::endl;
+            std::cout << "\n++++++++ Loop Start " << " ++++++++"<< std::endl;
 
             bool result = cq_->Next(&tag, &status);
 
@@ -159,33 +182,49 @@ void BaseServer::run_cq_loop()
 
             BaseRPC* rpc = static_cast<BaseRPC*>(tag);
 
-            if (dead_rpc_set_.find(rpc) != dead_rpc_set_.end())
+            // if (dead_rpc_set_.find(rpc) != dead_rpc_set_.end())
+            // {
+            //     cout << "[E] RPC id=" << rpc->obj_id_ << " has been released!" << endl;
+
+            //     std::cout << "[E][CQ] result: "<<  result << " status: " << status  
+            //               << ", session_id_=" << rpc->session_id_ 
+            //               << ", rpc_id_=" << rpc->rpc_id_ 
+            //               << ", obj_id: " << rpc->obj_id_ 
+            //               << std::endl;
+
+            //     continue;
+            // }
+
+            if (rpc->is_stream_)
             {
-                cout << "[E] RPC id=" << rpc->obj_id_ << " has been released!" << endl;
 
-                std::cout << "[E][CQ] result: "<<  result << " status: " << status  
-                          << ", session_id_=" << rpc->session_id_ 
-                          << ", rpc_id_=" << rpc->rpc_id_ 
-                          << ", obj_id: " << rpc->obj_id_ 
-                          << std::endl;
+                check_dead_rpc(rpc);
 
-                continue;
+                if (result && status)
+                {                
+                    rpc->process();
+                }
+                else
+                {
+                    record_dead_rpc(rpc);
+
+                    reconnect(rpc);
+                }
+            }
+            else
+            {
+                if (result && status)
+                {                
+                    rpc->process();
+                }
+                else
+                {
+                    reconnect(rpc);
+                }                
             }
 
             // std::cout << "[E] result: "<<  result << " status: " << status  << ", session_id_=" << rpc->session_id_ << ", rpc_id_=" << rpc->rpc_id_ << ", obj_id: " << rpc->obj_id_ << std::endl;
 
-            check_dead_rpc(rpc);
-
-            if (result && status)
-            {                
-                rpc->process();
-            }
-            else
-            {
-                record_dead_rpc(rpc);
-
-                reconnect(rpc);
-            }
         }
     }
     catch(const std::exception& e)
@@ -229,6 +268,12 @@ void BaseServer::reconnect(BaseRPC* rpc)
 {
     try
     {
+
+        if (!rpc->is_stream_)
+        {
+            delete rpc;
+        }
+
         BaseRPC* new_rpc = rpc->spawn();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(3000));

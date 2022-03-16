@@ -57,7 +57,7 @@ class BaseRPC
 
     virtual void release();
 
-    virtual void register_request() { }
+    virtual void  register_request() { }
 
     virtual BaseRPC* spawn() { return this; }
 
@@ -98,8 +98,8 @@ class BaseRPC
     }
 
     
-    enum CallStatus     { CREATE, PROCESS, FINISH };
-    CallStatus          status_{CREATE};                // The current serving state.        
+    enum CallStatus                             { CREATE, PROCESS, FINISH };
+    CallStatus                                  status_{CREATE};                // The current serving state.        
 
     ServerCompletionQueue*                      cq_{nullptr};
 
@@ -107,7 +107,7 @@ class BaseRPC
 
     grpc::Alarm                                 alarm_;
     
-
+    bool                                        is_stream_{false};
 
     static int                                  obj_count;    
 
