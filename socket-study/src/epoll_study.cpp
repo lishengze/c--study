@@ -59,6 +59,7 @@ void EventAdd(int epollFd, int events, myevent_s *ev)
     else  
         printf("Event Add OK[fd=%d], op=%d, evnets[%0X]\n", ev->fd, op, events);  
 }  
+
 // delete an event from epoll  
 void EventDel(int epollFd, myevent_s *ev)  
 {  
@@ -186,6 +187,8 @@ void InitListenSocket(int epollFd, short port)
     bind(listenFd, (const sockaddr*)&sin, sizeof(sin));  
     listen(listenFd, 5);  
 }  
+
+
 int main(int argc, char **argv)  
 {  
     unsigned short port = 12345; // default port  
@@ -223,6 +226,7 @@ int main(int argc, char **argv)
             printf("epoll_wait error, exit\n");  
             break;  
         }  
+        
         for(int i = 0; i < fds; i++){  
             myevent_s *ev = (struct myevent_s*)events[i].data.ptr;  
             if((events[i].events&EPOLLIN)&&(ev->events&EPOLLIN)) // read event  
