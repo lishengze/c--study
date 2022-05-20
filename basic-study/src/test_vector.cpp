@@ -6,6 +6,11 @@
 
 using namespace std;
 
+void vec_basic_test()
+{
+    std::vector<string> empty_vec;
+    cout << "empty_vec: " << sizeof(empty_vec) << endl;
+}
 
 void test_multi_vector()
 {
@@ -15,6 +20,8 @@ void test_multi_vector()
     vector<vector<set<int>>> data;
     vector<set<int>> empty_vs;
     set<int> empyt_si;
+
+    // std::string data;
 
     data.reserve(first_dimension);
     empty_vs.reserve(second_dimension);
@@ -57,5 +64,9 @@ void test_multi_vector()
 
 void test_vector()
 {
-    test_multi_vector();
+    // test_string();
+
+    vec_basic_test();
+
+    // test_multi_vector();
 }
