@@ -18,7 +18,11 @@ int main()
 
 	// test_vector();
 
-	TestStringMain();
+	// TestStringSub();
+
+	// TestStringAllocate();
+
+	TestVectorMain();
 
 	return 0;
 }
