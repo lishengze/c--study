@@ -54,25 +54,47 @@ void PrintTest(T&& t)
 template <class T>
 void Print(T& t)
 {
-	cout << "L" << t << endl;
+	cout << "<L> " << t << endl;
     PrintTest(std::forward<T>(t));
+    PrintTest(t);
 }
 
 template <class T>
 void Print(T&& t)
 {
-	cout << "R" << t << endl;
+	cout << "<R> " << t << endl;
+    PrintTest(std::forward<T>(t));
+    PrintTest(t);    
 }
 
 
 //既可以对左值引用，也可以对右值引用。但要注意，引用以后，这个t值它本质上是一个左值
 template <class T>
-void func(T&& t)
+void func( T&& t)
 {
+    cout << "[R] " << t << endl; 
 	Print(t);//一定是左值，因为t此时已经是一个具名的变量
 	Print(std::move(t));//move(t)是右值
-	Print(std::forward<T>(t));//forward(t)按照参数原来的类型转发
+	Print(std::forward<T>(t));//右值引用 forward(t)按照参数原来的类型转发
 }
+
+template <class T>
+void func( T& t)
+{
+    cout << "[R] " << t << endl; 
+	Print(t);//一定是左值，因为t此时已经是一个具名的变量
+	Print(std::move(t));//move(t)是右值
+	Print(std::forward<T>(t));//右值引用 forward(t)按照参数原来的类型转发
+}
+
+// template <class T>
+// void func(T& t)
+// {
+// 	cout << "[L] " << t << endl;
+// 	Print(t);//一定是左值，因为t此时已经是一个具名的变量
+// 	Print(std::move(t));//move(t)是右值
+// 	Print(std::forward<T>(t));//forward(t)按照参数原来的类型转发    
+// }
 
 int TestRight()
 {
@@ -83,7 +105,10 @@ int TestRight()
 	cout << "-- func(x)" << endl;
 	func(x); // x本身是左值
 	cout << "-- func(std::forward<int>(y))" << endl;
-	func(std::forward<int>(y)); //
+	// func(std::forward<int>(y)); // 对于确定的左值或其引用 -- 返回的是右值
+
+    int const && a = 10;
+    // a  = 100;
 	return 0;
 }
 
