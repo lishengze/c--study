@@ -5,6 +5,7 @@
 #include "operator.h"
 #include "test_vector.h"
 #include "test_string.h"
+#include "test_move.h"
 
 int main()
 {
@@ -22,7 +23,9 @@ int main()
 
 	// TestStringAllocate();
 
-	TestVectorMain();
+	// TestVectorMain();
+
+	TestRightMain();
 
 	return 0;
 }

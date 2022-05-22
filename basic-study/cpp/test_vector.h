@@ -8,6 +8,7 @@
 #include <string>
 #include <folly/FBVector.h>
 #include <folly/small_vector.h>
+#include "data_struct.h"
 
 // using namespace std;
 
@@ -109,23 +110,6 @@ void test_emplace_back()
     }
 }
 
-struct A {
-    std::string s;
-    A(std::string str) : s(std::move(str))  { std::cout << " constructed\n"; }
-    A(const A& o) : s(o.s) { std::cout << " copy constructed\n"; }
-    A(A&& o) : s(std::move(o.s)) { std::cout << " move constructed\n"; }
-    A& operator=(const A& other) {
-        s = other.s;
-        std::cout << " copy assigned\n";
-        return *this;
-    }
-    A& operator=(A&& other) {
-        s = std::move(other.s);
-        std::cout << " move assigned\n";
-        return *this;
-    }
-};
- 
 void TestEmplace()
 {
     std::vector<A> container;
@@ -144,6 +128,15 @@ void TestEmplace()
     std::cout << "emplace with A&&:\n";
     container.emplace(container.end(), std::move(three));
 
+    std::cout << "emplace_back with para Four!\n";
+    container.emplace_back("Four");
+
+    std::cout << "emplace_back with two!\n";
+    container.emplace_back(two);    
+
+    // std::cout << "emplace_back with para Four!\n";
+    // container.push_back("Four");
+
     std::cout << "push_back with A& \n";
     container.push_back(two);
 
@@ -160,7 +153,9 @@ void TestEmplace()
 template<class Vector>
 void append_vector(Vector& dst, Vector& src) {
     for (auto& i:src) {
-        dst.push_back(i);
+        // dst.push_back(i);
+        std::cout << "emplace back " << i.get_value() << ": ";
+        dst.emplace_back(i);
     }
 }
 
@@ -179,7 +174,7 @@ void test_vector_allocate(std::string info) {
 
     std::cout << "-------- Init Start!-----" << std::endl;
     vector_type a = {A{"a"}, A{"b"}};
-    vector_type b = {A{"a"}, A{"b"}, A{"c"}, A{"d"}};
+    vector_type b = {A{"c"}, A{"d"}, A{"e"}, A{"f"}};
 
     std::cout << "-------- Init Over!-----\n" << std::endl;
 
@@ -204,7 +199,9 @@ void test_vector_allocate(std::string info) {
         }    
         std::cout << std::endl;
 
+        std::cout << "\n*******  Append Start ******" << std::endl;
         append_vector<vector_type>(a, b);
+         std::cout << "******* Append Over ****** \n" << std::endl;
                 //   << ", " << a << std::endl;
     }
     std::cout << std::endl;
@@ -213,10 +210,9 @@ void test_vector_allocate(std::string info) {
 void TestVectorAllocate() {
 	// cout << "Test Std::String " << endl;
     test_vector_allocate<std::vector<A>>("Test Std::Vector");
-    test_vector_allocate<folly::fbvector<A>>("Test Fb::fbvector");
+    // test_vector_allocate<folly::fbvector<A>>("Test Fb::fbvector");
     test_vector_allocate<folly::small_vector<A>>("Test Fb::small_vector");
 }
-
 
 void TestVectorMain()
 {
@@ -228,8 +224,8 @@ void TestVectorMain()
 
     // test_emplace_back();
 
-    // TestEmplace();
+    TestEmplace();
 
-    TestVectorAllocate();
+    // TestVectorAllocate();
 }
 
