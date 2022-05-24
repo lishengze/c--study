@@ -6,6 +6,9 @@
 #include "test_vector.h"
 #include "test_string.h"
 #include "test_move.h"
+#include "test_func.h"
+#include "test_struct.h"
+#include "test_static.h"
 
 int main()
 {
@@ -25,7 +28,13 @@ int main()
 
 	// TestVectorMain();
 
-	TestRightMain();
+	// TestRightMain();
+
+	// TestFuncMain();
+
+	// TestStructMain();
+
+	TestStaticMain();
 
 	return 0;
 }
