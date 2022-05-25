@@ -1,4 +1,3 @@
-#include "test_virtual.h"
 #include <iostream>
 #include <memory.h>
 #include <typeinfo>
@@ -160,10 +159,8 @@ class DeV2:public DeV{
 };
 
 
-
-
-void test_constructor_use_virtual() {
-
+int main()
+{
     printf( "Basev1::Print: %p\n", (BasicFuncPtr)&BaseV1::print);
     printf( "BaseV2::Print: %p\n", (BasicFuncPtr)&BaseV2::print);
     printf( "BaseV3::Print: %p\n", (BasicFuncPtr)&BaseV3::print);
@@ -196,21 +193,46 @@ void test_constructor_use_virtual() {
     BaseV3* b13 = dev1;
     PrintFuncAddress("Base_dev1_V3",sizeof(BaseV3),  b13, 2);  
 
-    PrintFuncAddress("Dev1", sizeof(DeV), dev1, 2);
+    int64_t* dev1_vptr = *(reinterpret_cast<int64_t**>(dev1));
+    BasicFuncPtr fun1 = BasicFuncPtr(dev1_vptr[0]);
+    fun1();
 
-    cout << "************ Test Different Derived Vptable Address *************" << endl;
-    DeV* dev2 = new DeV();
+    // printf("dev1_vptr address: %p \n", dev1_vptr);
 
-    BaseV1* b21 = dev2;
-    PrintFuncAddress("Base_dev2_V1", sizeof(BaseV1), b21, 2);
+    int64_t* b11_vptr = *(reinterpret_cast<int64_t**>(b11));
+    BasicFuncPtr fun2 = BasicFuncPtr(b11_vptr[0]);
+    fun2();
 
-    BaseV2* b22 = dev2;
-    PrintFuncAddress("Base_dev2_V2", sizeof(BaseV2), b22, 2);
+    // printf("b11_vptr address: %p \n", b11_vptr);
 
-    BaseV3* b23 = dev2;
-    PrintFuncAddress("Base_dev2_V3", sizeof(BaseV3), b23, 2); 
+    int64_t* b12_vptr = *(reinterpret_cast<int64_t**>(b12));
+    BasicFuncPtr fun3 = BasicFuncPtr(b12_vptr[0]);
+    fun3();
 
-    PrintFuncAddress("Dev2", sizeof(DeV), dev2, 3);    
+    // printf("b12_vptr address: %p \n", b12_vptr);
+
+    int64_t* b13_vptr = *(reinterpret_cast<int64_t**>(b13));
+    BasicFuncPtr fun4 = BasicFuncPtr(b13_vptr[0]);
+    fun4();
+
+    // printf("b13_vptr address: %p \n", b13_vptr);
+
+    // PrintFuncAddress("Dev1", sizeof(DeV), dev1, 2);
+   
+
+    // cout << "************ Test Different Derived Vptable Address *************" << endl;
+    // DeV* dev2 = new DeV();
+
+    // BaseV1* b21 = dev2;
+    // PrintFuncAddress("Base_dev2_V1", sizeof(BaseV1), b21, 2);
+
+    // BaseV2* b22 = dev2;
+    // PrintFuncAddress("Base_dev2_V2", sizeof(BaseV2), b22, 2);
+
+    // BaseV3* b23 = dev2;
+    // PrintFuncAddress("Base_dev2_V3", sizeof(BaseV3), b23, 2); 
+
+    // PrintFuncAddress("Dev2", sizeof(DeV), dev2, 2);    
 
 
     // cout << "\n*********************** Test Third Derived *****************" << endl;
@@ -224,70 +246,8 @@ void test_constructor_use_virtual() {
     cout << "sizeof (BaseV1): " << sizeof(BaseV1) << "\n"
     << "sizeof (BaseV2): " << sizeof(BaseV2) << "\n"
     << "sizeof (BaseV3): " << sizeof(BaseV3) << "\n"
-    << "sizeof (DeV): " << sizeof(DeV) << "\n"
-    ;
+    << "sizeof (DeV): " << sizeof(DeV) << "\n";
 
-
-
-    // dev1->func2();
-
-
-    
-    // base1->print();    
-
+	return 0;
 }
 
-class Person {
- public:
-  Person() : mId(0), mAge(20) { ++sCount; }
-  static int personCount() { return sCount; }
-
-  virtual void print() { cout << "print id: " << mId << ", age: " << mAge << endl; }
-  virtual void job() { cout << "job Person" << endl; }
-  virtual ~Person() {
-    --sCount;
-    cout << "~Person" << endl;
-  }
-
- protected:
-  static int sCount;
-  int mId;
-  int mAge;
-};
-int Person::sCount = 0;
-
-typedef void (*FuncPtr)();
-
-void test_preson() {
-  Person person;
-  int64_t** vptr = reinterpret_cast<int64_t**>(&person);
-  int64_t* vtbl = *vptr;
-
-  for (int i = 0; i < 3; ++i) {
-    FuncPtr func = (FuncPtr) * (vtbl + i);
-    cout << "vtbl+i: " << *(vtbl+i) << endl;
-    func();
-    cout << endl;
-  }
-  
-  // 由于虚函数表没有数组名之说，所以是可以用首地址自增的，运行结果与上面的用法一样
-  // for (int i = 0; i < 3; ++i) {
-  //   FuncPtr func = (FuncPtr) * (vtbl);
-  //   func();
-  //   ++vtbl;
-  // }
-
-  // 以数组的形式调用
-  // for (int i = 0; i < 3; ++i) {
-  //   FuncPtr func = (FuncPtr)(vtbl[i]);
-  //   func();
-  // }
-}
-
-
-void TestVirtualMain()
-{
-    test_constructor_use_virtual();
-
-    // test_preson();
-}
