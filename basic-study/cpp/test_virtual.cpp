@@ -7,9 +7,9 @@ using namespace std;
 
 typedef void (*BasicFuncPtr)();
 
-void PrintFuncAddress(string info, void* obj, int func_count) {
+void PrintFuncAddress(string info, int datasize,  void* obj, int func_count) {
     // cout << "\n----------- Start Test " << info << " ------------ "  << endl;
-    printf("\n----------- Start Test %s, this: %p ------------\n", info.c_str(), obj);
+    printf("\n----------- Start Test %s, this: %p , ends: %p ------------\n", info.c_str(), obj, (void *)(int64_t(obj) + datasize));
     int64_t** vptr = reinterpret_cast<int64_t**>(obj);
     int64_t* vtbl = *vptr;
     printf("vptable address: %p \n", vtbl);
@@ -56,7 +56,7 @@ class BaseV1 {
 
             // print(); // 为什么可以?
 
-            PrintFuncAddress("BaseV1 Constructor", this, 2);
+            PrintFuncAddress("BaseV1 Constructor", sizeof(BaseV1), this, 2);
         }
 
         virtual void print() {
@@ -72,7 +72,7 @@ class BaseV1 {
 class BaseV2 {
     public:
         BaseV2() {
-            PrintFuncAddress("BaseV2 Constructor", this, 2);
+            PrintFuncAddress("BaseV2 Constructor", sizeof(BaseV2),this, 2);
         }
 
         virtual void print() {
@@ -88,7 +88,7 @@ class BaseV2 {
 class BaseV3 {
     public:
         BaseV3() {
-            PrintFuncAddress("BaseV3 Constructor", this, 2);
+            PrintFuncAddress("BaseV3 Constructor", sizeof(BaseV3),this, 2);
         }
 
         virtual void print() {
@@ -113,14 +113,54 @@ class DeV:public  BaseV0, public BaseV1, public BaseV2, public BaseV3{
             //     cout << vptb+i << endl;
             // }
 
-            PrintFuncAddress("DeV Constructor", this, 2);
+            PrintFuncAddress("DeV Constructor", sizeof(DeV), this, 2);
 
         }
 
         virtual void print() {
             cout << "DeV Print" << endl;
         }
+
+        // virtual void funcd1() {
+        //     cout << "DeV funcd1" << endl;
+        // }    
+
+        // virtual void funcd2() {
+        //     cout << "DeV funcd2" << endl;
+        // }             `   
 };
+
+class DeV2:public DeV{
+    public:
+        DeV2(){
+            // cout << "DeV Construct this: " << this << endl;
+
+            // int64_t** vptr = reinterpret_cast<int64_t**>(this);
+            // int64_t* vptb = reinterpret_cast<int64_t*>(*vptr);
+
+            // for (int i = 0; i < 3; ++i) {
+            //     cout << vptb+i << endl;
+            // }
+
+            PrintFuncAddress("DeV2 Constructor", sizeof(DeV), this, 4);
+
+        }
+
+        virtual void print() {
+            cout << "DeV Print" << endl;
+        }
+
+        // virtual void funcd1() {
+        //     cout << "DeV funcd1" << endl;
+        // }    
+
+        // virtual void funcd2() {
+        //     cout << "DeV funcd2" << endl;
+        // }                
+};
+
+
+
 
 void test_constructor_use_virtual() {
 
@@ -148,29 +188,36 @@ void test_constructor_use_virtual() {
     DeV* dev1 = new DeV();
 
     BaseV1* b11 = dev1;
-    PrintFuncAddress("Base_dev1_V1", b11, 2);
+    PrintFuncAddress("Base_dev1_V1", sizeof(BaseV1), b11, 2);
 
     BaseV2* b12 = dev1;
-    PrintFuncAddress("Base_dev1_V2", b12, 2);
+    PrintFuncAddress("Base_dev1_V2", sizeof(BaseV2), b12, 2);
 
     BaseV3* b13 = dev1;
-    PrintFuncAddress("Base_dev1_V3", b13, 2);  
+    PrintFuncAddress("Base_dev1_V3",sizeof(BaseV3),  b13, 2);  
 
-    PrintFuncAddress("Dev1", dev1, 2);
+    PrintFuncAddress("Dev1", sizeof(DeV), dev1, 2);
 
     cout << "************ Test Different Derived Vptable Address *************" << endl;
     DeV* dev2 = new DeV();
 
-    BaseV1* b21 = dev1;
-    PrintFuncAddress("Base_dev2_V1", b21, 2);
+    BaseV1* b21 = dev2;
+    PrintFuncAddress("Base_dev2_V1", sizeof(BaseV1), b21, 2);
 
-    BaseV2* b22 = dev1;
-    PrintFuncAddress("Base_dev2_V2", b22, 2);
+    BaseV2* b22 = dev2;
+    PrintFuncAddress("Base_dev2_V2", sizeof(BaseV2), b22, 2);
 
-    BaseV3* b23 = dev1;
-    PrintFuncAddress("Base_dev2_V3", b23, 2);  
+    BaseV3* b23 = dev2;
+    PrintFuncAddress("Base_dev2_V3", sizeof(BaseV3), b23, 2); 
 
-    PrintFuncAddress("Dev2", dev2, 2);    
+    PrintFuncAddress("Dev2", sizeof(DeV), dev2, 2);    
+
+
+    cout << "\n*********************** Test Third Derived *****************" << endl;
+    DeV2* dev3 = new DeV2();
+    PrintFuncAddress("Dev3", sizeof(DeV2), dev3, 4); 
+
+    dev3->func3();
 
 
 
