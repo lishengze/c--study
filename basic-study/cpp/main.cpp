@@ -9,6 +9,7 @@
 #include "test_func.h"
 #include "test_struct.h"
 #include "test_static.h"
+#include "test_virtual.h"
 
 int main()
 {
@@ -34,7 +35,9 @@ int main()
 
 	// TestStructMain();
 
-	TestStaticMain();
+	// TestStaticMain();
+
+	TestVirtualMain();
 
 	return 0;
 }
