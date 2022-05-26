@@ -96,6 +96,9 @@ void func( T& t)
 // 	Print(std::forward<T>(t));//forward(t)按照参数原来的类型转发    
 // }
 
+void func2(int&& i) {
+    cout << "Raw Right Ref: " << i << endl;
+}
 int TestRight()
 {
 	cout << "-- func(1)" << endl;
@@ -112,11 +115,24 @@ int TestRight()
 	return 0;
 }
 
+int TestRightSimple() {
+    int i = 0;
+    int&& a = 10;
+
+    func2(100);
+
+    // func2(a);
+
+    func2(std::move(i));
+    func2(std::forward<int>(i));
+}
 
 void TestRightMain() {
     // TestRawRightValue();
 
     // BasicTest();
 
-    TestRight();
+    // TestRight();
+
+    TestRightSimple();
 }

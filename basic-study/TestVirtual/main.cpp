@@ -215,6 +215,8 @@ int main()
     BasicFuncPtr fun4 = BasicFuncPtr(b13_vptr[0]);
     fun4();
 
+    delete dev1;
+
     // printf("b13_vptr address: %p \n", b13_vptr);
 
     // PrintFuncAddress("Dev1", sizeof(DeV), dev1, 2);
