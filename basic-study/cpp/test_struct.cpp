@@ -3,9 +3,12 @@
 using namespace std;
 
 class TestA {
+    public:
+    // virtual void print() {}
+    int b;
     bool a;
-    bool b;
     bool c;
+    
 }; // sizeof (TestA) == 3
 
 void TestSizeof () {

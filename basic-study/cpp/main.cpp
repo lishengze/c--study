@@ -33,11 +33,11 @@ int main()
 
 	// TestFuncMain();
 
-	// TestStructMain();
+	TestStructMain();
 
 	// TestStaticMain();
 
-	TestVirtualMain();
+	// TestVirtualMain();
 
 	return 0;
 }
