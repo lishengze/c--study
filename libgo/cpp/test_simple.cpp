@@ -70,7 +70,7 @@ void go_func(int i ) {
 }
 
 void test_thread() {
-    int coroutine_count = 100;
+    int coroutine_count = 2;
     for (int i = 0; i < coroutine_count; ++i) {
         go std::bind(go_func, i);
     }

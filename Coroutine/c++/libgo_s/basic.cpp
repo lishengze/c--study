@@ -27,6 +27,8 @@ int test_base()
     //   注意不要忘记句尾的分号";".
     go foo;
 
+
+
     go []{
         printf("lambda\n");
     };
