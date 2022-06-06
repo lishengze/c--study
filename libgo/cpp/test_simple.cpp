@@ -18,23 +18,28 @@ void go_func0 ()
 
 void go_func1 () 
 {
-    // while(true)
-    // {
-    //     // co_sleep(3000);
+    cout << "go_func1: " << std::this_thread::get_id()  << " start!" << endl;
+    while(true)
+    {
+        // co_sleep(3000);
 
-    //     std::this_thread::sleep_for(std::chrono::seconds(3));
+        // std::this_thread::sleep_for(std::chrono::seconds(3));
 
-    //     go go_func0;
+        // go go_func0;
 
-    //     cout << "go_func1: " << std::this_thread::get_id()  << ", " << utrade::pandora::NanoTimeStr() <<  endl;
-    // }
+        // cout << "go_func1: " << std::this_thread::get_id()  << ", " << utrade::pandora::NanoTimeStr() <<  endl;
+
+        // int a = 10;
+    }
+
+    cout << "go_func1: " << std::this_thread::get_id()  << " end!" << endl;
 
 
-        std::this_thread::sleep_for(std::chrono::seconds(3));
+        // std::this_thread::sleep_for(std::chrono::seconds(10));
 
-        go go_func0;
+        // go go_func0;
 
-        cout << "go_func1: " << std::this_thread::get_id()  << ", " << utrade::pandora::NanoTimeStr() <<  endl;    
+        // cout << "go_func1: " << std::this_thread::get_id()  << ", " << utrade::pandora::NanoTimeStr() <<  endl;    
     
 }
 
@@ -47,6 +52,18 @@ void go_func2()
         std::this_thread::sleep_for(std::chrono::seconds(3));
 
         cout << "go_func2: " << std::this_thread::get_id()  << ", " << utrade::pandora::NanoTimeStr() <<  endl;
+    }
+}
+
+void go_func3() 
+{
+    while(true)
+    {
+        // co_sleep(3000);
+
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+
+        cout << "go_func3: " << std::this_thread::get_id()  << ", " << utrade::pandora::NanoTimeStr() <<  endl;
     }
 }
 
@@ -80,9 +97,44 @@ void test_thread() {
     cout << "test_thread over" << endl;    
 }
 
+void thread_main() {
+    go go_func3;
+}
+
+void test_multi_thread() {
+    cout << "test_multi_thread main_thread: " << std::this_thread::get_id() << endl;
+    std::thread sched_thread = std::thread([](){ 
+        cout << "Add go_func3 thread: " << std::this_thread::get_id()  << endl;
+        go go_func3;
+    });
+
+    go go_func2;
+
+    co_sched.Start();
+
+    if (sched_thread.joinable()) {
+        sched_thread.join();
+    }
+}
+
+
+void test_thread_block() {
+    cout << "test_thread_block main_thread: " << std::this_thread::get_id() << endl;
+    for (int i = 0; i < 2; ++i) {
+        go go_func1;
+    }
+    go go_func2;
+
+    co_sched.Start(4);
+}
+
 void TestSimple()
 {
-    test1();
+    // test1();
 
     // test_thread();
+
+    // test_multi_thread();
+
+    test_thread_block();
 }

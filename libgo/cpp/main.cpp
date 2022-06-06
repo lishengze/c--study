@@ -6,9 +6,9 @@ int main()
 {
     cout << "-------- Test Libgo --------" << endl;
 
-    // TestSimple();
+    TestSimple();
 
-    TestCoRoutine();
+    // TestCoRoutine();
 
     return 1;
 }
