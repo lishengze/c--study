@@ -27,13 +27,15 @@ int main()
 
 	// TestStringAllocate();
 
-	// TestVectorMain();
+	// TestStringMain();
+
+	TestVectorMain();
 
 	// TestRightMain();
 
 	// TestFuncMain();
 
-	TestStructMain();
+	// TestStructMain();
 
 	// TestStaticMain();
 

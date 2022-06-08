@@ -43,20 +43,18 @@ void test_string_allocate(std::string info) {
 
     for (int i =0; i < cout; ++i) {
         a += b;
-
-        
-        std::cout << reinterpret_cast<void*>(const_cast<char *>(a.data())) 
-                  << ", size: " << a.size() << " cap: " << a.capacity();
-
         if (a.capacity() != last_cap) {
+            std::cout << reinterpret_cast<void*>(const_cast<char *>(a.data())) 
+                    << ", size: " << a.size() << " cap: " << a.capacity();            
             if (last_cap == 0) {
                 std::cout << ", init size: " << a.capacity();
             } else {
                 std::cout << ", rate: " << float(a.capacity()) / last_cap;
             }
             last_cap = a.capacity();
+            std::cout << std::endl;
         }    
-        std::cout << std::endl;
+        
                 //   << ", " << a << std::endl;
     }
 }
@@ -114,8 +112,14 @@ void TestStringSub() {
 }
 
 void TestStringAllocate() {
-    // test_string_allocate<std::string>("Test Std::String " );
-    // test_string_allocate<folly::fbstring>("Test Fb::String " );
-    test_stringview_expand("Test Std::string_view " );    
+    test_string_allocate<std::string>("Test Std::String " );
+    test_string_allocate<folly::fbstring>("Test Fb::String " );
+    // test_stringview_expand("Test Std::string_view " );    
 }
 
+
+void TestStringMain() {
+    // TestStringAllocate();
+
+    TestStringSub();
+}

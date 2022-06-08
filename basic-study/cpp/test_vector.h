@@ -142,6 +142,74 @@ void TestEmplace()
 
     std::cout << "push_back with A&& \n";
     container.push_back(std::move(three));
+
+    std::cout << "Test erase 0 start!" << std::endl;
+
+    container.erase(container.begin());
+
+    std::cout << "sleep start!" << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+
+    std::cout << "\nTest Clear ------" << std::endl;
+    container.clear();
+    std::cout << "sleep start!" << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+          
+ 
+    // std::cout << "content:\n";
+    // for (const auto& obj : container)
+    //     std::cout << ' ' << obj.s;
+    // std::cout << '\n';
+}
+
+template<class Vector>
+void TestEmplaceAll(std::string info)
+{
+    cout << info << endl;
+    Vector container;
+    // reserve enough place so vector does not have to resize
+    // container.reserve(10);
+    // std::cout << "construct 2 times A:\n";
+    A two { "two" };
+    A three { "three" };
+ 
+    std::cout << "emplace:\n";
+    container.emplace(container.end(), "one");
+ 
+    std::cout << "emplace with A&:\n";
+    container.emplace(container.end(), two);
+ 
+    std::cout << "emplace with A&&:\n";
+    container.emplace(container.end(), std::move(three));
+
+    std::cout << "emplace_back with para Four!\n";
+    container.emplace_back("Four");
+
+    std::cout << "emplace_back with two!\n";
+    container.emplace_back(two);    
+
+    // std::cout << "emplace_back with para Four!\n";
+    // container.push_back("Four");
+
+    std::cout << "push_back with A& \n";
+    container.push_back(two);
+
+    std::cout << "push_back with A&& \n";
+    container.push_back(std::move(three));
+
+    std::cout << "Test erase 0 start!" << std::endl;
+
+    container.erase(container.begin());
+
+    std::cout << "sleep start!" << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+
+    std::cout << "\nTest Clear ------" << std::endl;
+    container.clear();
+    std::cout << "sleep start!" << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(5));
           
  
     // std::cout << "content:\n";
@@ -154,7 +222,7 @@ template<class Vector>
 void append_vector(Vector& dst, Vector& src) {
     for (auto& i:src) {
         // dst.push_back(i);
-        std::cout << "emplace back " << i.get_value() << ": ";
+        // std::cout << "emplace back " << i.get_value() << ": ";
         dst.emplace_back(i);
     }
 }
@@ -170,7 +238,7 @@ void append_vector(Vector& dst, Vector& src) {
 template<class vector_type>
 void test_vector_allocate(std::string info) {
     cout << info << endl;
-    int cout = 10;
+    int cout = 20;
 
     std::cout << "-------- Init Start!-----" << std::endl;
     vector_type a = {A{"a"}, A{"b"}};
@@ -183,25 +251,27 @@ void test_vector_allocate(std::string info) {
 
     int last_cap = 0;
 
+    // std::cout << reinterpret_cast<void*>(const_cast<A *>(&(a[0]))) 
+    //             << ", size: " << a.size() << " cap: " << a.capacity() << endl;
+
     for (int i =0; i < cout; ++i) {
-        
-
-        std::cout << reinterpret_cast<void*>(const_cast<A *>(&(a[0]))) 
-                  << ", size: " << a.size() << " cap: " << a.capacity();
-
         if (a.capacity() != last_cap) {
+            std::cout << reinterpret_cast<void*>(const_cast<A *>(&(a[0]))) 
+                      << ", size: " << a.size() << " cap: " << a.capacity();
+
             if (last_cap == 0) {
                 std::cout << ", init size: " << a.capacity();
             } else {
                 std::cout << ", rate: " << float(a.capacity()) / last_cap;
             }
             last_cap = a.capacity();
+            std::cout << std::endl;
         }    
-        std::cout << std::endl;
+        
 
-        std::cout << "\n*******  Append Start ******" << std::endl;
+        // std::cout << "\n*******  Append Start ******" << std::endl;
         append_vector<vector_type>(a, b);
-         std::cout << "******* Append Over ****** \n" << std::endl;
+        //  std::cout << "******* Append Over ****** \n" << std::endl;
                 //   << ", " << a << std::endl;
     }
     std::cout << std::endl;
@@ -209,9 +279,14 @@ void test_vector_allocate(std::string info) {
 
 void TestVectorAllocate() {
 	// cout << "Test Std::String " << endl;
-    test_vector_allocate<std::vector<A>>("Test Std::Vector");
+    test_vector_allocate<std::vector<A>>("\n------------ Test Std::Vector");
     // test_vector_allocate<folly::fbvector<A>>("Test Fb::fbvector");
-    test_vector_allocate<folly::small_vector<A>>("Test Fb::small_vector");
+    test_vector_allocate<folly::small_vector<A>>("\n------------ Test Fb::small_vector");
+}
+
+void test_emplace_main() {
+    TestEmplaceAll<std::vector<A>>("\n----- Emplace Std::vector -------");
+    TestEmplaceAll<folly::small_vector<A>>("\n----- Emplace Folly::small_vector -------");
 }
 
 void TestVectorMain()
@@ -224,7 +299,7 @@ void TestVectorMain()
 
     // test_emplace_back();
 
-    TestEmplace();
+    test_emplace_main();
 
     // TestVectorAllocate();
 }

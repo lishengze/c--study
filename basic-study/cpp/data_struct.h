@@ -11,10 +11,19 @@
 
 struct A {
     std::string s;
-    A() {std::cout << " construct defalut" << endl;}
-    A(std::string str) : s(std::move(str))  { std::cout << " constructed "<< s <<"\n"; }
-    A(const A& o) : s(o.s) { std::cout << " copy constructed "<< o.s <<"\n"; }
-    // A(A&& o) : s(std::move(o.s)) { std::cout << " move constructed -- " << s <<"\n"; }
+    A() {
+        std::cout << " construct defalut" << endl;
+    }
+    A(std::string str) : s(std::move(str))  { 
+        std::cout << " constructed "<< s <<"\n"; 
+        }
+    A(const A& o) : s(o.s) { 
+        std::cout << " copy constructed "<< o.s <<"\n"; 
+        }
+    A(A&& o) : s(std::move(o.s)) 
+    { 
+        std::cout << " move constructed -- " << s <<"\n"; 
+    }
     A& operator=(const A& other) {
         s = other.s;
         std::cout << " copy assigned " << other.s << "\n";
@@ -22,7 +31,7 @@ struct A {
     }
     A& operator=(A&& other) {
         s = std::move(other.s);
-        std::cout << " move assigned "<< other.s << "\n";
+        std::cout << " move assigned == "<< other.s << "\n";
         return *this;
     }
     std::string get_value() {return s;}
@@ -31,7 +40,9 @@ struct A {
         std::cout << a.get_value() << std::endl;
     }
 
-    ~A() {std::cout << "Destory: " << s << endl;}
+    ~A() {
+        std::cout << "Destory: " << s << endl;
+        }
 
 };
 
