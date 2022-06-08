@@ -198,9 +198,11 @@ void TestEmplaceAll(std::string info)
     std::cout << "push_back with A&& \n";
     container.push_back(std::move(three));
 
-    std::cout << "Test erase 0 start!" << std::endl;
+    std::cout << "Test erase 0 start, size: " << container.size() << ", cap: " << container.capacity() << std::endl;
 
     container.erase(container.begin());
+
+    std::cout << "After erase size: " << container.size() << ", cap: " << container.capacity() << std::endl;
 
     std::cout << "sleep start!" << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -208,6 +210,7 @@ void TestEmplaceAll(std::string info)
 
     std::cout << "\nTest Clear ------" << std::endl;
     container.clear();
+    std::cout << "After clear size: " << container.size() << ", cap: " << container.capacity() << std::endl;
     std::cout << "sleep start!" << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(5));
           
