@@ -16,9 +16,9 @@ int main()
 {
 	cout << "Test Boost" << endl;
 
-	TestNumbMain();
+	// TestNumbMain();
 	
-	// testFuncMain();
+	testFuncMain();
 
 	// cout << "Test Over!" << endl;
 	return 0;

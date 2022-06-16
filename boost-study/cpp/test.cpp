@@ -7,7 +7,7 @@
 
 void testFuncMain()
 {
-    // test_shared_ptr();
+    test_shared_ptr();
 
     // TestPackageMain();
 

@@ -139,6 +139,31 @@ void test_deleter()
     boost::shared_ptr<Test> array_ptr (new Test[5], delete_test_array);
 }
 
+void test_weak_ptr() {
+    struct Node {
+        Node(int value):value(value) {}
+        std::shared_ptr<Node> child{nullptr};
+        std::weak_ptr<Node> parent;
+
+        int value;
+    };
+
+    std::shared_ptr<Node> root = std::make_shared<Node>(1);
+    std::shared_ptr<Node> child = std::make_shared<Node>(2);
+
+    root->child = child;
+    child->parent = root;
+
+    cout << "root.use_count: " << root.use_count() << ", child.use_count: " << child.use_count() << endl;
+
+    auto root_p = child->parent.lock();
+    if (root_p) {
+        root_p->value = 10;
+    }
+
+    cout << "root.value: " << root->value << endl;
+}
+
 void test_boost_shared_ptr()
 {
     test_boost_shared_ptr_enable_share_from_this();
@@ -150,5 +175,7 @@ void test_boost_shared_ptr()
 
 void test_shared_ptr()
 {
-    test_boost_shared_ptr();
+    // test_boost_shared_ptr();
+
+    test_weak_ptr();
 }
