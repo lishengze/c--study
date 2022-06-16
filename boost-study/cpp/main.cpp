@@ -10,10 +10,16 @@
 #include "global_declare.h"
 
 #include "test.h"
+#include "test_double.h"
 
 int main() 
 {
 	cout << "Test Boost" << endl;
-	testFuncMain();
+
+	TestNumbMain();
+	
+	// testFuncMain();
+
+	// cout << "Test Over!" << endl;
 	return 0;
 }
