@@ -10,6 +10,7 @@
 #include "test_struct.h"
 #include "test_static.h"
 #include "test_virtual.h"
+#include "online_test.h"
 
 int main()
 {
@@ -29,9 +30,9 @@ int main()
 
 	// TestStringMain();
 
-	TestVectorMain();
+	// TestVectorMain();
 
-	// TestRightMain();
+	TestRightMain();
 
 	// TestFuncMain();
 
@@ -40,6 +41,8 @@ int main()
 	// TestStaticMain();
 
 	// TestVirtualMain();
+
+	// OnlineTest();
 
 	return 0;
 }

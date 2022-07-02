@@ -127,6 +127,38 @@ int TestRightSimple() {
     func2(std::forward<int>(i));
 }
 
+void test_move_inner() {
+    int a = 10;
+    int&& b = std::move(a);
+    cout << "a: " << a << endl;
+    cout << "b: " << b << endl;
+
+    std::string s_a = "Hello";
+    std::string&& s_b = std::move(s_a);
+    cout << "s_a: " << s_a << endl;
+
+    s_a = "aaa";
+    cout << "s_a: " << s_a << endl;
+    cout << "s_b: " << s_b << endl;
+
+    std::unique_ptr<std::string> s_c = std::make_unique<std::string>("ccccc");
+
+    cout << "s_c: " << *s_c << endl;
+
+    std::unique_ptr<std::string> s_c_2 = std::move(s_c);
+    cout << "s_c_2: " << *s_c_2 << endl;
+    // cout << "s_c: " << *s_c << endl;
+
+    std::string* ss_a = new string("ssss");
+    cout << "ss_a: " << *ss_a << endl;
+    std::string* && ss_b = std::move(ss_a);
+    cout << "ss_b: " << *ss_b <<endl;
+    *ss_a = "tttt";
+    cout << "ss_a: " << *ss_a << endl;
+    
+
+}
+
 void TestRightMain() {
     // TestRawRightValue();
 
@@ -134,5 +166,7 @@ void TestRightMain() {
 
     // TestRight();
 
-    TestRightSimple();
+    // TestRightSimple();
+
+    test_move_inner();
 }
