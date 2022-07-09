@@ -4,6 +4,8 @@
 #include <string>
 using namespace std;
 
+// #pragma pack(8)
+
 typedef void (*BasicFuncPtr)();
 
 void PrintFuncAddress(string info, int datasize,  void* obj, int func_count) {
@@ -158,64 +160,125 @@ class DeV2:public DeV{
         // }                
 };
 
+void test_func1() {
+    struct s1 { 
+        int i1;
+        long long l1;
+        char c1;
+        short int s1;
+    };
 
+    struct s2 { 
+        int  i1;
+        char c1;
+        short int s1;
+        long long l1;
+    };
+    s2 data;
+    cout << sizeof(data) << endl;
+
+    s1 data2;
+    cout << sizeof(data2) << endl;
+
+    cout << sizeof(short int) << endl;
+}
+
+template<class T>
+T test_func2(T x, T y) {
+    return x;
+}
+
+void test3() {
+    int x=2;
+    int y;
+
+    switch(x){
+        case 1:
+            y=1;
+        case 2:
+            y=2;
+        case 3:
+            y=3;
+            break;                        
+    }
+    cout << y << endl;
+}
+
+void test4() {
+    char a[] = "It is mine";
+    char *p = "It is mine";
+    cout << *(a+1)<< endl;
+
+    p ="It is mine aaaa";
+
+    a[11] = 'a';
+
+}
 int main()
 {
-    printf( "Basev1::Print: %p\n", (BasicFuncPtr)&BaseV1::print);
-    printf( "BaseV2::Print: %p\n", (BasicFuncPtr)&BaseV2::print);
-    printf( "BaseV3::Print: %p\n", (BasicFuncPtr)&BaseV3::print);
-    printf( "Basev1::func1: %p\n", (BasicFuncPtr)&BaseV1::func1);
-    printf( "BaseV2::func2: %p\n", (BasicFuncPtr)&BaseV2::func2);
-    printf( "BaseV3::func3: %p\n", (BasicFuncPtr)&BaseV3::func3);    
-    printf( "DeV::Print: %p\n", (BasicFuncPtr)&DeV::print);
+    test_func1();
 
-    // cout << "Base1::Print: " << &BaseV1::print << endl;
-    // cout << "Base1::Print: " << &BaseV2::print << endl;
-    // cout << "DeV::Print: " << &DeV::print << endl;
-    // 
+    // test_func2<>(3, 5);
 
-    // BaseV1* base = new BaseV1();
-    // base->print();
+    // test3();
 
-    // BaseV2* base2 = new DeV();
+    // test4();
 
-    // BaseV1* base1 = new DeV();
-    // base1->print();
+    // printf( "Basev1::Print: %p\n", (BasicFuncPtr)&BaseV1::print);
+    // printf( "BaseV2::Print: %p\n", (BasicFuncPtr)&BaseV2::print);
+    // printf( "BaseV3::Print: %p\n", (BasicFuncPtr)&BaseV3::print);
+    // printf( "Basev1::func1: %p\n", (BasicFuncPtr)&BaseV1::func1);
+    // printf( "BaseV2::func2: %p\n", (BasicFuncPtr)&BaseV2::func2);
+    // printf( "BaseV3::func3: %p\n", (BasicFuncPtr)&BaseV3::func3);    
+    // printf( "DeV::Print: %p\n", (BasicFuncPtr)&DeV::print);
 
-    DeV* dev1 = new DeV();
+    // // cout << "Base1::Print: " << &BaseV1::print << endl;
+    // // cout << "Base1::Print: " << &BaseV2::print << endl;
+    // // cout << "DeV::Print: " << &DeV::print << endl;
+    // // 
 
-    BaseV1* b11 = dev1;
-    PrintFuncAddress("Base_dev1_V1", sizeof(BaseV1), b11, 2);
+    // // BaseV1* base = new BaseV1();
+    // // base->print();
 
-    BaseV2* b12 = dev1;
-    PrintFuncAddress("Base_dev1_V2", sizeof(BaseV2), b12, 2);
+    // // BaseV2* base2 = new DeV();
 
-    BaseV3* b13 = dev1;
-    PrintFuncAddress("Base_dev1_V3",sizeof(BaseV3),  b13, 2);  
+    // // BaseV1* base1 = new DeV();
+    // // base1->print();
 
-    int64_t* dev1_vptr = *(reinterpret_cast<int64_t**>(dev1));
-    BasicFuncPtr fun1 = BasicFuncPtr(dev1_vptr[0]);
-    fun1();
+    // DeV* dev1 = new DeV();
 
-    // printf("dev1_vptr address: %p \n", dev1_vptr);
+    // BaseV1* b11 = dev1;
+    // PrintFuncAddress("Base_dev1_V1", sizeof(BaseV1), b11, 2);
 
-    int64_t* b11_vptr = *(reinterpret_cast<int64_t**>(b11));
-    BasicFuncPtr fun2 = BasicFuncPtr(b11_vptr[0]);
-    fun2();
+    // BaseV2* b12 = dev1;
+    // PrintFuncAddress("Base_dev1_V2", sizeof(BaseV2), b12, 2);
 
-    // printf("b11_vptr address: %p \n", b11_vptr);
+    // BaseV3* b13 = dev1;
+    // PrintFuncAddress("Base_dev1_V3",sizeof(BaseV3),  b13, 2);  
 
-    int64_t* b12_vptr = *(reinterpret_cast<int64_t**>(b12));
-    BasicFuncPtr fun3 = BasicFuncPtr(b12_vptr[0]);
-    fun3();
+    // int64_t* dev1_vptr = *(reinterpret_cast<int64_t**>(dev1));
+    // BasicFuncPtr fun1 = BasicFuncPtr(dev1_vptr[0]);
+    // fun1();
 
-    // printf("b12_vptr address: %p \n", b12_vptr);
+    // // printf("dev1_vptr address: %p \n", dev1_vptr);
 
-    int64_t* b13_vptr = *(reinterpret_cast<int64_t**>(b13));
-    BasicFuncPtr fun4 = BasicFuncPtr(b13_vptr[0]);
-    fun4();
+    // int64_t* b11_vptr = *(reinterpret_cast<int64_t**>(b11));
+    // BasicFuncPtr fun2 = BasicFuncPtr(b11_vptr[0]);
+    // fun2();
 
-    delete dev1;
+    // // printf("b11_vptr address: %p \n", b11_vptr);
+
+    // int64_t* b12_vptr = *(reinterpret_cast<int64_t**>(b12));
+    // BasicFuncPtr fun3 = BasicFuncPtr(b12_vptr[0]);
+    // fun3();
+
+    // // printf("b12_vptr address: %p \n", b12_vptr);
+
+    // int64_t* b13_vptr = *(reinterpret_cast<int64_t**>(b13));
+    // BasicFuncPtr fun4 = BasicFuncPtr(b13_vptr[0]);
+    // fun4();
+
+    // delete dev1;
 
     // printf("b13_vptr address: %p \n", b13_vptr);
 
@@ -245,10 +308,10 @@ int main()
 
 
 
-    cout << "sizeof (BaseV1): " << sizeof(BaseV1) << "\n"
-    << "sizeof (BaseV2): " << sizeof(BaseV2) << "\n"
-    << "sizeof (BaseV3): " << sizeof(BaseV3) << "\n"
-    << "sizeof (DeV): " << sizeof(DeV) << "\n";
+    // cout << "sizeof (BaseV1): " << sizeof(BaseV1) << "\n"
+    // << "sizeof (BaseV2): " << sizeof(BaseV2) << "\n"
+    // << "sizeof (BaseV3): " << sizeof(BaseV3) << "\n"
+    // << "sizeof (DeV): " << sizeof(DeV) << "\n";
 
 	return 0;
 }

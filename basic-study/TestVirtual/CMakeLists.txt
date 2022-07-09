@@ -24,28 +24,28 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(BOOST_ROOT /usr/local/boost_1_68)
+# set(BOOST_ROOT /usr/local/boost_1_68)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 AUX_SOURCE_DIRECTORY(. MAIN_SRC)
 
-FIND_PACKAGE(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 
-                                     chrono regex program_options unit_test_framework locale REQUIRED)
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
+# FIND_PACKAGE(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 
+#                                      chrono regex program_options unit_test_framework locale REQUIRED)
+# INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 INCLUDE_DIRECTORIES("../include")
 
-INCLUDE_DIRECTORIES("../../component/pandora")
-INCLUDE_DIRECTORIES("../../component")
+# INCLUDE_DIRECTORIES("../../component/pandora")
+# INCLUDE_DIRECTORIES("../../component")
 # INCLUDE_DIRECTORIES("../server")
 # INCLUDE_DIRECTORIES("../include")
 # INCLUDE_DIRECTORIES("../../proto")
 
 
 
-LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
-LINK_DIRECTORIES("/opt/utrade/console/lib/pandora/")
+# LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
+# LINK_DIRECTORIES("/opt/utrade/console/lib/pandora/")
 
 
 SET(ALL_SRC ${MAIN_SRC})
@@ -57,15 +57,15 @@ ADD_EXECUTABLE(${BIN_NAME} ${ALL_SRC})
 # ADD_LIBRARY(${PROJECT_NAME} SHARED ${ALL_SRC})
 
 
-TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
+# TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
 
 # TARGET_LINK_LIBRARIES(${BIN_NAME} fmt)
 
 # TARGET_LINK_LIBRARIES(${BIN_NAME} Threads::Threads)
 
-TARGET_LINK_LIBRARIES(${BIN_NAME} folly)
-TARGET_LINK_LIBRARIES(${BIN_NAME} dl)
-TARGET_LINK_LIBRARIES(${BIN_NAME} fmt)
+# TARGET_LINK_LIBRARIES(${BIN_NAME} folly)
+# TARGET_LINK_LIBRARIES(${BIN_NAME} dl)
+# TARGET_LINK_LIBRARIES(${BIN_NAME} fmt)
 
 
 

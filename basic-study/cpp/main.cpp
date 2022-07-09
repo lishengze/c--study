@@ -32,7 +32,7 @@ int main()
 
 	// TestVectorMain();
 
-	TestRightMain();
+	// TestRightMain();
 
 	// TestFuncMain();
 
@@ -42,7 +42,7 @@ int main()
 
 	// TestVirtualMain();
 
-	// OnlineTest();
+	OnlineTest();
 
 	return 0;
 }
