@@ -1,5 +1,5 @@
 #include "func.h"
-#include "data_struct.h"
+#include "../include/data_struct.h"
 
 int fill_buffer(char * bufptr, int size) {
    static char ch = 'A';

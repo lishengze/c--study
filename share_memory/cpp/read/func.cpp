@@ -1,5 +1,5 @@
 #include "func.h"
-#include "data_struct.h"
+#include "../include/data_struct.h"
 
 int ReadBase() {
    int shmid;

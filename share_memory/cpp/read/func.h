@@ -1,3 +1,3 @@
-#include "global_declare.h"
+#include "../include/global_declare.h"
 
 int ReadBase();
