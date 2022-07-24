@@ -3,3 +3,5 @@
 #include "global_declare.h"
 
 int WriteBase();
+
+void SemphoreBaseTest();
