@@ -5,5 +5,7 @@ int main(int argc, char *argv[]) {
 
    ReadBase();
 
+   // SemphoreBaseTest();
+
    return 0;
 }

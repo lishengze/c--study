@@ -1,5 +1,6 @@
 #include "func.h"
-#include "data_struct.h"
+#include "../include/data_struct.h"
+#include "os_sem.h"
 
 int fill_buffer(char * bufptr, int size) {
    static char ch = 'A';
@@ -40,16 +41,27 @@ int WriteBase() {
       perror("Shared memory attach");
       return 1;
    }
+
+   sem_t *s1 = nullptr;
+	s1 = sem_open("sem_print1", O_CREAT, 0777, 0);  
+ 	if(SEM_FAILED == s1)
+	{
+		perror("sem_open");
+      return -1;
+	} else {
+      printf("Create S1 Successfully! \n");
+   }   
  
    /* Transfer blocks of data from buffer to shared memory */
    bufptr = shmp->buf;
    spaceavailable = BUF_SIZE;
-   for (numtimes = 0; numtimes < 5; numtimes++) {
+   while(true){
       shmp->cnt = fill_buffer(bufptr, spaceavailable);
       shmp->complete = 0;
       printf("Writing Process: Shared Memory Write: Wrote %d bytes\n", shmp->cnt);
       bufptr = shmp->buf;
       spaceavailable = BUF_SIZE;
+      sem_post(s1);
       sleep(3);
    }
    printf("Writing Process: Wrote %d times\n", numtimes);
@@ -66,4 +78,50 @@ int WriteBase() {
    }
    printf("Writing Process: Complete\n");
    return 0;
+}
+
+
+void print(sem_t* s1, sem_t* s2) { 
+
+   int i = 0;
+   while (true) { 
+
+      // sem_post(s1);
+
+      sem_wait(s2);
+
+      printf("P2: %d \n", i++);
+      fflush(stdout);
+
+      sleep(3);
+
+      // sem_wait(s2);
+
+      sem_post(s1);
+   }
+
+}
+
+void SemphoreBaseTest() {
+   printf("SemphoreBaseTest P2 \n");
+
+	sem_t *print1, *print2;
+	print1 = sem_open("sem_print1", O_CREAT, 0777, 1);  
+	if(SEM_FAILED == print1)
+	{
+		perror("sem_open");
+	}else {
+      printf("Create S1 Successfully! \n");
+   }
+
+
+	print2 = sem_open("sem_print2", O_CREAT, 0777, 1);  
+	if(SEM_FAILED == print2)
+	{
+		perror("sem_open");
+	}else {
+      printf("Create S2 Successfully! \n");
+   }
+
+	print(print1, print2);  
 }
