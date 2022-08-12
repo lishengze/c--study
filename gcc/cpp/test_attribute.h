@@ -3,8 +3,8 @@
 #include <stdio.h>
 
 
-void Before() __attribute__((constructor));
+// void Before() __attribute__((constructor));
 
-void After() __attribute__((destructor));
+// void After() __attribute__((destructor));
 
 void TestAttribute();

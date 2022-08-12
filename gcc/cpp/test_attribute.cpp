@@ -8,11 +8,11 @@ void myprint(const char* format, ...)
 
 }
 
-void Before() {
+__attribute__((constructor)) void Before() {
     printf("***** Before Main *****\n");
 }
 
-void After() {
+__attribute__((destructor)) void After() {
      printf("***** After Main *****\n");
 }
 
