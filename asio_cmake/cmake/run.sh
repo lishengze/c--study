@@ -1,2 +1,0 @@
-make
-./asio_study
