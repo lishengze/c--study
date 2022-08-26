@@ -1,4 +1,4 @@
-#include "func.h"
+#include "func/func.h"
 #include <stdio.h>
 
 int main() {

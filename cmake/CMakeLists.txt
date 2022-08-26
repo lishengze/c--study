@@ -16,22 +16,30 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread  -flto -O3")
 
 
+## Set CPP SRC
 AUX_SOURCE_DIRECTORY(. MAIN_SRC)
-
-SET(ALL_SRC ${MAIN_SRC})
+AUX_SOURCE_DIRECTORY(func FUNC_SRC)
+SET(ALL_SRC ${MAIN_SRC} ${FUNC_SRC})
 
 add_library(${LIB_NAME} SHARED ${ALL_SRC})
 ADD_EXECUTABLE(${BIN_NAME} ${ALL_SRC})
 
+
+set(CMAKE_INSTALL_PREFIX "/home/lsz/Code/Git/study/c--study/cmake/test_des")
+
+
 # Test Install
 
 # install dynamic lib
+install(TARGETS ${LIB_NAME} LIBRARY DESTINATION lib)
 
-# install static lib 
-
-# install header file
+# install bin
+install(TARGETS ${BIN_NAME} RUNTIME DESTINATION bin)
 
 # install header directory
+install(DIRECTORY func DESTINATION include 
+        PATTERN "./*.h" )
 
+# install header file
 
 
