@@ -5,8 +5,10 @@
 
 
 void test_cout_err() {
-    // fprintf(stdout, "Hello ");
-    // fprintf(stderr, "World!\n");
+    fprintf(stdout, "Hello ");
+    fflush(stdout);
+    
+    fprintf(stderr, "World!\n");
 
     FILE* fd = freopen("a.log", "a+", stdout);
 
