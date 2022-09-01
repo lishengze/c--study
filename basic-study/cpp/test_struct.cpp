@@ -48,6 +48,59 @@ void TestSizeof () {
 
 }
 
+void test_func1() {
+    struct s1 { 
+        int i1;
+        long long l1;
+        char c1;
+        short int s1;
+    };
+
+    struct s2 { 
+        int  i1;
+        char c1;
+        short int s1;
+        long long l1;
+    };
+    s2 data;
+    cout << sizeof(data) << endl;
+
+    s1 data2;
+    cout << sizeof(data2) << endl;
+
+    cout << sizeof(short int) << endl;
+}
+
+template<class T>
+T test_func2(T x, T y) {
+    return x;
+}
+
+void test3() {
+    int x=2;
+    int y;
+
+    switch(x){
+        case 1:
+            y=1;
+        case 2:
+            y=2;
+        case 3:
+            y=3;
+            break;                        
+    }
+    cout << y << endl;
+}
+
+void test4() {
+    char a[] = "It is mine";
+    char *p = "It is mine";
+    cout << *(a+1)<< endl;
+
+    p ="It is mine aaaa";
+
+    a[11] = 'a';
+}
 
 void TestStructMain() {
     test_address();
