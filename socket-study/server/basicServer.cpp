@@ -1,6 +1,17 @@
 #include "socket_head.h"
 
 #include <string>
+#include <sys/socket.h>  
+#include <sys/epoll.h>  
+#include <netinet/in.h>  
+#include <arpa/inet.h>  
+#include <fcntl.h>  
+#include <unistd.h>  
+#include <stdio.h>  
+#include <errno.h>  
+#include <iostream>  
+#include <memory.h>
+
 #include "basicServer.h"
 #include "connectProcess.h"
 

@@ -6,12 +6,10 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#include "test.h"
+#include "epoll_study.h"
 
 int main() 
 {
-
-	testMain();
-
+	TestEpoll();
 	return 0;
 }
