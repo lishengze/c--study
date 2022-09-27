@@ -1,5 +1,5 @@
 #include "testStaticCast.h"
-#include "print.h"
+#include "../print.h"
 
 void base1::func() {
 	cout << "base::func() " << endl;

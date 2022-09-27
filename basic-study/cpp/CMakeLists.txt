@@ -19,10 +19,19 @@ set(BOOST_ROOT /usr/local/boost_1_68)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-AUX_SOURCE_DIRECTORY(. MAIN_SRC)
+AUX_SOURCE_DIRECTORY(. SRC_LIST)
+AUX_SOURCE_DIRECTORY(class_test/ SRC_LIST)
+AUX_SOURCE_DIRECTORY(func_test/ SRC_LIST)
+AUX_SOURCE_DIRECTORY(key_word/ SRC_LIST)
+AUX_SOURCE_DIRECTORY(online_test/ SRC_LIST)
+AUX_SOURCE_DIRECTORY(stl_test/ SRC_LIST)
+AUX_SOURCE_DIRECTORY(string_test/ SRC_LIST)
+
 
 FIND_PACKAGE(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 
                                      chrono regex program_options unit_test_framework locale REQUIRED)
+
+                                     
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 INCLUDE_DIRECTORIES("../include")
 
@@ -32,9 +41,9 @@ LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
 LINK_DIRECTORIES("/opt/utrade/console/lib/pandora/")
 
 
-SET(ALL_SRC ${MAIN_SRC})
+# SET(ALL_SRC ${MAIN_SRC})
 
-ADD_EXECUTABLE(${BIN_NAME} ${ALL_SRC})
+ADD_EXECUTABLE(${BIN_NAME} ${SRC_LIST})
 
 TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
 
