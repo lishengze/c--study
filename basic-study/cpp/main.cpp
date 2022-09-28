@@ -12,6 +12,7 @@
 // #include "test_virtual.h"
 #include "key_word/test_null.h"
 #include "online_test/online_test.h"
+#include "string_test/test_str_func.h"
 
 int main()
 {
@@ -45,7 +46,9 @@ int main()
 
 	// TestStringMain();
 
-	TestKeyNULL();
+	// TestKeyNULL();
+
+	TestStrFuncMain();
 
 	return 0;
 }
