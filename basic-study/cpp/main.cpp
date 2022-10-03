@@ -14,6 +14,7 @@
 #include "online_test/online_test.h"
 #include "string_test/test_str_func.h"
 #include "string_test/string_opt.h"
+#include "key_word/test_union.h"
 
 int main()
 {
@@ -51,7 +52,9 @@ int main()
 
 	// TestStrFuncMain();
 
-	StringOPTMain();
+	// StringOPTMain();
+
+	TestUnion();
 
 	return 0;
 }
