@@ -16,7 +16,30 @@ void test_rewrite() {
     cout << "test_uo.a : " << test_uo.a << endl;
 }
 
+
+void TestLittleBig() {
+    union TestUO {
+        unsigned char a;
+        unsigned long b;
+    };
+
+    TestUO test_uo;
+    test_uo.b = 0x12345678;
+
+    cout << "test_uo.a : " << int(test_uo.a) << endl;
+
+    if (test_uo.a == 0x12) {
+        cout << "System is Big!" << endl;
+    } else if (test_uo.a == 0x78) {
+        cout << "System is Little!" << endl;
+    } else {
+        cout << "Something is wrong!" << endl;
+    }
+}
+
 void TestUnion() {
     cout << "----- TestUnion -----" << endl;
-    test_rewrite();
+    // test_rewrite();
+
+    TestLittleBig();
 }
