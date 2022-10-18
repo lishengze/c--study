@@ -9,14 +9,8 @@
 
 #include "base.h"
 #include "gtest/gtest.h"
+#include "gtest/gtest-assertion-result.h"
 #include <stdio.h>
-
-TEST(FactorialTest, Positive) {
-EXPECT_EQ(1, Factorial(1));
-EXPECT_EQ(2, Factorial(2));
-EXPECT_EQ(3, Factorial(3));
-EXPECT_EQ(40320, Factorial(8));
-}
 
 int main(int argc, char* argv[]) 
 {

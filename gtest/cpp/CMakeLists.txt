@@ -10,7 +10,7 @@ PROJECT(testg)
 SET("BIN_NAME" testg)
 set(CMAKE_CXX_STANDARD 14)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-SET(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS} -pthread  -flto -O3")
+SET(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS} -pthread  -flto -O3 -ggdb -g")
 
 # SET(CMAKE_CXX_FLAGS "-std=c++14  -Wall ${CMAKE_CXX_FLAGS}")
 

@@ -34,9 +34,29 @@ bool IsPrime(int n) {
   return true;
 }
 
-
-
-
-void TestBase() {
-
+testing::AssertionResult IsFactorialTrue(int a, int b) {
+	if (Factorial(a) == b) {
+		return testing::AssertionSuccess();
+	} else {
+		return testing::AssertionFailure() << "\n[HaHa]Factorial(" << a << ") !=" << b;
+	}
 }
+
+testing::AssertionResult IsFactorialTrueFormat(const char* a_expr,const char* b_expr, int a, int b) {
+	if (Factorial(a) == b) {
+		return testing::AssertionSuccess();
+	} else {
+		return testing::AssertionFailure() << "\n[HaHa]Factorial(" << a << ") !=" << b 
+				<< ", a_expr: " << a_expr << ", b_expr: " << b_expr << "\n";
+	}
+}
+
+// TEST(FactorialTest, Positive) {
+// 	EXPECT_EQ(1, Factorial(1));
+// 	EXPECT_EQ(2, Factorial(2));
+// 	EXPECT_EQ(3, Factorial(3));
+// 	EXPECT_EQ(40320, Factorial(8));
+
+// 	EXPECT_TRUE(IsFactorialTrue(3,3));
+// 	EXPECT_PRED_FORMAT2(IsFactorialTrueFormat, 3,3);
+// }
