@@ -28,7 +28,6 @@ class TestObj {
 
 };
 
-
 class MyTest: public ::testing::Test {
 public:
     void SetUp() override {
@@ -44,10 +43,16 @@ public:
 };
 
 // TEST_F(MyTest, TestF1) {
+//     // cout << env_ << endl;
+
+//     // testing::AddGlobalTestEnvironment
+//     cout << "TestF1: a = " << obj.a << endl;
 //     EXPECT_TRUE(obj.IsPrime(obj.a));
+//     obj.a = 101;
 // }
 
 // TEST_F(MyTest, TestF2) {
+//     cout << "TestF2: a = " << obj.a << endl;
 //     obj.a = 77;
 //     EXPECT_TRUE(obj.IsPrime(obj.a));
 // }
