@@ -12,3 +12,5 @@ using std::tuple;
 using std::cout;
 using std::endl;
 using std::get;
+
+using namespace testing;
