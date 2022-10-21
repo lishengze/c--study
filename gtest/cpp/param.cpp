@@ -21,15 +21,15 @@ protected:
     Tuples t1;
 };
  
-// TEST_P(FuncTestParamStruct,case1)
-// {
-//     // EXPECT_EQ(t1.a+t1.b+t1.c,add(t1.a,t1.b,t1.c));
-//     auto data = GetParam();
-//     EXPECT_EQ(data.a+data.b+data.c,add(data.a,data.b,data.c));
-// }
+TEST_P(FuncTestParamStruct,case1)
+{
+    // EXPECT_EQ(t1.a+t1.b+t1.c,add(t1.a,t1.b,t1.c));
+    auto data = GetParam();
+    EXPECT_EQ(data.a+data.b+data.c,add(data.a,data.b,data.c));
+}
  
-// INSTANTIATE_TEST_CASE_P(StructTest, FuncTestParamStruct, 
-//                         testing::Values(Tuples{1,2,3},Tuples{4,5,6}));
+INSTANTIATE_TEST_CASE_P(StructTest, FuncTestParamStruct, 
+                        testing::Values(Tuples{1,2,3},Tuples{4,5,6}));
  
 class FuncTestParamCompbine:public testing::TestWithParam<tuple<int,int>>{
 protected:

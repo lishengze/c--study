@@ -10,7 +10,9 @@ PROJECT(testg)
 SET("BIN_NAME" testg)
 set(CMAKE_CXX_STANDARD 14)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-SET(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS} -save-temps -pthread  -flto -O3 -ggdb -g")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread  -flto -O3 -ggdb -g")
+# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps")
+SET(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS} -fno-access-control")
 
 # SET(CMAKE_CXX_FLAGS "-std=c++14  -Wall ${CMAKE_CXX_FLAGS}")
 

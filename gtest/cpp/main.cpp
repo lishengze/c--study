@@ -33,12 +33,11 @@ int main(int argc, char* argv[])
 {
 	printf("---------- Test GoogleTest ----------\n");
 
-	testing::AddGlobalTestEnvironment(new FooEnvironment);
+    testing::GTEST_FLAG(filter) = "Algo*:Share*";
+    testing::GTEST_FLAG(repeat) = 1;
+    testing::GTEST_FLAG(output) = "xml:";
 
 	testing::InitGoogleTest(&argc, argv);
 
-	TestMokaBase();
-
 	return RUN_ALL_TESTS();
-
 }

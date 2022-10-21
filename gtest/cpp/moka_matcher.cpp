@@ -11,7 +11,7 @@ TEST(TestMockPrivate, TestPrivate) {
     cout << "test private GetTimeOut:" << foo.GetTimeOut() << endl; //1
 }
 
-//测试重载方法
+// //测试重载方法
 
 TEST(TestMockOverload, TestOverload) {
     MockFoo foo;

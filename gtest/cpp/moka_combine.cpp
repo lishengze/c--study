@@ -49,10 +49,10 @@ class MockCombine:public testing::Test {
         MockBaseUser* user_;
 };
 
-// TEST_F(MockCombine, BasicTest) {
-//     // EXPECT_CALL(*user_, IsPositive(Gt(10))).WillRepeatedly(testing::Return(true));
-//     EXPECT_CALL(*user_, IsPositive(Lt(10))).WillRepeatedly(testing::Return(false));
+TEST_F(MockCombine, BasicTest) {
+    // EXPECT_CALL(*user_, IsPositive(Gt(10))).WillRepeatedly(testing::Return(true));
+    EXPECT_CALL(*user_, IsPositive(Lt(10))).WillRepeatedly(testing::Return(false));
 
-//     EXPECT_TRUE(worker_.TestPositive(9));
-//     EXPECT_TRUE(worker_.TestPositive(11));
-// }
+    EXPECT_TRUE(worker_.TestPositive(9));
+    EXPECT_TRUE(worker_.TestPositive(11));
+}

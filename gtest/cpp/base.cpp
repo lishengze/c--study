@@ -1,62 +1,94 @@
 #include "base.h"
+#include "global_declare.h"
 #include "gtest/gtest.h"
+#include <string.h>
 
-int Factorial(int n) {
-  int result = 1;
-  for (int i = 1; i <= n; i++) {
-    result *= i;
-  }
+class MockSimpleAlgorithm: public SimpleAlgorithm {
+  public:
+    MOCK_METHOD1(IsPositive, bool(int));
 
-  return result;
+    virtual ~MockSimpleAlgorithm() {}
+};
+
+class TestUserAlogrithm: public UserAlogrithm {
+  public:
+    bool SimpleDataEqual(const SimpleDataType& src, const SimpleDataType& target) { 
+      return src.value1_ == target.value1_ && src.value2_ == target.value2_;
+    }
+
+    bool CheckPrivateData(const SimpleDataType& target) { 
+      return SimpleDataEqual(private_value_, target);
+    }
+
+    bool CheckPublicData(const SimpleDataType& target) { 
+      return SimpleDataEqual(public_value_, target);
+    }
+};
+
+
+TEST(AlgoTest,AlgoInt) {
+  UserAlogrithm algoObj;
+
+	EXPECT_EQ(1, algoObj.Factorial(1));
+	EXPECT_EQ(2, algoObj.Factorial(2));
+	EXPECT_EQ(3, algoObj.Factorial(3));
+	EXPECT_EQ(40320, algoObj.Factorial(8));
+
+	// EXPECT_TRUE(algoObj.IsFactorialTrue(3,3));
+	// EXPECT_PRED_FORMAT2(algoObj.IsFactorialTrueFormat, 3,3);
 }
 
-// Returns true if and only if n is a prime number.
-bool IsPrime(int n) {
-  // Trivial case 1: small numbers
-  if (n <= 1) return false;
-
-  // Trivial case 2: even numbers
-  if (n % 2 == 0) return n == 2;
-
-  // Now, we have that n is odd and n >= 3.
-
-  // Try to divide n by every odd number i, starting from 3
-  for (int i = 3;; i += 2) {
-    // We only have to try i up to the square root of n
-    if (i > n / i) break;
-
-    // Now, we have i <= n/i < n.
-    // If n is divisible by i, n is not prime.
-    if (n % i == 0) return false;
-  }
-
-  // n has no integer factor in the range (1, n), and thus is prime.
-  return true;
+TEST(AlgoTest, AlgoString) {
+  UserAlogrithm algoObj;
+  char a[20] = "Hello";
+  char b[20] = "World";
+  EXPECT_EQ(0, algoObj.StringCmp(algoObj.StringCat(a, b), "Hello World"));
 }
 
-testing::AssertionResult IsFactorialTrue(int a, int b) {
-	if (Factorial(a) == b) {
-		return testing::AssertionSuccess();
-	} else {
-		return testing::AssertionFailure() << "\n[HaHa]Factorial(" << a << ") !=" << b;
-	}
+TEST(AlgoTest, AlgoPrivate) {
+  TestUserAlogrithm algoObj;
+  SimpleDataType target;
+  target.Init();
+  EXPECT_TRUE(algoObj.CheckPrivateData(target));
 }
 
-testing::AssertionResult IsFactorialTrueFormat(const char* a_expr,const char* b_expr, int a, int b) {
-	if (Factorial(a) == b) {
-		return testing::AssertionSuccess();
-	} else {
-		return testing::AssertionFailure() << "\n[HaHa]Factorial(" << a << ") !=" << b 
-				<< ", a_expr: " << a_expr << ", b_expr: " << b_expr << "\n";
-	}
+TEST(AlgoTest, AlgoPublic) {
+  TestUserAlogrithm algoObj;
+  SimpleDataType target;
+  target.Init();
+  EXPECT_TRUE(algoObj.CheckPublicData(target));
 }
 
-// TEST(FactorialTest, Positive) {
-// 	EXPECT_EQ(1, Factorial(1));
-// 	EXPECT_EQ(2, Factorial(2));
-// 	EXPECT_EQ(3, Factorial(3));
-// 	EXPECT_EQ(40320, Factorial(8));
 
-// 	EXPECT_TRUE(IsFactorialTrue(3,3));
-// 	EXPECT_PRED_FORMAT2(IsFactorialTrueFormat, 3,3);
-// }
+TEST(AlgoTest, AlgoMock) {
+  UserAlogrithm algoObj;
+  MockSimpleAlgorithm* mock_algo_ = new MockSimpleAlgorithm();
+  algoObj.SetSimpleAlgo(mock_algo_);
+
+  ON_CALL(*mock_algo_, IsPositive(_)).WillByDefault(Return(true));
+  EXPECT_CALL(*mock_algo_, IsPositive(Lt(10))).WillRepeatedly(Return(false));
+
+  EXPECT_EQ(0, algoObj.FactorialCombine(1));
+  EXPECT_EQ(1, algoObj.FactorialCombine(1));
+
+  if (mock_algo_) delete mock_algo_;
+}
+
+class ShareTest:public testing::Test {
+  public:
+    static TestUserAlogrithm algoObj_;
+};
+
+TestUserAlogrithm ShareTest::algoObj_;
+
+TEST_F(ShareTest, AlgoPrivate) {
+  SimpleDataType target;
+  target.Init();
+  EXPECT_TRUE(algoObj_.CheckPrivateData(target));
+}
+
+TEST_F(ShareTest, AlgoPublic) {
+  SimpleDataType target;
+  target.Init();
+  EXPECT_TRUE(algoObj_.CheckPublicData(target));
+}
