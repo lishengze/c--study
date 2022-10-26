@@ -6,14 +6,12 @@ int Factorial(int n) {
   for (int i = 1; i <= n; i++) {
     result *= i;
   }
-
   return result;
 }
 
 // 是否是素数
 bool IsPrime(int n) {
   if (n <= 1) return false;
-
   if (n % 2 == 0) return n == 2;
 
   for (int i = 3;; i += 2) {
@@ -21,7 +19,6 @@ bool IsPrime(int n) {
 
     if (n % i == 0) return false;
   }
-
   return true;
 }
 
@@ -40,8 +37,15 @@ bool IsPalindrome(int n)
 }
 
 // 计算是回文数的素数的阶乘;
+int CalPrimePalindromeFactorialSeprate(int n) {
+    if (!IsPrime(n)) return 0;
+    if(!IsPalindrome(n)) return 0;
+    return Factorial(n);
+}
+
+// 计算是回文数的素数的阶乘;
 int CalPrimePalindromeFactorialALL(int n) {
-  // 判断素数
+
     if (n <= 1) return 0;
     if (n % 2 == 0 && n !=2 ) return 0;
 
@@ -50,8 +54,8 @@ int CalPrimePalindromeFactorialALL(int n) {
         if (n % i == 0) return 0;
     }
 
-  // 判断回文数
-    if(n<0) return 0;
+    if(n<10) return 0;
+
     double rn=0;
     int nn=n;
     while(n)
@@ -61,7 +65,6 @@ int CalPrimePalindromeFactorialALL(int n) {
     }
     if (rn!=nn) return 0;
 
-    // 计算阶乘
     int result = 1;
     for (int i = 1; i <= n; i++) {
         result *= i;
@@ -69,28 +72,94 @@ int CalPrimePalindromeFactorialALL(int n) {
     return result;
 }
 
-int CalPrimePalindromeFactorial(int n) {
-    if (!IsPrime(n)) return 0;
 
-    if(!IsPalindrome(n)) return 0;
-
-    return Factorial(n);
-}
-
+// 为集中式实现的接口编写测试套件;
+// 为每个相对独立的功能点编写单独的测试案例;
+// 但是测试的接口是同一个;
 TEST(TEST_ALL, TestPrime) {
-    EXPECT_TRUE(CalPrimePalindromeFactorialALL(1));
     EXPECT_TRUE(CalPrimePalindromeFactorialALL(2));
-    EXPECT_TRUE(CalPrimePalindromeFactorialALL(3));
     EXPECT_FALSE(CalPrimePalindromeFactorialALL(4));
     EXPECT_TRUE(CalPrimePalindromeFactorialALL(11));
-    EXPECT_TRUE(CalPrimePalindromeFactorialALL(17));
     EXPECT_FALSE(CalPrimePalindromeFactorialALL(21));
 }
 
 TEST(TEST_ALL, TestPalindrome) {
-    
+    EXPECT_TRUE(CalPrimePalindromeFactorialALL(2));
+    EXPECT_FALSE(CalPrimePalindromeFactorialALL(4));
+    EXPECT_TRUE(CalPrimePalindromeFactorialALL(121));
+    EXPECT_FALSE(CalPrimePalindromeFactorialALL(221));   
 }
 
 TEST(TEST_ALL, TestFactorial) {
-    
+	EXPECT_EQ(1, CalPrimePalindromeFactorialALL(1));
+	EXPECT_EQ(2, CalPrimePalindromeFactorialALL(2));
+	EXPECT_EQ(3, CalPrimePalindromeFactorialALL(3));
+	EXPECT_EQ(120, CalPrimePalindromeFactorialALL(5));    
+}
+
+// 为测试驱动式实现的接口编写测试套件;
+// 为每个测试接口编写单独的测试案例，每次测试的接口不同;
+TEST(TEST_SEPARTE, TestPrime) {
+    EXPECT_TRUE(IsPrime(2));
+    EXPECT_FALSE(IsPrime(4));
+    EXPECT_TRUE(IsPrime(11));
+    EXPECT_FALSE(IsPrime(21));
+}
+
+TEST(TEST_SEPARTE, TestPalindrome) {
+    EXPECT_TRUE(IsPalindrome(2));
+    EXPECT_FALSE(IsPalindrome(4));
+    EXPECT_TRUE(IsPalindrome(121));
+    EXPECT_FALSE(IsPalindrome(221));    
+}
+
+TEST(TEST_SEPARTE, TestFactorial) {
+	EXPECT_EQ(1, Factorial(1));
+	EXPECT_EQ(2, Factorial(2));
+	EXPECT_EQ(3, Factorial(3));
+	EXPECT_EQ(120, Factorial(5));    
+}
+
+int FuncCall1(int n) {
+    // Before Work;
+    ++n;
+    // After Work;
+    return n;
+}
+
+int FuncCall2(int n) {
+    // Before Work;
+    ++n;
+    ++n;
+    ++n;
+    ++n;
+    // After Work;
+    return n;
+}
+
+void FuncCall3(int n) {
+    // Before Work;
+    ++n;
+    --n;
+    ++n;
+    --n;
+    n ^= 1;
+    --n;
+    ++n;
+    ++n;
+    // After Work;
+}
+
+void FuncCall4(int n) {
+    // Before Work;
+    ++n;
+    --n;
+    n ^= n++;
+    ++n;
+    --n;
+    n |= n--;
+    --n;
+    ++n;
+    ++n;
+    // After Work;
 }

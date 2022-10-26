@@ -13,6 +13,12 @@ class TestCase {
         return n1;
     }
 
+    private:
+        int m_value1;
+        int m_value2;
+        int m_value3;
+
+    public:
     int Func2(int value) {
         int local_n = 100;
         value += Cal1(local_n);
@@ -65,9 +71,6 @@ class TestCase {
         printf("%d", value);
     }
 
-    private:
-        int m_value1;
-        int m_value2;
-        int m_value3;
+
 };
 
