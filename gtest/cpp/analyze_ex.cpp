@@ -3,6 +3,8 @@
 class TestCase {
     public:
 
+    TestCase() {}
+
     int Func1(int n1) {
         int local_n2 = 10;
         n1 = n1 + local_n2;
@@ -70,7 +72,4 @@ class TestCase {
     void PrintImportantInfo(int value) {
         printf("%d", value);
     }
-
-
 };
-

@@ -1,6 +1,6 @@
 #include "global_declare.h"
 
-// ¼ÆËã½×³Ë
+// è®¡ç®—é˜¶ä¹˜
 int Factorial(int n) {
   int result = 1;
   for (int i = 1; i <= n; i++) {
@@ -9,20 +9,20 @@ int Factorial(int n) {
   return result;
 }
 
-// ÊÇ·ñÊÇËØÊı
+// æ˜¯å¦æ˜¯ç´ æ•°
 bool IsPrime(int n) {
   if (n <= 1) return false;
   if (n % 2 == 0) return n == 2;
 
-  for (int i = 3;; i += 2) {
-    if (i > n / i) break;
-
+  for (int i = 3;; i += 4) { // é”™è¯¯ï¼Œæ­£ç¡®çš„æ˜¯ i+=2;
+    // å› å­çš„å¤§å°å·²ç»è¶…è¿‡ N çš„å¹³æ–¹æ ¹ï¼Œè¯´æ˜å·²ç»æ£€æµ‹ç»“æŸ;
+    if (i > n / i) break; 
     if (n % i == 0) return false;
   }
   return true;
 }
 
-// ÊÇ·ñÊÇ»ØÎÄÊı
+// æ˜¯å¦æ˜¯å›æ–‡æ•°
 bool IsPalindrome(int n)
 {
     if(n<0) return false;
@@ -36,14 +36,14 @@ bool IsPalindrome(int n)
     return rn==nn;
 }
 
-// ¼ÆËãÊÇ»ØÎÄÊıµÄËØÊıµÄ½×³Ë;
+// è®¡ç®—æ˜¯å›æ–‡æ•°çš„ç´ æ•°çš„é˜¶ä¹˜;
 int CalPrimePalindromeFactorialSeprate(int n) {
     if (!IsPrime(n)) return 0;
     if(!IsPalindrome(n)) return 0;
     return Factorial(n);
 }
 
-// ¼ÆËãÊÇ»ØÎÄÊıµÄËØÊıµÄ½×³Ë;
+// è®¡ç®—æ˜¯å›æ–‡æ•°çš„ç´ æ•°çš„é˜¶ä¹˜;
 int CalPrimePalindromeFactorialALL(int n) {
 
     if (n <= 1) return 0;
@@ -73,44 +73,49 @@ int CalPrimePalindromeFactorialALL(int n) {
 }
 
 
-// Îª¼¯ÖĞÊ½ÊµÏÖµÄ½Ó¿Ú±àĞ´²âÊÔÌ×¼ş;
-// ÎªÃ¿¸öÏà¶Ô¶ÀÁ¢µÄ¹¦ÄÜµã±àĞ´µ¥¶ÀµÄ²âÊÔ°¸Àı;
-// µ«ÊÇ²âÊÔµÄ½Ó¿ÚÊÇÍ¬Ò»¸ö;
+// ä¸ºé›†ä¸­å¼å®ç°çš„æ¥å£ç¼–å†™æµ‹è¯•å¥—ä»¶;
+// ä¸ºæ¯ä¸ªç›¸å¯¹ç‹¬ç«‹çš„åŠŸèƒ½ç‚¹ç¼–å†™å•ç‹¬çš„æµ‹è¯•æ¡ˆä¾‹;
+// ä½†æ˜¯æµ‹è¯•çš„æ¥å£æ˜¯åŒä¸€ä¸ª;
 TEST(TEST_ALL, TestPrime) {
-    EXPECT_TRUE(CalPrimePalindromeFactorialALL(2));
+    EXPECT_FALSE(CalPrimePalindromeFactorialALL(2));
     EXPECT_FALSE(CalPrimePalindromeFactorialALL(4));
     EXPECT_TRUE(CalPrimePalindromeFactorialALL(11));
     EXPECT_FALSE(CalPrimePalindromeFactorialALL(21));
 }
 
 TEST(TEST_ALL, TestPalindrome) {
-    EXPECT_TRUE(CalPrimePalindromeFactorialALL(2));
+    EXPECT_FALSE(CalPrimePalindromeFactorialALL(2));
     EXPECT_FALSE(CalPrimePalindromeFactorialALL(4));
-    EXPECT_TRUE(CalPrimePalindromeFactorialALL(121));
+    EXPECT_TRUE(CalPrimePalindromeFactorialALL(1221));
     EXPECT_FALSE(CalPrimePalindromeFactorialALL(221));   
 }
 
 TEST(TEST_ALL, TestFactorial) {
-	EXPECT_EQ(1, CalPrimePalindromeFactorialALL(1));
-	EXPECT_EQ(2, CalPrimePalindromeFactorialALL(2));
-	EXPECT_EQ(3, CalPrimePalindromeFactorialALL(3));
-	EXPECT_EQ(120, CalPrimePalindromeFactorialALL(5));    
+	EXPECT_EQ(0, CalPrimePalindromeFactorialALL(1));
+	EXPECT_EQ(0, CalPrimePalindromeFactorialALL(2));
+	EXPECT_EQ(0, CalPrimePalindromeFactorialALL(3));
+	EXPECT_EQ(0, CalPrimePalindromeFactorialALL(5));    
 }
 
-// Îª²âÊÔÇı¶¯Ê½ÊµÏÖµÄ½Ó¿Ú±àĞ´²âÊÔÌ×¼ş;
-// ÎªÃ¿¸ö²âÊÔ½Ó¿Ú±àĞ´µ¥¶ÀµÄ²âÊÔ°¸Àı£¬Ã¿´Î²âÊÔµÄ½Ó¿Ú²»Í¬;
+// ä¸ºæµ‹è¯•é©±åŠ¨å¼å®ç°çš„æ¥å£ç¼–å†™æµ‹è¯•å¥—ä»¶;
+// ä¸ºæ¯ä¸ªæµ‹è¯•æ¥å£ç¼–å†™å•ç‹¬çš„æµ‹è¯•æ¡ˆä¾‹ï¼Œæ¯æ¬¡æµ‹è¯•çš„æ¥å£ä¸åŒ;
+
 TEST(TEST_SEPARTE, TestPrime) {
     EXPECT_TRUE(IsPrime(2));
     EXPECT_FALSE(IsPrime(4));
     EXPECT_TRUE(IsPrime(11));
-    EXPECT_FALSE(IsPrime(21));
+    EXPECT_FALSE(IsPrime(35));
 }
+
+TEST(TEST_SEPARTE, TestPrime2) {
+    EXPECT_FALSE(IsPrime(25));
+}
+
 
 TEST(TEST_SEPARTE, TestPalindrome) {
     EXPECT_TRUE(IsPalindrome(2));
     EXPECT_FALSE(IsPalindrome(4));
-    EXPECT_TRUE(IsPalindrome(121));
-    EXPECT_FALSE(IsPalindrome(221));    
+    EXPECT_TRUE(IsPalindrome(35));   
 }
 
 TEST(TEST_SEPARTE, TestFactorial) {
@@ -120,46 +125,3 @@ TEST(TEST_SEPARTE, TestFactorial) {
 	EXPECT_EQ(120, Factorial(5));    
 }
 
-int FuncCall1(int n) {
-    // Before Work;
-    ++n;
-    // After Work;
-    return n;
-}
-
-int FuncCall2(int n) {
-    // Before Work;
-    ++n;
-    ++n;
-    ++n;
-    ++n;
-    // After Work;
-    return n;
-}
-
-void FuncCall3(int n) {
-    // Before Work;
-    ++n;
-    --n;
-    ++n;
-    --n;
-    n ^= 1;
-    --n;
-    ++n;
-    ++n;
-    // After Work;
-}
-
-void FuncCall4(int n) {
-    // Before Work;
-    ++n;
-    --n;
-    n ^= n++;
-    ++n;
-    --n;
-    n |= n--;
-    --n;
-    ++n;
-    ++n;
-    // After Work;
-}

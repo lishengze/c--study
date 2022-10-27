@@ -3,8 +3,8 @@
 // Author      : lsz
 // Version     :
 // Copyright   : None
-// Description : Study right refrenece in C++, Ansi-style
-// Date        : 2022-8-16
+// Description : Study Google Test
+// Date        : 2022-9-22
 //============================================================================
 #include "global_declare.h"
 #include "base.h"
@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 {
 	printf("---------- Test GoogleTest ----------\n");
 
-    testing::GTEST_FLAG(filter) = "Algo*:Share*";
+    testing::GTEST_FLAG(filter) = "TEST_ALL*";
     testing::GTEST_FLAG(repeat) = 1;
     testing::GTEST_FLAG(output) = "xml:";
 
