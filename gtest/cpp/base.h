@@ -98,6 +98,6 @@ class UserAlogrithm {
     SimpleDataType public_value_;
     SimpleAlgorithm* simple_algo_;
 
-  private:
+  public:
     SimpleDataType private_value_;
 };

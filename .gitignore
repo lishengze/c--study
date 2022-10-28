@@ -20,6 +20,11 @@ build/
 cmake-build-debug/
 cmake-build-release/
 
-# grpc生成的代码
 protos/cpp/*
 protos/python/*
+
+gtest/vs2017/gtest_vs_2017/Debug/*
+gtest/vs2017/gtest_vs_2017/gtest_vs_2017/*
+gtest/vs2017/gtest_vs_2017/.vs/*
+gtest/vs2017/gtest_vs_2017/packages/*
+.vs/*

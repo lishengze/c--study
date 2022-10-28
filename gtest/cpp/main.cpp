@@ -9,7 +9,6 @@
 #include "global_declare.h"
 #include "base.h"
 #include "gtest/gtest.h"
-#include "gtest/gtest-assertion-result.h"
 #include <stdio.h>
 #include "moka_base.h"
 
