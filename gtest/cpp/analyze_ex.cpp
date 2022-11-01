@@ -40,6 +40,9 @@ class TestCase {
         }
 
         int condition1 = m_value1 + m_value2;
+        /*50*/
+
+
         if (condition1 < 0) {
             // 此次接口的调用不可测，condition1 是局部变量，即时它在此次调用后不改变，也无法被外部获取;
             PrintImportantInfo(condition1); 

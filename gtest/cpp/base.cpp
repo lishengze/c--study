@@ -34,6 +34,8 @@ TEST(AlgoTest,AlgoInt) {
 	EXPECT_EQ(3, algoObj.Factorial(3));
 	EXPECT_EQ(40320, algoObj.Factorial(8));
 
+  // EXPECT_EQ(10, algoObj.public_value_);
+
 	// EXPECT_TRUE(algoObj.IsFactorialTrue(3,3));
 	// EXPECT_PRED_FORMAT2(algoObj.IsFactorialTrueFormat, 3,3);
 }
@@ -43,6 +45,8 @@ TEST(AlgoTest, AlgoString) {
   char a[20] = "Hello";
   char b[20] = "World";
   EXPECT_EQ(0, algoObj.StringCmp(algoObj.StringCat(a, b), "Hello World"));
+
+
 }
 
 TEST(AlgoTest, AlgoPrivate) {
