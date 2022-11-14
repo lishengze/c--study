@@ -11,7 +11,7 @@ SET("BIN_NAME" boost_study)
 set(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
 
-set(BOOST_ROOT /usr/local/boost_1_68)
+# set(BOOST_ROOT /usr/local/boost_1_68)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

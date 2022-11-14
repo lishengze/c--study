@@ -7,6 +7,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/filesystem.hpp>
 
 using ID_TYPE = unsigned long long;
 
