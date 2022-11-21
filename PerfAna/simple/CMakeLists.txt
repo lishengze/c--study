@@ -12,7 +12,7 @@ SET(LIB_NAME libtest_cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Generate compile_commands.json
 
 set(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -pg -O0")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -pg -O1")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps")
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
