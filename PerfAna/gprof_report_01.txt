@@ -1,0 +1,38 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 50.79      0.03     0.03        1    30.48    30.48  TestMemberPerf(int)
+ 50.79      0.06     0.03        1    30.48    30.48  TestInheritClass(int)
+  0.00      0.06     0.00        1     0.00     0.00  _GLOBAL__sub_I__Z14TestMemberPerfi
+  0.00      0.06     0.00        1     0.00     0.00  _GLOBAL__sub_I_main
+
+			Call graph
+
+
+granularity: each sample hit covers 2 byte(s) for 16.41% of 0.06 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]    100.0    0.00    0.06                 main [1]
+                0.03    0.00       1/1           TestInheritClass(int) [3]
+                0.03    0.00       1/1           TestMemberPerf(int) [2]
+-----------------------------------------------
+                0.03    0.00       1/1           main [1]
+[2]     50.0    0.03    0.00       1         TestMemberPerf(int) [2]
+-----------------------------------------------
+                0.03    0.00       1/1           main [1]
+[3]     50.0    0.03    0.00       1         TestInheritClass(int) [3]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [15]
+[10]     0.0    0.00    0.00       1         _GLOBAL__sub_I__Z14TestMemberPerfi [10]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [15]
+[11]     0.0    0.00    0.00       1         _GLOBAL__sub_I_main [11]
+-----------------------------------------------
+
+Index by function name
+
+  [10] _GLOBAL__sub_I__Z14TestMemberPerfi [2] TestMemberPerf(int)
+  [11] _GLOBAL__sub_I_main     [3] TestInheritClass(int)
