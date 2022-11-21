@@ -21,7 +21,7 @@ void TestMember(benchmark::State& state) {
     MemberClass member_obj;
      for (auto _: state) {
 
-        member_obj.base_obj_.SetA(100);
+        member_obj.base_obj_.UpdateA();
      }
     
 }
@@ -29,7 +29,7 @@ void TestMember(benchmark::State& state) {
 void TestInherit(benchmark::State& state) {
     InheritClass inherit_obj;
     for (auto _: state) {         
-        inherit_obj.SetA(100);
+        inherit_obj.UpdateA();
     }
 }
 
@@ -38,7 +38,7 @@ void TestMemberPointer(benchmark::State& state) {
 
     if (member_obj) {
         for (auto _: state) {
-            member_obj->base_obj_.SetA(100);
+            member_obj->base_obj_.UpdateA();
         }
 
         delete member_obj;
@@ -50,7 +50,7 @@ void TestInheritPointer(benchmark::State& state) {
 
     if (inherit_obj) {
         for (auto _: state) {         
-            inherit_obj->SetA(100);
+            inherit_obj->UpdateA();
         }
         delete inherit_obj;
     }

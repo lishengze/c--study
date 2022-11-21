@@ -5,7 +5,7 @@
 class BaseClass {
     
 private:
-    int a_;
+    unsigned long a_;
     double b_;
     char d1_[MAX_STRING_LEN];
     char d2_[MAX_STRING_LEN];
@@ -17,9 +17,12 @@ private:
     char d8_[MAX_STRING_LEN];
 
 public:
+    BaseClass():a_{0} {
+    }
     void SetA(int a) { a_ = a;}
     void SetB(double b) { b_ = b;}
     void SetD(char* src, int len) { memcpy(d1_, src, len >MAX_STRING_LEN?MAX_STRING_LEN:len);}
+    void UpdateA() {a_++;}
 
     int GetA() {return a_;}
 };
@@ -37,19 +40,19 @@ int main() {
     MemberClass member_obj;
     InheritClass inherit_obj;
 
-    member_obj.base_obj_.SetA(100);
-    inherit_obj.SetA(100);
+    member_obj.base_obj_.UpdateA();
+    inherit_obj.UpdateA();
 
   	MemberClass* p_member_obj = new MemberClass();
     InheritClass* p_base_obj = new InheritClass();
   
   	if (p_member_obj) {
-        p_member_obj->base_obj_.SetA(100);
+        p_member_obj->base_obj_.UpdateA();
         delete p_member_obj;
     }
 
     if (p_base_obj) {
-        p_base_obj->SetA(100);
+        p_base_obj->UpdateA();
         delete p_base_obj;
     }
 

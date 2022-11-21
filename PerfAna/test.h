@@ -7,7 +7,7 @@
 class BaseClass {
     
 private:
-    int a_;
+    unsigned long a_;
     double b_;
     char d1_[MAX_STRING_LEN];
     char d2_[MAX_STRING_LEN];
@@ -19,9 +19,14 @@ private:
     char d8_[MAX_STRING_LEN];
 
 public:
+    BaseClass():a_{0} {
+
+    }
+    
     void SetA(int a) { a_ = a;}
     void SetB(double b) { b_ = b;}
     void SetD(char* src, int len) { memcpy(d1_, src, len >MAX_STRING_LEN?MAX_STRING_LEN:len);}
+    void UpdateA() {a_++;}
 
     int GetA() {return a_;}
 };
