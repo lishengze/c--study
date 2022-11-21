@@ -1,6 +1,4 @@
-#pragma once
-#include "global_declare.h"
-#include <benchmark/benchmark.h>
+#include <string.h>
 
 #define MAX_STRING_LEN 1024
 
@@ -35,20 +33,25 @@ class InheritClass: public BaseClass{
 
 };
 
+int main() {
+    MemberClass member_obj;
+    InheritClass inherit_obj;
 
-void TestMember(benchmark::State& state);
+    member_obj.base_obj_.SetA(100);
+    inherit_obj.SetA(100);
 
-BENCHMARK(TestMember);
+  	MemberClass* p_member_obj = new MemberClass();
+    InheritClass* p_base_obj = new InheritClass();
+  
+  	if (p_member_obj) {
+        p_member_obj->base_obj_.SetA(100);
+        delete p_member_obj;
+    }
 
-void TestInherit(benchmark::State& state);
+    if (p_base_obj) {
+        p_base_obj->SetA(100);
+        delete p_base_obj;
+    }
 
-BENCHMARK(TestInherit);
-
-
-void TestMemberPointer(benchmark::State& state);
-
-BENCHMARK(TestMemberPointer);
-
-void TestInheritPointer(benchmark::State& state);
-
-BENCHMARK(TestInheritPointer);
+    return 1;
+}

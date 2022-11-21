@@ -1,45 +1,57 @@
 #include "test.h"
 
-MemberClass g_member_obj;
-InheritClass g_inherit_obj;
 
-void test_member_obj(int count) {
-    for (int i=0; i<count; ++i) {
-        g_member_obj.base_obj_.SetA(i);
-    }
-}
 
-void test_inherit_class(int count) {
+
+// void test_member_obj(int count) {
+//     for (int i=0; i<count; ++i) {
+//         g_member_obj.base_obj_.SetA(i);
+//     }
+// }
+
+// void test_inherit_class(int count) {
     
-    for (int i=0; i<count; ++i) {
-        g_inherit_obj.SetA(i);
-    }    
-}   
+//     for (int i=0; i<count; ++i) {
+//         g_inherit_obj.SetA(i);
+//     }    
+// }   
 
 
-void TestMemberObj(benchmark::State& state) {
-    auto count = state.range(0);
+void TestMember(benchmark::State& state) {
+    MemberClass member_obj;
      for (auto _: state) {
 
-        // test_member_obj(count);
-        // for (int i=0; i<count; ++i) {
-        //     g_member_obj.base_obj_.SetA(i);
-        // }
-
-        g_member_obj.base_obj_.SetA(count);
+        member_obj.base_obj_.SetA(100);
      }
     
 }
 
-void TestInheritClass(benchmark::State& state) {
-    auto count = state.range(0);
+void TestInherit(benchmark::State& state) {
+    InheritClass inherit_obj;
+    for (auto _: state) {         
+        inherit_obj.SetA(100);
+    }
+}
 
-    for (auto _: state) {
-        // test_inherit_class(count);
-        // for (int i=0; i<count; ++i) {
-        //     g_inherit_obj.SetA(i);
-        // }          
+void TestMemberPointer(benchmark::State& state) {
+    MemberClass* member_obj = new MemberClass();
 
-        g_inherit_obj.SetA(count);
+    if (member_obj) {
+        for (auto _: state) {
+            member_obj->base_obj_.SetA(100);
+        }
+
+        delete member_obj;
+    }
+}
+
+void TestInheritPointer(benchmark::State& state) {
+    InheritClass* inherit_obj = new InheritClass();
+
+    if (inherit_obj) {
+        for (auto _: state) {         
+            inherit_obj->SetA(100);
+        }
+        delete inherit_obj;
     }
 }
