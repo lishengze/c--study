@@ -14,7 +14,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Generate compile_commands.json
 
 # SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread  -flto -O3 -g")
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps")
 
 
 ## Set CPP SRC
