@@ -57,3 +57,5 @@ BENCHMARK(TestMemberPointer);
 void TestInheritPointer(benchmark::State& state);
 
 BENCHMARK(TestInheritPointer);
+
+void TestUserMain();

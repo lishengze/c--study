@@ -3,18 +3,26 @@
 
 
 
-// void test_member_obj(int count) {
-//     for (int i=0; i<count; ++i) {
-//         g_member_obj.base_obj_.SetA(i);
-//     }
-// }
+void test_member_obj(int count) {
+    MemberClass member_obj;
+    for (int i=0; i<count; ++i) {
+        member_obj.base_obj_.UpdateA();
+    }
+}
 
-// void test_inherit_class(int count) {
-    
-//     for (int i=0; i<count; ++i) {
-//         g_inherit_obj.SetA(i);
-//     }    
-// }   
+void test_inherit_class(int count) {
+    InheritClass inherit_obj;
+    for (int i=0; i<count; ++i) {
+        inherit_obj.UpdateA();
+    }    
+}   
+
+void TestUserMain() {
+    int test_count = 1000000;
+
+    test_member_obj(test_count);
+    test_inherit_class(test_count);
+}
 
 
 void TestMember(benchmark::State& state) {

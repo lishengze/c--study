@@ -1,0 +1,3709 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="1200" height="2134" onload="init(evt)" viewBox="0 0 1200 2134" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<defs>
+	<linearGradient id="background" y1="0" y2="1" x1="0" x2="0" >
+		<stop stop-color="#eeeeee" offset="5%" />
+		<stop stop-color="#eeeeb0" offset="95%" />
+	</linearGradient>
+</defs>
+<style type="text/css">
+	text { font-family:Verdana; font-size:12px; fill:rgb(0,0,0); }
+	#search, #ignorecase { opacity:0.1; cursor:pointer; }
+	#search:hover, #search.show, #ignorecase:hover, #ignorecase.show { opacity:1; }
+	#subtitle { text-anchor:middle; font-color:rgb(160,160,160); }
+	#title { text-anchor:middle; font-size:17px}
+	#unzoom { cursor:pointer; }
+	#frames > *:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+	.hide { display:none; }
+	.parent { opacity:0.5; }
+</style>
+<script type="text/ecmascript">
+<![CDATA[
+	"use strict";
+	var details, searchbtn, unzoombtn, matchedtxt, svg, searching, currentSearchTerm, ignorecase, ignorecaseBtn;
+	function init(evt) {
+		details = document.getElementById("details").firstChild;
+		searchbtn = document.getElementById("search");
+		ignorecaseBtn = document.getElementById("ignorecase");
+		unzoombtn = document.getElementById("unzoom");
+		matchedtxt = document.getElementById("matched");
+		svg = document.getElementsByTagName("svg")[0];
+		searching = 0;
+		currentSearchTerm = null;
+
+		// use GET parameters to restore a flamegraphs state.
+		var params = get_params();
+		if (params.x && params.y)
+			zoom(find_group(document.querySelector('[x="' + params.x + '"][y="' + params.y + '"]')));
+                if (params.s) search(params.s);
+	}
+
+	// event listeners
+	window.addEventListener("click", function(e) {
+		var target = find_group(e.target);
+		if (target) {
+			if (target.nodeName == "a") {
+				if (e.ctrlKey === false) return;
+				e.preventDefault();
+			}
+			if (target.classList.contains("parent")) unzoom(true);
+			zoom(target);
+			if (!document.querySelector('.parent')) {
+				// we have basically done a clearzoom so clear the url
+				var params = get_params();
+				if (params.x) delete params.x;
+				if (params.y) delete params.y;
+				history.replaceState(null, null, parse_params(params));
+				unzoombtn.classList.add("hide");
+				return;
+			}
+
+			// set parameters for zoom state
+			var el = target.querySelector("rect");
+			if (el && el.attributes && el.attributes.y && el.attributes._orig_x) {
+				var params = get_params()
+				params.x = el.attributes._orig_x.value;
+				params.y = el.attributes.y.value;
+				history.replaceState(null, null, parse_params(params));
+			}
+		}
+		else if (e.target.id == "unzoom") clearzoom();
+		else if (e.target.id == "search") search_prompt();
+		else if (e.target.id == "ignorecase") toggle_ignorecase();
+	}, false)
+
+	// mouse-over for info
+	// show
+	window.addEventListener("mouseover", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = "Function: " + g_to_text(target);
+	}, false)
+
+	// clear
+	window.addEventListener("mouseout", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = ' ';
+	}, false)
+
+	// ctrl-F for search
+	// ctrl-I to toggle case-sensitive search
+	window.addEventListener("keydown",function (e) {
+		if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+			e.preventDefault();
+			search_prompt();
+		}
+		else if (e.ctrlKey && e.keyCode === 73) {
+			e.preventDefault();
+			toggle_ignorecase();
+		}
+	}, false)
+
+	// functions
+	function get_params() {
+		var params = {};
+		var paramsarr = window.location.search.substr(1).split('&');
+		for (var i = 0; i < paramsarr.length; ++i) {
+			var tmp = paramsarr[i].split("=");
+			if (!tmp[0] || !tmp[1]) continue;
+			params[tmp[0]]  = decodeURIComponent(tmp[1]);
+		}
+		return params;
+	}
+	function parse_params(params) {
+		var uri = "?";
+		for (var key in params) {
+			uri += key + '=' + encodeURIComponent(params[key]) + '&';
+		}
+		if (uri.slice(-1) == "&")
+			uri = uri.substring(0, uri.length - 1);
+		if (uri == '?')
+			uri = window.location.href.split('?')[0];
+		return uri;
+	}
+	function find_child(node, selector) {
+		var children = node.querySelectorAll(selector);
+		if (children.length) return children[0];
+	}
+	function find_group(node) {
+		var parent = node.parentElement;
+		if (!parent) return;
+		if (parent.id == "frames") return node;
+		return find_group(parent);
+	}
+	function orig_save(e, attr, val) {
+		if (e.attributes["_orig_" + attr] != undefined) return;
+		if (e.attributes[attr] == undefined) return;
+		if (val == undefined) val = e.attributes[attr].value;
+		e.setAttribute("_orig_" + attr, val);
+	}
+	function orig_load(e, attr) {
+		if (e.attributes["_orig_"+attr] == undefined) return;
+		e.attributes[attr].value = e.attributes["_orig_" + attr].value;
+		e.removeAttribute("_orig_"+attr);
+	}
+	function g_to_text(e) {
+		var text = find_child(e, "title").firstChild.nodeValue;
+		return (text)
+	}
+	function g_to_func(e) {
+		var func = g_to_text(e);
+		// if there's any manipulation we want to do to the function
+		// name before it's searched, do it here before returning.
+		return (func);
+	}
+	function update_text(e) {
+		var r = find_child(e, "rect");
+		var t = find_child(e, "text");
+		var w = parseFloat(r.attributes.width.value) -3;
+		var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+		t.attributes.x.value = parseFloat(r.attributes.x.value) + 3;
+
+		// Smaller than this size won't fit anything
+		if (w < 2 * 12 * 0.59) {
+			t.textContent = "";
+			return;
+		}
+
+		t.textContent = txt;
+		var sl = t.getSubStringLength(0, txt.length);
+		// check if only whitespace or if we can fit the entire string into width w
+		if (/^ *$/.test(txt) || sl < w)
+			return;
+
+		// this isn't perfect, but gives a good starting point
+		// and avoids calling getSubStringLength too often
+		var start = Math.floor((w/sl) * txt.length);
+		for (var x = start; x > 0; x = x-2) {
+			if (t.getSubStringLength(0, x + 2) <= w) {
+				t.textContent = txt.substring(0, x) + "..";
+				return;
+			}
+		}
+		t.textContent = "";
+	}
+
+	// zoom
+	function zoom_reset(e) {
+		if (e.attributes != undefined) {
+			orig_load(e, "x");
+			orig_load(e, "width");
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_reset(c[i]);
+		}
+	}
+	function zoom_child(e, x, ratio) {
+		if (e.attributes != undefined) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = (parseFloat(e.attributes.x.value) - x - 10) * ratio + 10;
+				if (e.tagName == "text")
+					e.attributes.x.value = find_child(e.parentNode, "rect[x]").attributes.x.value + 3;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseFloat(e.attributes.width.value) * ratio;
+			}
+		}
+
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_child(c[i], x - 10, ratio);
+		}
+	}
+	function zoom_parent(e) {
+		if (e.attributes) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = 10;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseInt(svg.width.baseVal.value) - (10 * 2);
+			}
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_parent(c[i]);
+		}
+	}
+	function zoom(node) {
+		var attr = find_child(node, "rect").attributes;
+		var width = parseFloat(attr.width.value);
+		var xmin = parseFloat(attr.x.value);
+		var xmax = parseFloat(xmin + width);
+		var ymin = parseFloat(attr.y.value);
+		var ratio = (svg.width.baseVal.value - 2 * 10) / width;
+
+		// XXX: Workaround for JavaScript float issues (fix me)
+		var fudge = 0.0001;
+
+		unzoombtn.classList.remove("hide");
+
+		var el = document.getElementById("frames").children;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var a = find_child(e, "rect").attributes;
+			var ex = parseFloat(a.x.value);
+			var ew = parseFloat(a.width.value);
+			var upstack;
+			// Is it an ancestor
+			if (0 == 0) {
+				upstack = parseFloat(a.y.value) > ymin;
+			} else {
+				upstack = parseFloat(a.y.value) < ymin;
+			}
+			if (upstack) {
+				// Direct ancestor
+				if (ex <= xmin && (ex+ew+fudge) >= xmax) {
+					e.classList.add("parent");
+					zoom_parent(e);
+					update_text(e);
+				}
+				// not in current path
+				else
+					e.classList.add("hide");
+			}
+			// Children maybe
+			else {
+				// no common path
+				if (ex < xmin || ex + fudge >= xmax) {
+					e.classList.add("hide");
+				}
+				else {
+					zoom_child(e, xmin, ratio);
+					update_text(e);
+				}
+			}
+		}
+		search();
+	}
+	function unzoom(dont_update_text) {
+		unzoombtn.classList.add("hide");
+		var el = document.getElementById("frames").children;
+		for(var i = 0; i < el.length; i++) {
+			el[i].classList.remove("parent");
+			el[i].classList.remove("hide");
+			zoom_reset(el[i]);
+			if(!dont_update_text) update_text(el[i]);
+		}
+		search();
+	}
+	function clearzoom() {
+		unzoom();
+
+		// remove zoom state
+		var params = get_params();
+		if (params.x) delete params.x;
+		if (params.y) delete params.y;
+		history.replaceState(null, null, parse_params(params));
+	}
+
+	// search
+	function toggle_ignorecase() {
+		ignorecase = !ignorecase;
+		if (ignorecase) {
+			ignorecaseBtn.classList.add("show");
+		} else {
+			ignorecaseBtn.classList.remove("show");
+		}
+		reset_search();
+		search();
+	}
+	function reset_search() {
+		var el = document.querySelectorAll("#frames rect");
+		for (var i = 0; i < el.length; i++) {
+			orig_load(el[i], "fill")
+		}
+		var params = get_params();
+		delete params.s;
+		history.replaceState(null, null, parse_params(params));
+	}
+	function search_prompt() {
+		if (!searching) {
+			var term = prompt("Enter a search term (regexp " +
+			    "allowed, eg: ^ext4_)"
+			    + (ignorecase ? ", ignoring case" : "")
+			    + "\nPress Ctrl-i to toggle case sensitivity", "");
+			if (term != null) search(term);
+		} else {
+			reset_search();
+			searching = 0;
+			currentSearchTerm = null;
+			searchbtn.classList.remove("show");
+			searchbtn.firstChild.nodeValue = "Search"
+			matchedtxt.classList.add("hide");
+			matchedtxt.firstChild.nodeValue = ""
+		}
+	}
+	function search(term) {
+		if (term) currentSearchTerm = term;
+
+		var re = new RegExp(currentSearchTerm, ignorecase ? 'i' : '');
+		var el = document.getElementById("frames").children;
+		var matches = new Object();
+		var maxwidth = 0;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var func = g_to_func(e);
+			var rect = find_child(e, "rect");
+			if (func == null || rect == null)
+				continue;
+
+			// Save max width. Only works as we have a root frame
+			var w = parseFloat(rect.attributes.width.value);
+			if (w > maxwidth)
+				maxwidth = w;
+
+			if (func.match(re)) {
+				// highlight
+				var x = parseFloat(rect.attributes.x.value);
+				orig_save(rect, "fill");
+				rect.attributes.fill.value = "rgb(230,0,230)";
+
+				// remember matches
+				if (matches[x] == undefined) {
+					matches[x] = w;
+				} else {
+					if (w > matches[x]) {
+						// overwrite with parent
+						matches[x] = w;
+					}
+				}
+				searching = 1;
+			}
+		}
+		if (!searching)
+			return;
+		var params = get_params();
+		params.s = currentSearchTerm;
+		history.replaceState(null, null, parse_params(params));
+
+		searchbtn.classList.add("show");
+		searchbtn.firstChild.nodeValue = "Reset Search";
+
+		// calculate percent matched, excluding vertical overlap
+		var count = 0;
+		var lastx = -1;
+		var lastw = 0;
+		var keys = Array();
+		for (k in matches) {
+			if (matches.hasOwnProperty(k))
+				keys.push(k);
+		}
+		// sort the matched frames by their x location
+		// ascending, then width descending
+		keys.sort(function(a, b){
+			return a - b;
+		});
+		// Step through frames saving only the biggest bottom-up frames
+		// thanks to the sort order. This relies on the tree property
+		// where children are always smaller than their parents.
+		var fudge = 0.0001;	// JavaScript floating point
+		for (var k in keys) {
+			var x = parseFloat(keys[k]);
+			var w = matches[keys[k]];
+			if (x >= lastx + lastw - fudge) {
+				count += w;
+				lastx = x;
+				lastw = w;
+			}
+		}
+		// display matched percent
+		matchedtxt.classList.remove("hide");
+		var pct = 100 * count / maxwidth;
+		if (pct != 100) pct = pct.toFixed(1)
+		matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+	}
+]]>
+</script>
+<rect x="0.0" y="0" width="1200.0" height="2134.0" fill="url(#background)"  />
+<text id="title" x="600.00" y="24" >Flame Graph</text>
+<text id="details" x="10.00" y="2117" > </text>
+<text id="unzoom" x="10.00" y="24" class="hide">Reset Zoom</text>
+<text id="search" x="1090.00" y="24" >Search</text>
+<text id="ignorecase" x="1174.00" y="24" >ic</text>
+<text id="matched" x="1090.00" y="2117" > </text>
+<g id="frames">
+<g >
+<title>[libvk_swiftshader.so] (1,500,000 samples, 2.49%)</title><rect x="112.8" y="1957" width="29.4" height="15.0" fill="rgb(246,213,33)" rx="2" ry="2" />
+<text  x="115.82" y="1967.5" >[l..</text>
+</g>
+<g >
+<title>pthread_cond_wait@@GLIBC_2.3.2 (250,000 samples, 0.41%)</title><rect x="103.0" y="2037" width="4.9" height="15.0" fill="rgb(218,146,21)" rx="2" ry="2" />
+<text  x="106.03" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="176.5" y="1893" width="9.8" height="15.0" fill="rgb(229,44,25)" rx="2" ry="2" />
+<text  x="179.47" y="1903.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="629" width="29.4" height="15.0" fill="rgb(232,194,14)" rx="2" ry="2" />
+<text  x="629.93" y="639.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="215.6" y="1989" width="4.9" height="15.0" fill="rgb(249,100,25)" rx="2" ry="2" />
+<text  x="218.64" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="357" width="4.9" height="15.0" fill="rgb(224,145,34)" rx="2" ry="2" />
+<text  x="654.41" y="367.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="789" width="29.4" height="15.0" fill="rgb(235,92,45)" rx="2" ry="2" />
+<text  x="629.93" y="799.5" >__..</text>
+</g>
+<g >
+<title>[unknown]  (250,000 samples, 0.41%)</title><rect x="210.7" y="1957" width="4.9" height="15.0" fill="rgb(213,78,47)" rx="2" ry="2" />
+<text  x="213.75" y="1967.5" ></text>
+</g>
+<g >
+<title>std::vector&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt; &gt; &gt;::vector (250,000 samples, 0.41%)</title><rect x="656.3" y="2005" width="4.9" height="15.0" fill="rgb(253,129,26)" rx="2" ry="2" />
+<text  x="659.31" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="1957" width="14.6" height="15.0" fill="rgb(239,193,3)" rx="2" ry="2" />
+<text  x="727.85" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="656.3" y="1957" width="4.9" height="15.0" fill="rgb(234,153,5)" rx="2" ry="2" />
+<text  x="659.31" y="1967.5" ></text>
+</g>
+<g >
+<title>do_lookup_x (1,250,000 samples, 2.07%)</title><rect x="690.6" y="2053" width="24.5" height="15.0" fill="rgb(212,206,9)" rx="2" ry="2" />
+<text  x="693.58" y="2063.5" >d..</text>
+</g>
+<g >
+<title>__nss_database_lookup2 (250,000 samples, 0.41%)</title><rect x="646.5" y="389" width="4.9" height="15.0" fill="rgb(217,4,24)" rx="2" ry="2" />
+<text  x="649.51" y="399.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="117" width="4.9" height="15.0" fill="rgb(238,208,6)" rx="2" ry="2" />
+<text  x="644.62" y="127.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (250,000 samples, 0.41%)</title><rect x="240.1" y="1909" width="4.9" height="15.0" fill="rgb(233,46,38)" rx="2" ry="2" />
+<text  x="243.12" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="475.1" y="1557" width="4.9" height="15.0" fill="rgb(222,84,29)" rx="2" ry="2" />
+<text  x="478.15" y="1567.5" ></text>
+</g>
+<g >
+<title>getifaddrs_internal (500,000 samples, 0.83%)</title><rect x="88.3" y="1893" width="9.8" height="15.0" fill="rgb(247,16,19)" rx="2" ry="2" />
+<text  x="91.34" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="313.6" y="1909" width="4.9" height="15.0" fill="rgb(240,108,51)" rx="2" ry="2" />
+<text  x="316.57" y="1919.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="421" width="29.4" height="15.0" fill="rgb(231,61,7)" rx="2" ry="2" />
+<text  x="629.93" y="431.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="69" width="4.9" height="15.0" fill="rgb(224,89,41)" rx="2" ry="2" />
+<text  x="644.62" y="79.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1605" width="4.9" height="15.0" fill="rgb(245,46,37)" rx="2" ry="2" />
+<text  x="483.04" y="1615.5" ></text>
+</g>
+<g >
+<title>pthread_cond_wait@@GLIBC_2.3.2 (250,000 samples, 0.41%)</title><rect x="333.2" y="2037" width="4.8" height="15.0" fill="rgb(236,189,5)" rx="2" ry="2" />
+<text  x="336.15" y="2047.5" ></text>
+</g>
+<g >
+<title>__resolv_conf_get (500,000 samples, 0.83%)</title><rect x="499.6" y="2053" width="9.8" height="15.0" fill="rgb(220,174,20)" rx="2" ry="2" />
+<text  x="502.63" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="328.3" y="1957" width="4.9" height="15.0" fill="rgb(224,132,51)" rx="2" ry="2" />
+<text  x="331.26" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="426.2" y="1829" width="4.9" height="15.0" fill="rgb(226,76,34)" rx="2" ry="2" />
+<text  x="429.18" y="1839.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="1909" width="14.6" height="15.0" fill="rgb(249,42,5)" rx="2" ry="2" />
+<text  x="595.66" y="1919.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (250,000 samples, 0.41%)</title><rect x="626.9" y="277" width="4.9" height="15.0" fill="rgb(230,62,41)" rx="2" ry="2" />
+<text  x="629.93" y="287.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (250,000 samples, 0.41%)</title><rect x="626.9" y="213" width="4.9" height="15.0" fill="rgb(251,127,49)" rx="2" ry="2" />
+<text  x="629.93" y="223.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="981" width="29.4" height="15.0" fill="rgb(230,2,47)" rx="2" ry="2" />
+<text  x="629.93" y="991.5" >__..</text>
+</g>
+<g >
+<title>start_thread (3,750,000 samples, 6.22%)</title><rect x="112.8" y="2053" width="73.5" height="15.0" fill="rgb(234,131,31)" rx="2" ry="2" />
+<text  x="115.82" y="2063.5" >start_th..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="85" width="4.9" height="15.0" fill="rgb(227,209,9)" rx="2" ry="2" />
+<text  x="639.72" y="95.5" ></text>
+</g>
+<g >
+<title>[code] (2,500,000 samples, 4.15%)</title><rect x="39.4" y="1877" width="48.9" height="15.0" fill="rgb(208,37,31)" rx="2" ry="2" />
+<text  x="42.38" y="1887.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1797" width="4.9" height="15.0" fill="rgb(215,57,7)" rx="2" ry="2" />
+<text  x="605.45" y="1807.5" ></text>
+</g>
+<g >
+<title>__pthread_mutex_lock (250,000 samples, 0.41%)</title><rect x="401.7" y="1877" width="4.9" height="15.0" fill="rgb(222,81,28)" rx="2" ry="2" />
+<text  x="404.70" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1861" width="9.8" height="15.0" fill="rgb(248,199,36)" rx="2" ry="2" />
+<text  x="532.00" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="1957" width="4.9" height="15.0" fill="rgb(245,63,11)" rx="2" ry="2" />
+<text  x="522.21" y="1967.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (4,750,000 samples, 7.88%)</title><rect x="338.0" y="1941" width="93.1" height="15.0" fill="rgb(230,119,12)" rx="2" ry="2" />
+<text  x="341.05" y="1951.5" >[libvk_swif..</text>
+</g>
+<g >
+<title>[code] (1,250,000 samples, 2.07%)</title><rect x="63.9" y="1749" width="24.4" height="15.0" fill="rgb(249,181,28)" rx="2" ry="2" />
+<text  x="66.86" y="1759.5" >[..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="705.3" y="1845" width="4.9" height="15.0" fill="rgb(225,198,25)" rx="2" ry="2" />
+<text  x="708.27" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="558.4" y="2005" width="14.7" height="15.0" fill="rgb(240,200,21)" rx="2" ry="2" />
+<text  x="561.38" y="2015.5" ></text>
+</g>
+<g >
+<title>__pthread_mutex_lock (250,000 samples, 0.41%)</title><rect x="137.3" y="1941" width="4.9" height="15.0" fill="rgb(206,44,41)" rx="2" ry="2" />
+<text  x="140.30" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="1989" width="4.9" height="15.0" fill="rgb(254,162,13)" rx="2" ry="2" />
+<text  x="718.06" y="1999.5" ></text>
+</g>
+<g >
+<title>__pthread_mutex_unlock (250,000 samples, 0.41%)</title><rect x="205.9" y="1941" width="4.8" height="15.0" fill="rgb(242,163,5)" rx="2" ry="2" />
+<text  x="208.85" y="1951.5" ></text>
+</g>
+<g >
+<title>strcmp (250,000 samples, 0.41%)</title><rect x="587.8" y="2021" width="4.9" height="15.0" fill="rgb(246,128,49)" rx="2" ry="2" />
+<text  x="590.76" y="2031.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1205" width="29.4" height="15.0" fill="rgb(245,153,35)" rx="2" ry="2" />
+<text  x="629.93" y="1215.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1061" width="29.4" height="15.0" fill="rgb(245,24,26)" rx="2" ry="2" />
+<text  x="629.93" y="1071.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="1957" width="4.9" height="15.0" fill="rgb(220,25,11)" rx="2" ry="2" />
+<text  x="321.46" y="1967.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1621" width="29.4" height="15.0" fill="rgb(208,10,12)" rx="2" ry="2" />
+<text  x="629.93" y="1631.5" >__..</text>
+</g>
+<g >
+<title>[libc-2.31.so] (250,000 samples, 0.41%)</title><rect x="98.1" y="1925" width="4.9" height="15.0" fill="rgb(237,137,0)" rx="2" ry="2" />
+<text  x="101.13" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="176.5" y="1877" width="9.8" height="15.0" fill="rgb(223,227,12)" rx="2" ry="2" />
+<text  x="179.47" y="1887.5" ></text>
+</g>
+<g >
+<title>[code] (750,000 samples, 1.24%)</title><rect x="68.8" y="1669" width="14.6" height="15.0" fill="rgb(213,168,41)" rx="2" ry="2" />
+<text  x="71.76" y="1679.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (250,000 samples, 0.41%)</title><rect x="191.2" y="1925" width="4.9" height="15.0" fill="rgb(254,136,28)" rx="2" ry="2" />
+<text  x="194.16" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="213" width="4.9" height="15.0" fill="rgb(206,174,26)" rx="2" ry="2" />
+<text  x="654.41" y="223.5" ></text>
+</g>
+<g >
+<title>[code] (3,250,000 samples, 5.39%)</title><rect x="39.4" y="1957" width="63.6" height="15.0" fill="rgb(209,177,10)" rx="2" ry="2" />
+<text  x="42.38" y="1967.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="325" width="4.9" height="15.0" fill="rgb(243,126,19)" rx="2" ry="2" />
+<text  x="649.51" y="335.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="73.7" y="1637" width="4.8" height="15.0" fill="rgb(229,0,10)" rx="2" ry="2" />
+<text  x="76.65" y="1647.5" ></text>
+</g>
+<g >
+<title>JS_CallFunction (1,750,000 samples, 2.90%)</title><rect x="450.7" y="2021" width="34.2" height="15.0" fill="rgb(214,91,14)" rx="2" ry="2" />
+<text  x="453.66" y="2031.5" >JS..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="543.7" y="1829" width="4.9" height="15.0" fill="rgb(229,90,32)" rx="2" ry="2" />
+<text  x="546.69" y="1839.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="53" width="4.9" height="15.0" fill="rgb(240,105,22)" rx="2" ry="2" />
+<text  x="634.83" y="63.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="165" width="4.9" height="15.0" fill="rgb(236,188,26)" rx="2" ry="2" />
+<text  x="629.93" y="175.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1765" width="29.4" height="15.0" fill="rgb(249,96,45)" rx="2" ry="2" />
+<text  x="629.93" y="1775.5" >__..</text>
+</g>
+<g >
+<title>std::vector&lt;std::unique_ptr&lt;benchmark::internal::Benchmark, std::default_delete&lt;benchmark::internal::Benchmark&gt; &gt;, std::allocator&lt;std::unique_ptr&lt;benchmark::internal::Benchmark, std::default_delete&lt;benchmark::internal::Benchmark&gt; &gt; &gt; &gt;::vector (250,000 samples, 0.41%)</title><rect x="661.2" y="1989" width="4.9" height="15.0" fill="rgb(213,221,30)" rx="2" ry="2" />
+<text  x="664.20" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown]  (1,500,000 samples, 2.49%)</title><rect x="284.2" y="1957" width="29.4" height="15.0" fill="rgb(242,89,34)" rx="2" ry="2" />
+<text  x="287.19" y="1967.5" >[u..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1749" width="4.9" height="15.0" fill="rgb(228,189,9)" rx="2" ry="2" />
+<text  x="22.79" y="1759.5" ></text>
+</g>
+<g >
+<title>[code] (750,000 samples, 1.24%)</title><rect x="68.8" y="1685" width="14.6" height="15.0" fill="rgb(236,162,53)" rx="2" ry="2" />
+<text  x="71.76" y="1695.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="885" width="29.4" height="15.0" fill="rgb(242,131,50)" rx="2" ry="2" />
+<text  x="629.93" y="895.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="165" width="4.9" height="15.0" fill="rgb(219,85,36)" rx="2" ry="2" />
+<text  x="634.83" y="175.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="710.2" y="1989" width="4.9" height="15.0" fill="rgb(239,164,45)" rx="2" ry="2" />
+<text  x="713.17" y="1999.5" ></text>
+</g>
+<g >
+<title>[perf-35671.map] (750,000 samples, 1.24%)</title><rect x="470.2" y="1925" width="14.7" height="15.0" fill="rgb(254,155,1)" rx="2" ry="2" />
+<text  x="473.25" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="53" width="4.9" height="15.0" fill="rgb(213,54,45)" rx="2" ry="2" />
+<text  x="629.93" y="63.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (750,000 samples, 1.24%)</title><rect x="626.9" y="309" width="14.7" height="15.0" fill="rgb(228,129,48)" rx="2" ry="2" />
+<text  x="629.93" y="319.5" ></text>
+</g>
+<g >
+<title>[code] (3,250,000 samples, 5.39%)</title><rect x="39.4" y="1941" width="63.6" height="15.0" fill="rgb(252,221,9)" rx="2" ry="2" />
+<text  x="42.38" y="1951.5" >[code]</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,000,000 samples, 1.66%)</title><rect x="626.9" y="389" width="19.6" height="15.0" fill="rgb(235,48,8)" rx="2" ry="2" />
+<text  x="629.93" y="399.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="582.9" y="1909" width="4.9" height="15.0" fill="rgb(242,172,14)" rx="2" ry="2" />
+<text  x="585.86" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="213" width="4.9" height="15.0" fill="rgb(254,197,6)" rx="2" ry="2" />
+<text  x="649.51" y="223.5" ></text>
+</g>
+<g >
+<title>__lll_lock_wait (250,000 samples, 0.41%)</title><rect x="406.6" y="1893" width="4.9" height="15.0" fill="rgb(217,204,53)" rx="2" ry="2" />
+<text  x="409.60" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1717" width="4.9" height="15.0" fill="rgb(242,36,42)" rx="2" ry="2" />
+<text  x="17.90" y="1727.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="661" width="29.4" height="15.0" fill="rgb(251,90,54)" rx="2" ry="2" />
+<text  x="629.93" y="671.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="261" width="4.9" height="15.0" fill="rgb(241,67,32)" rx="2" ry="2" />
+<text  x="644.62" y="271.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="313.6" y="1941" width="4.9" height="15.0" fill="rgb(227,7,42)" rx="2" ry="2" />
+<text  x="316.57" y="1951.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1605" width="29.4" height="15.0" fill="rgb(222,223,3)" rx="2" ry="2" />
+<text  x="629.93" y="1615.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1845" width="9.8" height="15.0" fill="rgb(246,186,50)" rx="2" ry="2" />
+<text  x="532.00" y="1855.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (250,000 samples, 0.41%)</title><rect x="122.6" y="1925" width="4.9" height="15.0" fill="rgb(227,127,23)" rx="2" ry="2" />
+<text  x="125.61" y="1935.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (500,000 samples, 0.83%)</title><rect x="274.4" y="1957" width="9.8" height="15.0" fill="rgb(252,17,33)" rx="2" ry="2" />
+<text  x="277.40" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="1909" width="4.9" height="15.0" fill="rgb(213,221,54)" rx="2" ry="2" />
+<text  x="718.06" y="1919.5" ></text>
+</g>
+<g >
+<title>[perf-35671.map] (500,000 samples, 0.83%)</title><rect x="475.1" y="1797" width="9.8" height="15.0" fill="rgb(217,6,1)" rx="2" ry="2" />
+<text  x="478.15" y="1807.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="1909" width="4.9" height="15.0" fill="rgb(217,82,41)" rx="2" ry="2" />
+<text  x="321.46" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="181" width="4.9" height="15.0" fill="rgb(221,43,41)" rx="2" ry="2" />
+<text  x="639.72" y="191.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1989" width="9.8" height="15.0" fill="rgb(246,185,9)" rx="2" ry="2" />
+<text  x="532.00" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="325" width="4.9" height="15.0" fill="rgb(223,20,10)" rx="2" ry="2" />
+<text  x="654.41" y="335.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="997" width="29.4" height="15.0" fill="rgb(215,141,15)" rx="2" ry="2" />
+<text  x="629.93" y="1007.5" >__..</text>
+</g>
+<g >
+<title>getifaddrs_internal (250,000 samples, 0.41%)</title><rect x="475.1" y="1573" width="4.9" height="15.0" fill="rgb(239,45,50)" rx="2" ry="2" />
+<text  x="478.15" y="1583.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="587.8" y="1989" width="4.9" height="15.0" fill="rgb(223,38,8)" rx="2" ry="2" />
+<text  x="590.76" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="264.6" y="1989" width="4.9" height="15.0" fill="rgb(235,47,23)" rx="2" ry="2" />
+<text  x="267.61" y="1999.5" ></text>
+</g>
+<g >
+<title>strcmp (750,000 samples, 1.24%)</title><rect x="724.9" y="2053" width="14.6" height="15.0" fill="rgb(214,129,53)" rx="2" ry="2" />
+<text  x="727.85" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1733" width="4.9" height="15.0" fill="rgb(252,26,13)" rx="2" ry="2" />
+<text  x="17.90" y="1743.5" ></text>
+</g>
+<g >
+<title>[ld-2.31.so] (1,000,000 samples, 1.66%)</title><rect x="573.1" y="2037" width="19.6" height="15.0" fill="rgb(213,17,48)" rx="2" ry="2" />
+<text  x="576.07" y="2047.5" ></text>
+</g>
+<g >
+<title>gaih_inet.constprop.0 (250,000 samples, 0.41%)</title><rect x="543.7" y="1973" width="4.9" height="15.0" fill="rgb(225,24,8)" rx="2" ry="2" />
+<text  x="546.69" y="1983.5" ></text>
+</g>
+<g >
+<title>run_builtin (500,000 samples, 0.83%)</title><rect x="538.8" y="2021" width="9.8" height="15.0" fill="rgb(229,184,6)" rx="2" ry="2" />
+<text  x="541.80" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="607.3" y="1957" width="4.9" height="15.0" fill="rgb(244,68,38)" rx="2" ry="2" />
+<text  x="610.34" y="1967.5" ></text>
+</g>
+<g >
+<title>benchmark::internal::RegisterBenchmarkInternal (250,000 samples, 0.41%)</title><rect x="661.2" y="2021" width="4.9" height="15.0" fill="rgb(236,62,29)" rx="2" ry="2" />
+<text  x="664.20" y="2031.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="453" width="29.4" height="15.0" fill="rgb(247,148,17)" rx="2" ry="2" />
+<text  x="629.93" y="463.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="357" width="4.9" height="15.0" fill="rgb(212,171,44)" rx="2" ry="2" />
+<text  x="649.51" y="367.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1877" width="9.8" height="15.0" fill="rgb(240,73,12)" rx="2" ry="2" />
+<text  x="91.34" y="1887.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1637" width="29.4" height="15.0" fill="rgb(241,129,46)" rx="2" ry="2" />
+<text  x="629.93" y="1647.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="1861" width="14.7" height="15.0" fill="rgb(211,129,37)" rx="2" ry="2" />
+<text  x="698.48" y="1871.5" ></text>
+</g>
+<g >
+<title>__vdso_clock_gettime (250,000 samples, 0.41%)</title><rect x="107.9" y="2037" width="4.9" height="15.0" fill="rgb(228,2,41)" rx="2" ry="2" />
+<text  x="110.93" y="2047.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1573" width="29.4" height="15.0" fill="rgb(229,122,4)" rx="2" ry="2" />
+<text  x="629.93" y="1583.5" >__..</text>
+</g>
+<g >
+<title>[code] (1,250,000 samples, 2.07%)</title><rect x="10.0" y="1925" width="24.5" height="15.0" fill="rgb(251,133,8)" rx="2" ry="2" />
+<text  x="13.00" y="1935.5" >[..</text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (1,750,000 samples, 2.90%)</title><rect x="450.7" y="1941" width="34.2" height="15.0" fill="rgb(209,72,45)" rx="2" ry="2" />
+<text  x="453.66" y="1951.5" >[l..</text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="323.4" y="2021" width="4.9" height="15.0" fill="rgb(224,125,27)" rx="2" ry="2" />
+<text  x="326.36" y="2031.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1381" width="29.4" height="15.0" fill="rgb(225,198,45)" rx="2" ry="2" />
+<text  x="629.93" y="1391.5" >__..</text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (1,750,000 samples, 2.90%)</title><rect x="450.7" y="1989" width="34.2" height="15.0" fill="rgb(241,85,7)" rx="2" ry="2" />
+<text  x="453.66" y="1999.5" >[l..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="499.6" y="1925" width="9.8" height="15.0" fill="rgb(233,147,18)" rx="2" ry="2" />
+<text  x="502.63" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="710.2" y="1941" width="4.9" height="15.0" fill="rgb(240,221,32)" rx="2" ry="2" />
+<text  x="713.17" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="436.0" y="1957" width="4.9" height="15.0" fill="rgb(249,127,30)" rx="2" ry="2" />
+<text  x="438.98" y="1967.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="416.4" y="1877" width="4.9" height="15.0" fill="rgb(223,42,25)" rx="2" ry="2" />
+<text  x="419.39" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="133" width="4.9" height="15.0" fill="rgb(247,114,35)" rx="2" ry="2" />
+<text  x="649.51" y="143.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="264.6" y="2021" width="4.9" height="15.0" fill="rgb(205,200,23)" rx="2" ry="2" />
+<text  x="267.61" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="1973" width="14.6" height="15.0" fill="rgb(251,213,26)" rx="2" ry="2" />
+<text  x="595.66" y="1983.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1653" width="29.4" height="15.0" fill="rgb(243,219,47)" rx="2" ry="2" />
+<text  x="629.93" y="1663.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="181" width="4.9" height="15.0" fill="rgb(221,185,34)" rx="2" ry="2" />
+<text  x="629.93" y="191.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1845" width="4.9" height="15.0" fill="rgb(245,127,10)" rx="2" ry="2" />
+<text  x="17.90" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1861" width="4.9" height="15.0" fill="rgb(219,191,30)" rx="2" ry="2" />
+<text  x="434.08" y="1871.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (1,250,000 samples, 2.07%)</title><rect x="220.5" y="1957" width="24.5" height="15.0" fill="rgb(242,135,48)" rx="2" ry="2" />
+<text  x="223.54" y="1967.5" >[..</text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (3,750,000 samples, 6.22%)</title><rect x="112.8" y="1989" width="73.5" height="15.0" fill="rgb(229,212,21)" rx="2" ry="2" />
+<text  x="115.82" y="1999.5" >[libvk_s..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="29.6" y="1845" width="4.9" height="15.0" fill="rgb(226,217,13)" rx="2" ry="2" />
+<text  x="32.59" y="1855.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="965" width="29.4" height="15.0" fill="rgb(208,155,24)" rx="2" ry="2" />
+<text  x="629.93" y="975.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="279.3" y="1845" width="4.9" height="15.0" fill="rgb(213,229,6)" rx="2" ry="2" />
+<text  x="282.29" y="1855.5" ></text>
+</g>
+<g >
+<title>__libc_read (250,000 samples, 0.41%)</title><rect x="436.0" y="2005" width="4.9" height="15.0" fill="rgb(229,84,51)" rx="2" ry="2" />
+<text  x="438.98" y="2015.5" ></text>
+</g>
+<g >
+<title>[perf-35671.map] (500,000 samples, 0.83%)</title><rect x="475.1" y="1765" width="9.8" height="15.0" fill="rgb(212,109,26)" rx="2" ry="2" />
+<text  x="478.15" y="1775.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1941" width="9.8" height="15.0" fill="rgb(250,69,16)" rx="2" ry="2" />
+<text  x="532.00" y="1951.5" ></text>
+</g>
+<g >
+<title>main (500,000 samples, 0.83%)</title><rect x="538.8" y="2037" width="9.8" height="15.0" fill="rgb(208,214,21)" rx="2" ry="2" />
+<text  x="541.80" y="2047.5" ></text>
+</g>
+<g >
+<title>Thread&lt;03&gt; (2,750,000 samples, 4.56%)</title><rect x="264.6" y="2069" width="53.9" height="15.0" fill="rgb(216,26,33)" rx="2" ry="2" />
+<text  x="267.61" y="2079.5" >Threa..</text>
+</g>
+<g >
+<title>__nss_database_lookup2 (250,000 samples, 0.41%)</title><rect x="636.7" y="293" width="4.9" height="15.0" fill="rgb(218,75,10)" rx="2" ry="2" />
+<text  x="639.72" y="303.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="53" width="4.9" height="15.0" fill="rgb(233,3,12)" rx="2" ry="2" />
+<text  x="639.72" y="63.5" ></text>
+</g>
+<g >
+<title>std::_Vector_base&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt; &gt; &gt;::_Vector_base (250,000 samples, 0.41%)</title><rect x="656.3" y="1989" width="4.9" height="15.0" fill="rgb(211,164,39)" rx="2" ry="2" />
+<text  x="659.31" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="524.1" y="2037" width="4.9" height="15.0" fill="rgb(232,72,10)" rx="2" ry="2" />
+<text  x="527.11" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="197" width="4.9" height="15.0" fill="rgb(252,54,5)" rx="2" ry="2" />
+<text  x="644.62" y="207.5" ></text>
+</g>
+<g >
+<title>__strcasecmp_l_sse42 (250,000 samples, 0.41%)</title><rect x="666.1" y="2053" width="4.9" height="15.0" fill="rgb(250,107,19)" rx="2" ry="2" />
+<text  x="669.10" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="587.8" y="1941" width="4.9" height="15.0" fill="rgb(205,148,36)" rx="2" ry="2" />
+<text  x="590.76" y="1951.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (4,750,000 samples, 7.88%)</title><rect x="338.0" y="2037" width="93.1" height="15.0" fill="rgb(233,141,27)" rx="2" ry="2" />
+<text  x="341.05" y="2047.5" >[libvk_swif..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="548.6" y="1861" width="4.9" height="15.0" fill="rgb(232,71,27)" rx="2" ry="2" />
+<text  x="551.59" y="1871.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (4,750,000 samples, 7.88%)</title><rect x="338.0" y="1989" width="93.1" height="15.0" fill="rgb(206,102,52)" rx="2" ry="2" />
+<text  x="341.05" y="1999.5" >[libvk_swif..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="710.2" y="2021" width="4.9" height="15.0" fill="rgb(233,227,42)" rx="2" ry="2" />
+<text  x="713.17" y="2031.5" ></text>
+</g>
+<g >
+<title>[libc-2.31.so] (250,000 samples, 0.41%)</title><rect x="78.5" y="1637" width="4.9" height="15.0" fill="rgb(221,30,15)" rx="2" ry="2" />
+<text  x="81.55" y="1647.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="245" width="4.9" height="15.0" fill="rgb(227,222,3)" rx="2" ry="2" />
+<text  x="654.41" y="255.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="1957" width="4.9" height="15.0" fill="rgb(239,184,44)" rx="2" ry="2" />
+<text  x="106.03" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="543.7" y="1941" width="4.9" height="15.0" fill="rgb(218,178,53)" rx="2" ry="2" />
+<text  x="546.69" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="149" width="4.9" height="15.0" fill="rgb(252,156,42)" rx="2" ry="2" />
+<text  x="654.41" y="159.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="85" width="4.9" height="15.0" fill="rgb(205,102,22)" rx="2" ry="2" />
+<text  x="634.83" y="95.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1173" width="29.4" height="15.0" fill="rgb(231,18,19)" rx="2" ry="2" />
+<text  x="629.93" y="1183.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="1893" width="4.9" height="15.0" fill="rgb(221,7,36)" rx="2" ry="2" />
+<text  x="106.03" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="2021" width="9.8" height="15.0" fill="rgb(217,211,11)" rx="2" ry="2" />
+<text  x="532.00" y="2031.5" ></text>
+</g>
+<g >
+<title>[code] (2,250,000 samples, 3.73%)</title><rect x="44.3" y="1765" width="44.0" height="15.0" fill="rgb(205,163,36)" rx="2" ry="2" />
+<text  x="47.27" y="1775.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="215.6" y="1941" width="4.9" height="15.0" fill="rgb(231,143,18)" rx="2" ry="2" />
+<text  x="218.64" y="1951.5" ></text>
+</g>
+<g >
+<title>nss_load_library (250,000 samples, 0.41%)</title><rect x="646.5" y="373" width="4.9" height="15.0" fill="rgb(241,85,36)" rx="2" ry="2" />
+<text  x="649.51" y="383.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="254.8" y="1941" width="9.8" height="15.0" fill="rgb(215,155,39)" rx="2" ry="2" />
+<text  x="257.81" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="85" width="4.9" height="15.0" fill="rgb(225,213,51)" rx="2" ry="2" />
+<text  x="629.93" y="95.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="1185.1" y="1925" width="4.9" height="15.0" fill="rgb(212,39,44)" rx="2" ry="2" />
+<text  x="1188.10" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="656.3" y="1909" width="4.9" height="15.0" fill="rgb(210,184,51)" rx="2" ry="2" />
+<text  x="659.31" y="1919.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (1,500,000 samples, 2.49%)</title><rect x="186.3" y="2005" width="29.3" height="15.0" fill="rgb(232,83,53)" rx="2" ry="2" />
+<text  x="189.27" y="2015.5" >[l..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="245" width="4.9" height="15.0" fill="rgb(233,34,37)" rx="2" ry="2" />
+<text  x="649.51" y="255.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="254.8" y="1909" width="9.8" height="15.0" fill="rgb(224,4,14)" rx="2" ry="2" />
+<text  x="257.81" y="1919.5" ></text>
+</g>
+<g >
+<title>[libc-2.31.so] (1,000,000 samples, 1.66%)</title><rect x="553.5" y="2053" width="19.6" height="15.0" fill="rgb(210,90,3)" rx="2" ry="2" />
+<text  x="556.49" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (23,000,000 samples, 38.17%)</title><rect x="739.5" y="2053" width="450.5" height="15.0" fill="rgb(211,83,45)" rx="2" ry="2" />
+<text  x="742.54" y="2063.5" >[unknown]</text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (1,750,000 samples, 2.90%)</title><rect x="450.7" y="1957" width="34.2" height="15.0" fill="rgb(220,222,52)" rx="2" ry="2" />
+<text  x="453.66" y="1967.5" >[l..</text>
+</g>
+<g >
+<title>[unknown] (22,750,000 samples, 37.76%)</title><rect x="744.4" y="1973" width="445.6" height="15.0" fill="rgb(252,22,7)" rx="2" ry="2" />
+<text  x="747.44" y="1983.5" >[unknown]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="2021" width="4.9" height="15.0" fill="rgb(235,180,28)" rx="2" ry="2" />
+<text  x="718.06" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1829" width="4.9" height="15.0" fill="rgb(240,212,8)" rx="2" ry="2" />
+<text  x="605.45" y="1839.5" ></text>
+</g>
+<g >
+<title>[code] (1,000,000 samples, 1.66%)</title><rect x="63.9" y="1717" width="19.5" height="15.0" fill="rgb(216,223,38)" rx="2" ry="2" />
+<text  x="66.86" y="1727.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="1925" width="14.6" height="15.0" fill="rgb(207,105,30)" rx="2" ry="2" />
+<text  x="727.85" y="1935.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1029" width="29.4" height="15.0" fill="rgb(212,2,6)" rx="2" ry="2" />
+<text  x="629.93" y="1039.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1845" width="4.9" height="15.0" fill="rgb(222,90,7)" rx="2" ry="2" />
+<text  x="434.08" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="149" width="4.9" height="15.0" fill="rgb(226,219,29)" rx="2" ry="2" />
+<text  x="649.51" y="159.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="426.2" y="1797" width="4.9" height="15.0" fill="rgb(238,145,41)" rx="2" ry="2" />
+<text  x="429.18" y="1807.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="436.0" y="1925" width="4.9" height="15.0" fill="rgb(240,207,6)" rx="2" ry="2" />
+<text  x="438.98" y="1935.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,250,000 samples, 3.73%)</title><rect x="220.5" y="1989" width="44.1" height="15.0" fill="rgb(237,32,18)" rx="2" ry="2" />
+<text  x="223.54" y="1999.5" >[lib..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="499.6" y="2005" width="9.8" height="15.0" fill="rgb(237,56,26)" rx="2" ry="2" />
+<text  x="502.63" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="426.2" y="1909" width="4.9" height="15.0" fill="rgb(241,184,44)" rx="2" ry="2" />
+<text  x="429.18" y="1919.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="460.5" y="1893" width="9.7" height="15.0" fill="rgb(224,160,46)" rx="2" ry="2" />
+<text  x="463.46" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="279.3" y="1861" width="4.9" height="15.0" fill="rgb(250,57,17)" rx="2" ry="2" />
+<text  x="282.29" y="1871.5" ></text>
+</g>
+<g >
+<title>[code] (3,250,000 samples, 5.39%)</title><rect x="39.4" y="2005" width="63.6" height="15.0" fill="rgb(217,173,53)" rx="2" ry="2" />
+<text  x="42.38" y="2015.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="24.7" y="1861" width="9.8" height="15.0" fill="rgb(246,173,6)" rx="2" ry="2" />
+<text  x="27.69" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="133" width="4.9" height="15.0" fill="rgb(229,47,48)" rx="2" ry="2" />
+<text  x="654.41" y="143.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1813" width="4.9" height="15.0" fill="rgb(206,185,41)" rx="2" ry="2" />
+<text  x="22.79" y="1823.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="1941" width="4.9" height="15.0" fill="rgb(240,89,24)" rx="2" ry="2" />
+<text  x="718.06" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="1957" width="14.7" height="15.0" fill="rgb(250,24,5)" rx="2" ry="2" />
+<text  x="698.48" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1957" width="4.9" height="15.0" fill="rgb(225,123,49)" rx="2" ry="2" />
+<text  x="434.08" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1781" width="4.9" height="15.0" fill="rgb(248,43,33)" rx="2" ry="2" />
+<text  x="22.79" y="1791.5" ></text>
+</g>
+<g >
+<title>__libc_csu_init (500,000 samples, 0.83%)</title><rect x="656.3" y="2053" width="9.8" height="15.0" fill="rgb(239,15,41)" rx="2" ry="2" />
+<text  x="659.31" y="2063.5" ></text>
+</g>
+<g >
+<title>g_callable_info_is_method (250,000 samples, 0.41%)</title><rect x="484.9" y="2021" width="4.9" height="15.0" fill="rgb(250,146,43)" rx="2" ry="2" />
+<text  x="487.94" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="333.2" y="1909" width="4.8" height="15.0" fill="rgb(226,85,33)" rx="2" ry="2" />
+<text  x="336.15" y="1919.5" ></text>
+</g>
+<g >
+<title>[code] (2,500,000 samples, 4.15%)</title><rect x="39.4" y="1829" width="48.9" height="15.0" fill="rgb(250,128,37)" rx="2" ry="2" />
+<text  x="42.38" y="1839.5" >[code]</text>
+</g>
+<g >
+<title>re_search_stub (250,000 samples, 0.41%)</title><rect x="107.9" y="2053" width="4.9" height="15.0" fill="rgb(223,91,43)" rx="2" ry="2" />
+<text  x="110.93" y="2063.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="949" width="29.4" height="15.0" fill="rgb(224,117,5)" rx="2" ry="2" />
+<text  x="629.93" y="959.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="165" width="4.9" height="15.0" fill="rgb(230,190,15)" rx="2" ry="2" />
+<text  x="639.72" y="175.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1765" width="4.9" height="15.0" fill="rgb(224,229,29)" rx="2" ry="2" />
+<text  x="605.45" y="1775.5" ></text>
+</g>
+<g >
+<title>operator delete[] (250,000 samples, 0.41%)</title><rect x="245.0" y="1957" width="4.9" height="15.0" fill="rgb(228,37,43)" rx="2" ry="2" />
+<text  x="248.02" y="1967.5" ></text>
+</g>
+<g >
+<title>[code] (750,000 samples, 1.24%)</title><rect x="10.0" y="1909" width="14.7" height="15.0" fill="rgb(241,163,4)" rx="2" ry="2" />
+<text  x="13.00" y="1919.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1749" width="29.4" height="15.0" fill="rgb(207,122,36)" rx="2" ry="2" />
+<text  x="629.93" y="1759.5" >__..</text>
+</g>
+<g >
+<title>__nss_database_lookup2 (250,000 samples, 0.41%)</title><rect x="631.8" y="277" width="4.9" height="15.0" fill="rgb(229,125,54)" rx="2" ry="2" />
+<text  x="634.83" y="287.5" ></text>
+</g>
+<g >
+<title>migration/3 (250,000 samples, 0.41%)</title><rect x="524.1" y="2069" width="4.9" height="15.0" fill="rgb(249,42,42)" rx="2" ry="2" />
+<text  x="527.11" y="2079.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1285" width="29.4" height="15.0" fill="rgb(241,172,16)" rx="2" ry="2" />
+<text  x="629.93" y="1295.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="215.6" y="2021" width="4.9" height="15.0" fill="rgb(229,189,25)" rx="2" ry="2" />
+<text  x="218.64" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="2037" width="14.6" height="15.0" fill="rgb(238,178,45)" rx="2" ry="2" />
+<text  x="727.85" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="333.2" y="1973" width="4.8" height="15.0" fill="rgb(221,205,53)" rx="2" ry="2" />
+<text  x="336.15" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1669" width="4.9" height="15.0" fill="rgb(233,172,32)" rx="2" ry="2" />
+<text  x="22.79" y="1679.5" ></text>
+</g>
+<g >
+<title>malloc (500,000 samples, 0.83%)</title><rect x="411.5" y="1893" width="9.8" height="15.0" fill="rgb(226,171,51)" rx="2" ry="2" />
+<text  x="414.49" y="1903.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="757" width="29.4" height="15.0" fill="rgb(234,143,37)" rx="2" ry="2" />
+<text  x="629.93" y="767.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="328.3" y="2053" width="9.7" height="15.0" fill="rgb(221,186,28)" rx="2" ry="2" />
+<text  x="331.26" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="1925" width="4.9" height="15.0" fill="rgb(237,101,10)" rx="2" ry="2" />
+<text  x="522.21" y="1935.5" ></text>
+</g>
+<g >
+<title>[code] (2,500,000 samples, 4.15%)</title><rect x="39.4" y="1845" width="48.9" height="15.0" fill="rgb(250,86,21)" rx="2" ry="2" />
+<text  x="42.38" y="1855.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="2037" width="4.9" height="15.0" fill="rgb(216,85,29)" rx="2" ry="2" />
+<text  x="522.21" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="181" width="4.9" height="15.0" fill="rgb(238,51,33)" rx="2" ry="2" />
+<text  x="634.83" y="191.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="543.7" y="1909" width="4.9" height="15.0" fill="rgb(209,180,16)" rx="2" ry="2" />
+<text  x="546.69" y="1919.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,000,000 samples, 1.66%)</title><rect x="626.9" y="325" width="19.6" height="15.0" fill="rgb(205,76,0)" rx="2" ry="2" />
+<text  x="629.93" y="335.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="245" width="4.9" height="15.0" fill="rgb(231,228,4)" rx="2" ry="2" />
+<text  x="644.62" y="255.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1349" width="29.4" height="15.0" fill="rgb(207,158,51)" rx="2" ry="2" />
+<text  x="629.93" y="1359.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1365" width="29.4" height="15.0" fill="rgb(236,71,41)" rx="2" ry="2" />
+<text  x="629.93" y="1375.5" >__..</text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="323.4" y="1941" width="4.9" height="15.0" fill="rgb(225,106,18)" rx="2" ry="2" />
+<text  x="326.36" y="1951.5" ></text>
+</g>
+<g >
+<title>[code] (1,250,000 samples, 2.07%)</title><rect x="10.0" y="2037" width="24.5" height="15.0" fill="rgb(217,179,53)" rx="2" ry="2" />
+<text  x="13.00" y="2047.5" >[..</text>
+</g>
+<g >
+<title>_GLOBAL__sub_I_main (500,000 samples, 0.83%)</title><rect x="656.3" y="2037" width="9.8" height="15.0" fill="rgb(214,226,12)" rx="2" ry="2" />
+<text  x="659.31" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="197" width="4.9" height="15.0" fill="rgb(227,118,13)" rx="2" ry="2" />
+<text  x="654.41" y="207.5" ></text>
+</g>
+<g >
+<title>[unknown]  (1,000,000 samples, 1.66%)</title><rect x="142.2" y="1957" width="19.6" height="15.0" fill="rgb(231,102,46)" rx="2" ry="2" />
+<text  x="145.20" y="1967.5" ></text>
+</g>
+<g >
+<title>CompositorTileW (250,000 samples, 0.41%)</title><rect x="103.0" y="2069" width="4.9" height="15.0" fill="rgb(254,42,2)" rx="2" ry="2" />
+<text  x="106.03" y="2079.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1829" width="4.9" height="15.0" fill="rgb(206,118,5)" rx="2" ry="2" />
+<text  x="22.79" y="1839.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="229" width="4.9" height="15.0" fill="rgb(237,160,41)" rx="2" ry="2" />
+<text  x="639.72" y="239.5" ></text>
+</g>
+<g >
+<title>start_thread (2,250,000 samples, 3.73%)</title><rect x="220.5" y="2053" width="44.1" height="15.0" fill="rgb(238,7,16)" rx="2" ry="2" />
+<text  x="223.54" y="2063.5" >star..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="543.7" y="1957" width="4.9" height="15.0" fill="rgb(219,77,18)" rx="2" ry="2" />
+<text  x="546.69" y="1967.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1141" width="29.4" height="15.0" fill="rgb(232,200,33)" rx="2" ry="2" />
+<text  x="629.93" y="1151.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="1941" width="4.9" height="15.0" fill="rgb(220,68,8)" rx="2" ry="2" />
+<text  x="106.03" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="37" width="4.9" height="15.0" fill="rgb(230,172,4)" rx="2" ry="2" />
+<text  x="634.83" y="47.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1925" width="29.4" height="15.0" fill="rgb(239,181,27)" rx="2" ry="2" />
+<text  x="629.93" y="1935.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="2005" width="14.6" height="15.0" fill="rgb(213,225,14)" rx="2" ry="2" />
+<text  x="595.66" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="176.5" y="1845" width="9.8" height="15.0" fill="rgb(210,109,15)" rx="2" ry="2" />
+<text  x="179.47" y="1855.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1909" width="29.4" height="15.0" fill="rgb(232,25,17)" rx="2" ry="2" />
+<text  x="629.93" y="1919.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="1925" width="14.6" height="15.0" fill="rgb(236,105,38)" rx="2" ry="2" />
+<text  x="595.66" y="1935.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,250,000 samples, 3.73%)</title><rect x="362.5" y="1893" width="44.1" height="15.0" fill="rgb(211,36,27)" rx="2" ry="2" />
+<text  x="365.53" y="1903.5" >[lib..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="607.3" y="1989" width="4.9" height="15.0" fill="rgb(231,116,41)" rx="2" ry="2" />
+<text  x="610.34" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="587.8" y="1957" width="4.9" height="15.0" fill="rgb(247,131,31)" rx="2" ry="2" />
+<text  x="590.76" y="1967.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,250,000 samples, 3.73%)</title><rect x="220.5" y="2021" width="44.1" height="15.0" fill="rgb(250,146,5)" rx="2" ry="2" />
+<text  x="223.54" y="2031.5" >[lib..</text>
+</g>
+<g >
+<title>[unknown] (2,500,000 samples, 4.15%)</title><rect x="573.1" y="2053" width="48.9" height="15.0" fill="rgb(208,13,14)" rx="2" ry="2" />
+<text  x="576.07" y="2063.5" >[unk..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="313.6" y="1925" width="4.9" height="15.0" fill="rgb(236,86,36)" rx="2" ry="2" />
+<text  x="316.57" y="1935.5" ></text>
+</g>
+<g >
+<title>[libffi.so.7.1.0] (250,000 samples, 0.41%)</title><rect x="445.8" y="2037" width="4.9" height="15.0" fill="rgb(230,38,5)" rx="2" ry="2" />
+<text  x="448.77" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1861" width="9.8" height="15.0" fill="rgb(225,90,53)" rx="2" ry="2" />
+<text  x="91.34" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="149" width="4.9" height="15.0" fill="rgb(230,163,22)" rx="2" ry="2" />
+<text  x="644.62" y="159.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1653" width="4.9" height="15.0" fill="rgb(235,227,35)" rx="2" ry="2" />
+<text  x="22.79" y="1663.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="1877" width="14.7" height="15.0" fill="rgb(223,188,13)" rx="2" ry="2" />
+<text  x="698.48" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1589" width="4.9" height="15.0" fill="rgb(243,187,16)" rx="2" ry="2" />
+<text  x="483.04" y="1599.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (3,750,000 samples, 6.22%)</title><rect x="112.8" y="2005" width="73.5" height="15.0" fill="rgb(206,160,9)" rx="2" ry="2" />
+<text  x="115.82" y="2015.5" >[libvk_s..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1221" width="29.4" height="15.0" fill="rgb(242,24,13)" rx="2" ry="2" />
+<text  x="629.93" y="1231.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="373" width="4.9" height="15.0" fill="rgb(228,116,44)" rx="2" ry="2" />
+<text  x="654.41" y="383.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1701" width="4.9" height="15.0" fill="rgb(215,104,29)" rx="2" ry="2" />
+<text  x="17.90" y="1711.5" ></text>
+</g>
+<g >
+<title>_dl_tlsdesc_resolve_hold_fixup (250,000 samples, 0.41%)</title><rect x="690.6" y="2037" width="4.9" height="15.0" fill="rgb(222,95,20)" rx="2" ry="2" />
+<text  x="693.58" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="568.2" y="1925" width="4.9" height="15.0" fill="rgb(252,190,46)" rx="2" ry="2" />
+<text  x="571.17" y="1935.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1733" width="29.4" height="15.0" fill="rgb(231,213,42)" rx="2" ry="2" />
+<text  x="629.93" y="1743.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1957" width="9.8" height="15.0" fill="rgb(242,77,23)" rx="2" ry="2" />
+<text  x="532.00" y="1967.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,250,000 samples, 3.73%)</title><rect x="220.5" y="2037" width="44.1" height="15.0" fill="rgb(210,120,10)" rx="2" ry="2" />
+<text  x="223.54" y="2047.5" >[lib..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1973" width="29.4" height="15.0" fill="rgb(228,64,31)" rx="2" ry="2" />
+<text  x="629.93" y="1983.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="475.1" y="1525" width="4.9" height="15.0" fill="rgb(223,24,35)" rx="2" ry="2" />
+<text  x="478.15" y="1535.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1509" width="29.4" height="15.0" fill="rgb(233,65,42)" rx="2" ry="2" />
+<text  x="629.93" y="1519.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="1893" width="14.7" height="15.0" fill="rgb(231,36,13)" rx="2" ry="2" />
+<text  x="698.48" y="1903.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,250,000 samples, 3.73%)</title><rect x="220.5" y="2005" width="44.1" height="15.0" fill="rgb(254,63,24)" rx="2" ry="2" />
+<text  x="223.54" y="2015.5" >[lib..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1189" width="29.4" height="15.0" fill="rgb(253,111,40)" rx="2" ry="2" />
+<text  x="629.93" y="1199.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1765" width="4.9" height="15.0" fill="rgb(242,40,3)" rx="2" ry="2" />
+<text  x="22.79" y="1775.5" ></text>
+</g>
+<g >
+<title>[code] (3,250,000 samples, 5.39%)</title><rect x="39.4" y="2021" width="63.6" height="15.0" fill="rgb(215,43,16)" rx="2" ry="2" />
+<text  x="42.38" y="2031.5" >[code]</text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (250,000 samples, 0.41%)</title><rect x="475.1" y="1589" width="4.9" height="15.0" fill="rgb(214,65,28)" rx="2" ry="2" />
+<text  x="478.15" y="1599.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1461" width="29.4" height="15.0" fill="rgb(218,108,10)" rx="2" ry="2" />
+<text  x="629.93" y="1471.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="436.0" y="1941" width="4.9" height="15.0" fill="rgb(207,171,51)" rx="2" ry="2" />
+<text  x="438.98" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="710.2" y="1957" width="4.9" height="15.0" fill="rgb(242,187,37)" rx="2" ry="2" />
+<text  x="713.17" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1781" width="4.9" height="15.0" fill="rgb(210,186,51)" rx="2" ry="2" />
+<text  x="605.45" y="1791.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="524.1" y="1989" width="4.9" height="15.0" fill="rgb(205,111,27)" rx="2" ry="2" />
+<text  x="527.11" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1813" width="4.9" height="15.0" fill="rgb(216,0,16)" rx="2" ry="2" />
+<text  x="605.45" y="1823.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="2021" width="4.9" height="15.0" fill="rgb(249,140,15)" rx="2" ry="2" />
+<text  x="106.03" y="2031.5" ></text>
+</g>
+<g >
+<title>nss_load_library (250,000 samples, 0.41%)</title><rect x="636.7" y="277" width="4.9" height="15.0" fill="rgb(213,95,47)" rx="2" ry="2" />
+<text  x="639.72" y="287.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="176.5" y="1861" width="9.8" height="15.0" fill="rgb(229,14,11)" rx="2" ry="2" />
+<text  x="179.47" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="499.6" y="1973" width="9.8" height="15.0" fill="rgb(243,71,9)" rx="2" ry="2" />
+<text  x="502.63" y="1983.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (4,750,000 samples, 7.88%)</title><rect x="338.0" y="2005" width="93.1" height="15.0" fill="rgb(225,219,12)" rx="2" ry="2" />
+<text  x="341.05" y="2015.5" >[libvk_swif..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1957" width="29.4" height="15.0" fill="rgb(220,158,35)" rx="2" ry="2" />
+<text  x="629.93" y="1967.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (250,000 samples, 0.41%)</title><rect x="626.9" y="229" width="4.9" height="15.0" fill="rgb(216,27,38)" rx="2" ry="2" />
+<text  x="629.93" y="239.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="582.9" y="1925" width="4.9" height="15.0" fill="rgb(222,20,31)" rx="2" ry="2" />
+<text  x="585.86" y="1935.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::stdio_sync_filebuf&lt;char, std::char_traits&lt;char&gt; &gt;::sync (250,000 samples, 0.41%)</title><rect x="622.0" y="2053" width="4.9" height="15.0" fill="rgb(226,71,1)" rx="2" ry="2" />
+<text  x="625.03" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1845" width="9.8" height="15.0" fill="rgb(218,112,9)" rx="2" ry="2" />
+<text  x="91.34" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="133" width="4.9" height="15.0" fill="rgb(243,142,27)" rx="2" ry="2" />
+<text  x="644.62" y="143.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (500,000 samples, 0.83%)</title><rect x="191.2" y="1941" width="9.8" height="15.0" fill="rgb(228,48,41)" rx="2" ry="2" />
+<text  x="194.16" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="101" width="4.9" height="15.0" fill="rgb(246,212,25)" rx="2" ry="2" />
+<text  x="639.72" y="111.5" ></text>
+</g>
+<g >
+<title>[code] (1,250,000 samples, 2.07%)</title><rect x="10.0" y="1973" width="24.5" height="15.0" fill="rgb(249,10,23)" rx="2" ry="2" />
+<text  x="13.00" y="1983.5" >[..</text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1701" width="9.8" height="15.0" fill="rgb(218,163,13)" rx="2" ry="2" />
+<text  x="478.15" y="1711.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="1989" width="4.9" height="15.0" fill="rgb(208,123,32)" rx="2" ry="2" />
+<text  x="321.46" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (23,000,000 samples, 38.17%)</title><rect x="739.5" y="2005" width="450.5" height="15.0" fill="rgb(234,175,19)" rx="2" ry="2" />
+<text  x="742.54" y="2015.5" >[unknown]</text>
+</g>
+<g >
+<title>gnome-shell (4,000,000 samples, 6.64%)</title><rect x="440.9" y="2069" width="78.3" height="15.0" fill="rgb(251,8,8)" rx="2" ry="2" />
+<text  x="443.87" y="2079.5" >gnome-shell</text>
+</g>
+<g >
+<title>[code] (1,250,000 samples, 2.07%)</title><rect x="10.0" y="1989" width="24.5" height="15.0" fill="rgb(223,4,32)" rx="2" ry="2" />
+<text  x="13.00" y="1999.5" >[..</text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (250,000 samples, 0.41%)</title><rect x="279.3" y="1941" width="4.9" height="15.0" fill="rgb(208,185,47)" rx="2" ry="2" />
+<text  x="282.29" y="1951.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="869" width="29.4" height="15.0" fill="rgb(208,74,30)" rx="2" ry="2" />
+<text  x="629.93" y="879.5" >__..</text>
+</g>
+<g >
+<title>putspent (1,250,000 samples, 2.07%)</title><rect x="161.8" y="1957" width="24.5" height="15.0" fill="rgb(253,185,0)" rx="2" ry="2" />
+<text  x="164.78" y="1967.5" >p..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="1925" width="4.9" height="15.0" fill="rgb(219,142,6)" rx="2" ry="2" />
+<text  x="718.06" y="1935.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (3,500,000 samples, 5.81%)</title><rect x="357.6" y="1909" width="68.6" height="15.0" fill="rgb(223,86,46)" rx="2" ry="2" />
+<text  x="360.63" y="1919.5" >[libvk_..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="1957" width="4.9" height="15.0" fill="rgb(226,89,16)" rx="2" ry="2" />
+<text  x="718.06" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="1941" width="14.7" height="15.0" fill="rgb(206,160,29)" rx="2" ry="2" />
+<text  x="698.48" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1941" width="4.9" height="15.0" fill="rgb(209,120,2)" rx="2" ry="2" />
+<text  x="434.08" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="1925" width="4.9" height="15.0" fill="rgb(217,111,29)" rx="2" ry="2" />
+<text  x="321.46" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1893" width="9.8" height="15.0" fill="rgb(206,187,24)" rx="2" ry="2" />
+<text  x="532.00" y="1903.5" ></text>
+</g>
+<g >
+<title>std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt; &gt;::allocator (250,000 samples, 0.41%)</title><rect x="656.3" y="1973" width="4.9" height="15.0" fill="rgb(206,7,23)" rx="2" ry="2" />
+<text  x="659.31" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="197" width="4.9" height="15.0" fill="rgb(243,109,38)" rx="2" ry="2" />
+<text  x="649.51" y="207.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="1989" width="4.9" height="15.0" fill="rgb(247,14,30)" rx="2" ry="2" />
+<text  x="522.21" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="37" width="4.9" height="15.0" fill="rgb(250,118,49)" rx="2" ry="2" />
+<text  x="629.93" y="47.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="333.2" y="2005" width="4.8" height="15.0" fill="rgb(218,12,8)" rx="2" ry="2" />
+<text  x="336.15" y="2015.5" ></text>
+</g>
+<g >
+<title>setspent (250,000 samples, 0.41%)</title><rect x="548.6" y="1973" width="4.9" height="15.0" fill="rgb(208,3,39)" rx="2" ry="2" />
+<text  x="551.59" y="1983.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="565" width="29.4" height="15.0" fill="rgb(223,137,1)" rx="2" ry="2" />
+<text  x="629.93" y="575.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="328.3" y="1989" width="4.9" height="15.0" fill="rgb(247,73,20)" rx="2" ry="2" />
+<text  x="331.26" y="1999.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="597" width="29.4" height="15.0" fill="rgb(237,12,42)" rx="2" ry="2" />
+<text  x="629.93" y="607.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1877" width="9.8" height="15.0" fill="rgb(241,73,13)" rx="2" ry="2" />
+<text  x="532.00" y="1887.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="323.4" y="1957" width="4.9" height="15.0" fill="rgb(245,58,49)" rx="2" ry="2" />
+<text  x="326.36" y="1967.5" ></text>
+</g>
+<g >
+<title>start_thread (5,250,000 samples, 8.71%)</title><rect x="338.0" y="2053" width="102.9" height="15.0" fill="rgb(223,78,42)" rx="2" ry="2" />
+<text  x="341.05" y="2063.5" >start_thread</text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="1989" width="14.6" height="15.0" fill="rgb(207,86,15)" rx="2" ry="2" />
+<text  x="727.85" y="1999.5" ></text>
+</g>
+<g >
+<title>__libc_recvmsg (250,000 samples, 0.41%)</title><rect x="19.8" y="1877" width="4.9" height="15.0" fill="rgb(247,126,8)" rx="2" ry="2" />
+<text  x="22.79" y="1887.5" ></text>
+</g>
+<g >
+<title>perf-exec (1,000,000 samples, 1.66%)</title><rect x="529.0" y="2069" width="19.6" height="15.0" fill="rgb(238,4,12)" rx="2" ry="2" />
+<text  x="532.00" y="2079.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="83.4" y="1717" width="4.9" height="15.0" fill="rgb(223,165,34)" rx="2" ry="2" />
+<text  x="86.44" y="1727.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (3,750,000 samples, 6.22%)</title><rect x="112.8" y="2037" width="73.5" height="15.0" fill="rgb(246,14,47)" rx="2" ry="2" />
+<text  x="115.82" y="2047.5" >[libvk_s..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="475.1" y="1541" width="4.9" height="15.0" fill="rgb(216,98,47)" rx="2" ry="2" />
+<text  x="478.15" y="1551.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="215.6" y="1957" width="4.9" height="15.0" fill="rgb(217,21,29)" rx="2" ry="2" />
+<text  x="218.64" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (2,750,000 samples, 4.56%)</title><rect x="445.8" y="2053" width="53.8" height="15.0" fill="rgb(250,129,3)" rx="2" ry="2" />
+<text  x="448.77" y="2063.5" >[unkn..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,000,000 samples, 1.66%)</title><rect x="626.9" y="341" width="19.6" height="15.0" fill="rgb(215,218,38)" rx="2" ry="2" />
+<text  x="629.93" y="351.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="213" width="4.9" height="15.0" fill="rgb(205,140,16)" rx="2" ry="2" />
+<text  x="644.62" y="223.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1685" width="9.8" height="15.0" fill="rgb(224,100,4)" rx="2" ry="2" />
+<text  x="478.15" y="1695.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="328.3" y="2021" width="4.9" height="15.0" fill="rgb(243,26,50)" rx="2" ry="2" />
+<text  x="331.26" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="261" width="4.9" height="15.0" fill="rgb(232,17,3)" rx="2" ry="2" />
+<text  x="649.51" y="271.5" ></text>
+</g>
+<g >
+<title>ruserok2_sa (250,000 samples, 0.41%)</title><rect x="631.8" y="261" width="4.9" height="15.0" fill="rgb(241,82,28)" rx="2" ry="2" />
+<text  x="634.83" y="271.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="2021" width="4.9" height="15.0" fill="rgb(253,159,47)" rx="2" ry="2" />
+<text  x="522.21" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="101" width="4.9" height="15.0" fill="rgb(218,203,28)" rx="2" ry="2" />
+<text  x="629.93" y="111.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="504.5" y="1909" width="4.9" height="15.0" fill="rgb(231,158,44)" rx="2" ry="2" />
+<text  x="507.52" y="1919.5" ></text>
+</g>
+<g >
+<title>[ld-2.31.so] (750,000 samples, 1.24%)</title><rect x="573.1" y="2021" width="14.7" height="15.0" fill="rgb(240,162,38)" rx="2" ry="2" />
+<text  x="576.07" y="2031.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1797" width="29.4" height="15.0" fill="rgb(208,112,6)" rx="2" ry="2" />
+<text  x="629.93" y="1807.5" >__..</text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (3,750,000 samples, 6.22%)</title><rect x="112.8" y="2021" width="73.5" height="15.0" fill="rgb(235,163,3)" rx="2" ry="2" />
+<text  x="115.82" y="2031.5" >[libvk_s..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1893" width="29.4" height="15.0" fill="rgb(251,27,24)" rx="2" ry="2" />
+<text  x="629.93" y="1903.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="1941" width="4.9" height="15.0" fill="rgb(225,9,36)" rx="2" ry="2" />
+<text  x="321.46" y="1951.5" ></text>
+</g>
+<g >
+<title>main (250,000 samples, 0.41%)</title><rect x="548.6" y="2037" width="4.9" height="15.0" fill="rgb(231,21,35)" rx="2" ry="2" />
+<text  x="551.59" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="2021" width="14.6" height="15.0" fill="rgb(228,60,6)" rx="2" ry="2" />
+<text  x="727.85" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="215.6" y="2037" width="4.9" height="15.0" fill="rgb(222,139,14)" rx="2" ry="2" />
+<text  x="218.64" y="2047.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,500,000 samples, 4.15%)</title><rect x="269.5" y="2021" width="49.0" height="15.0" fill="rgb(250,113,41)" rx="2" ry="2" />
+<text  x="272.50" y="2031.5" >[lib..</text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="1989" width="14.7" height="15.0" fill="rgb(232,180,4)" rx="2" ry="2" />
+<text  x="698.48" y="1999.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (4,750,000 samples, 7.88%)</title><rect x="338.0" y="1957" width="93.1" height="15.0" fill="rgb(220,67,0)" rx="2" ry="2" />
+<text  x="341.05" y="1967.5" >[libvk_swif..</text>
+</g>
+<g >
+<title>pthread_cond_timedwait@@GLIBC_2.3.2 (250,000 samples, 0.41%)</title><rect x="328.3" y="2037" width="4.9" height="15.0" fill="rgb(228,160,32)" rx="2" ry="2" />
+<text  x="331.26" y="2047.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="323.4" y="2005" width="4.9" height="15.0" fill="rgb(212,70,49)" rx="2" ry="2" />
+<text  x="326.36" y="2015.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1333" width="29.4" height="15.0" fill="rgb(227,130,4)" rx="2" ry="2" />
+<text  x="629.93" y="1343.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="24.7" y="1893" width="9.8" height="15.0" fill="rgb(212,64,49)" rx="2" ry="2" />
+<text  x="27.69" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="279.3" y="1893" width="4.9" height="15.0" fill="rgb(240,81,42)" rx="2" ry="2" />
+<text  x="282.29" y="1903.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1813" width="29.4" height="15.0" fill="rgb(244,21,49)" rx="2" ry="2" />
+<text  x="629.93" y="1823.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="117" width="4.9" height="15.0" fill="rgb(245,4,48)" rx="2" ry="2" />
+<text  x="654.41" y="127.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1733" width="9.8" height="15.0" fill="rgb(231,38,33)" rx="2" ry="2" />
+<text  x="91.34" y="1743.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="1941" width="4.9" height="15.0" fill="rgb(239,204,46)" rx="2" ry="2" />
+<text  x="522.21" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="229" width="4.9" height="15.0" fill="rgb(232,177,10)" rx="2" ry="2" />
+<text  x="634.83" y="239.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="549" width="29.4" height="15.0" fill="rgb(224,211,36)" rx="2" ry="2" />
+<text  x="629.93" y="559.5" >__..</text>
+</g>
+<g >
+<title>cmd_record (500,000 samples, 0.83%)</title><rect x="538.8" y="2005" width="9.8" height="15.0" fill="rgb(250,113,43)" rx="2" ry="2" />
+<text  x="541.80" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="328.3" y="1941" width="4.9" height="15.0" fill="rgb(231,156,3)" rx="2" ry="2" />
+<text  x="331.26" y="1951.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (1,500,000 samples, 2.49%)</title><rect x="186.3" y="1973" width="29.3" height="15.0" fill="rgb(243,119,35)" rx="2" ry="2" />
+<text  x="189.27" y="1983.5" >[l..</text>
+</g>
+<g >
+<title>run_builtin (250,000 samples, 0.41%)</title><rect x="548.6" y="2021" width="4.9" height="15.0" fill="rgb(248,86,45)" rx="2" ry="2" />
+<text  x="551.59" y="2031.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1829" width="9.8" height="15.0" fill="rgb(213,89,3)" rx="2" ry="2" />
+<text  x="478.15" y="1839.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="279.3" y="1877" width="4.9" height="15.0" fill="rgb(210,133,4)" rx="2" ry="2" />
+<text  x="282.29" y="1887.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="677" width="29.4" height="15.0" fill="rgb(239,3,9)" rx="2" ry="2" />
+<text  x="629.93" y="687.5" >__..</text>
+</g>
+<g >
+<title>__strerror_r (250,000 samples, 0.41%)</title><rect x="607.3" y="2037" width="4.9" height="15.0" fill="rgb(215,67,3)" rx="2" ry="2" />
+<text  x="610.34" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="24.7" y="1877" width="9.8" height="15.0" fill="rgb(250,37,21)" rx="2" ry="2" />
+<text  x="27.69" y="1887.5" ></text>
+</g>
+<g >
+<title>std::__1::__thread_proxy&lt;std::__1::tuple&lt;std::__1::unique_ptr&lt;std::__1::__thread_struct, std::__1::default_delete&lt;std::__1::__thread_struct&gt; &gt;, Backend::run (500,000 samples, 0.83%)</title><rect x="431.1" y="2037" width="9.8" height="15.0" fill="rgb(251,226,49)" rx="2" ry="2" />
+<text  x="434.08" y="2047.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1557" width="29.4" height="15.0" fill="rgb(246,200,24)" rx="2" ry="2" />
+<text  x="629.93" y="1567.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="656.3" y="1941" width="4.9" height="15.0" fill="rgb(246,197,21)" rx="2" ry="2" />
+<text  x="659.31" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="1941" width="14.6" height="15.0" fill="rgb(208,180,11)" rx="2" ry="2" />
+<text  x="727.85" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="2037" width="4.9" height="15.0" fill="rgb(227,44,15)" rx="2" ry="2" />
+<text  x="718.06" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="2021" width="4.9" height="15.0" fill="rgb(210,1,12)" rx="2" ry="2" />
+<text  x="321.46" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="37" width="4.9" height="15.0" fill="rgb(245,192,3)" rx="2" ry="2" />
+<text  x="639.72" y="47.5" ></text>
+</g>
+<g >
+<title>_dl_fini (250,000 samples, 0.41%)</title><rect x="671.0" y="2053" width="4.9" height="15.0" fill="rgb(206,35,41)" rx="2" ry="2" />
+<text  x="674.00" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="568.2" y="1973" width="4.9" height="15.0" fill="rgb(222,90,41)" rx="2" ry="2" />
+<text  x="571.17" y="1983.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="821" width="29.4" height="15.0" fill="rgb(245,149,22)" rx="2" ry="2" />
+<text  x="629.93" y="831.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="69" width="4.9" height="15.0" fill="rgb(252,101,10)" rx="2" ry="2" />
+<text  x="654.41" y="79.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1797" width="4.9" height="15.0" fill="rgb(249,54,4)" rx="2" ry="2" />
+<text  x="22.79" y="1807.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="548.6" y="1877" width="4.9" height="15.0" fill="rgb(222,18,35)" rx="2" ry="2" />
+<text  x="551.59" y="1887.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (250,000 samples, 0.41%)</title><rect x="191.2" y="1909" width="4.9" height="15.0" fill="rgb(231,30,43)" rx="2" ry="2" />
+<text  x="194.16" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="656.3" y="1925" width="4.9" height="15.0" fill="rgb(251,174,49)" rx="2" ry="2" />
+<text  x="659.31" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="117" width="4.9" height="15.0" fill="rgb(247,65,19)" rx="2" ry="2" />
+<text  x="649.51" y="127.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1893" width="4.9" height="15.0" fill="rgb(213,203,7)" rx="2" ry="2" />
+<text  x="434.08" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="254.8" y="1925" width="9.8" height="15.0" fill="rgb(232,198,6)" rx="2" ry="2" />
+<text  x="257.81" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="2037" width="9.8" height="15.0" fill="rgb(208,90,25)" rx="2" ry="2" />
+<text  x="532.00" y="2047.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1301" width="29.4" height="15.0" fill="rgb(216,95,20)" rx="2" ry="2" />
+<text  x="629.93" y="1311.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="1185.1" y="1909" width="4.9" height="15.0" fill="rgb(245,104,6)" rx="2" ry="2" />
+<text  x="1188.10" y="1919.5" ></text>
+</g>
+<g >
+<title>getifaddrs_internal (250,000 samples, 0.41%)</title><rect x="626.9" y="197" width="4.9" height="15.0" fill="rgb(250,167,37)" rx="2" ry="2" />
+<text  x="629.93" y="207.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (250,000 samples, 0.41%)</title><rect x="210.7" y="1941" width="4.9" height="15.0" fill="rgb(211,37,39)" rx="2" ry="2" />
+<text  x="213.75" y="1951.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,250,000 samples, 2.07%)</title><rect x="626.9" y="405" width="24.5" height="15.0" fill="rgb(236,159,48)" rx="2" ry="2" />
+<text  x="629.93" y="415.5" >_..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="607.3" y="1941" width="4.9" height="15.0" fill="rgb(247,205,18)" rx="2" ry="2" />
+<text  x="610.34" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="1989" width="4.9" height="15.0" fill="rgb(245,123,35)" rx="2" ry="2" />
+<text  x="106.03" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="69" width="4.9" height="15.0" fill="rgb(244,146,15)" rx="2" ry="2" />
+<text  x="649.51" y="79.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="1909" width="14.6" height="15.0" fill="rgb(238,196,20)" rx="2" ry="2" />
+<text  x="727.85" y="1919.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,500,000 samples, 4.15%)</title><rect x="269.5" y="1973" width="49.0" height="15.0" fill="rgb(214,2,10)" rx="2" ry="2" />
+<text  x="272.50" y="1983.5" >[lib..</text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (4,750,000 samples, 7.88%)</title><rect x="338.0" y="1973" width="93.1" height="15.0" fill="rgb(207,166,13)" rx="2" ry="2" />
+<text  x="341.05" y="1983.5" >[libvk_swif..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="436.0" y="1909" width="4.9" height="15.0" fill="rgb(215,156,9)" rx="2" ry="2" />
+<text  x="438.98" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="524.1" y="2021" width="4.9" height="15.0" fill="rgb(237,66,8)" rx="2" ry="2" />
+<text  x="527.11" y="2031.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="517" width="29.4" height="15.0" fill="rgb(246,132,50)" rx="2" ry="2" />
+<text  x="629.93" y="527.5" >__..</text>
+</g>
+<g >
+<title>putenv (250,000 samples, 0.41%)</title><rect x="548.6" y="2053" width="4.9" height="15.0" fill="rgb(231,29,22)" rx="2" ry="2" />
+<text  x="551.59" y="2063.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,500,000 samples, 4.15%)</title><rect x="269.5" y="2005" width="49.0" height="15.0" fill="rgb(234,176,38)" rx="2" ry="2" />
+<text  x="272.50" y="2015.5" >[lib..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="720.0" y="2037" width="4.9" height="15.0" fill="rgb(210,12,22)" rx="2" ry="2" />
+<text  x="722.96" y="2047.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1861" width="9.8" height="15.0" fill="rgb(235,224,27)" rx="2" ry="2" />
+<text  x="478.15" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="261" width="4.9" height="15.0" fill="rgb(205,20,0)" rx="2" ry="2" />
+<text  x="654.41" y="271.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1749" width="4.9" height="15.0" fill="rgb(221,152,34)" rx="2" ry="2" />
+<text  x="605.45" y="1759.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1877" width="4.9" height="15.0" fill="rgb(230,107,19)" rx="2" ry="2" />
+<text  x="434.08" y="1887.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,000,000 samples, 1.66%)</title><rect x="626.9" y="373" width="19.6" height="15.0" fill="rgb(240,131,32)" rx="2" ry="2" />
+<text  x="629.93" y="383.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="323.4" y="1893" width="4.9" height="15.0" fill="rgb(238,169,52)" rx="2" ry="2" />
+<text  x="326.36" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="333.2" y="1925" width="4.8" height="15.0" fill="rgb(205,203,22)" rx="2" ry="2" />
+<text  x="336.15" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="548.6" y="1893" width="4.9" height="15.0" fill="rgb(227,217,2)" rx="2" ry="2" />
+<text  x="551.59" y="1903.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1701" width="29.4" height="15.0" fill="rgb(248,45,17)" rx="2" ry="2" />
+<text  x="629.93" y="1711.5" >__..</text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (1,750,000 samples, 2.90%)</title><rect x="450.7" y="1973" width="34.2" height="15.0" fill="rgb(235,207,46)" rx="2" ry="2" />
+<text  x="453.66" y="1983.5" >[l..</text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1845" width="9.8" height="15.0" fill="rgb(232,164,30)" rx="2" ry="2" />
+<text  x="478.15" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="543.7" y="1925" width="4.9" height="15.0" fill="rgb(212,197,53)" rx="2" ry="2" />
+<text  x="546.69" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="328.3" y="1893" width="4.9" height="15.0" fill="rgb(225,122,5)" rx="2" ry="2" />
+<text  x="331.26" y="1903.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (250,000 samples, 0.41%)</title><rect x="475.1" y="1605" width="4.9" height="15.0" fill="rgb(219,37,41)" rx="2" ry="2" />
+<text  x="478.15" y="1615.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1493" width="29.4" height="15.0" fill="rgb(251,93,4)" rx="2" ry="2" />
+<text  x="629.93" y="1503.5" >__..</text>
+</g>
+<g >
+<title>swapper (23,000,000 samples, 38.17%)</title><rect x="739.5" y="2069" width="450.5" height="15.0" fill="rgb(224,151,50)" rx="2" ry="2" />
+<text  x="742.54" y="2079.5" >swapper</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="101" width="4.9" height="15.0" fill="rgb(217,25,38)" rx="2" ry="2" />
+<text  x="634.83" y="111.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="426.2" y="1813" width="4.9" height="15.0" fill="rgb(237,76,48)" rx="2" ry="2" />
+<text  x="429.18" y="1823.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="1909" width="4.9" height="15.0" fill="rgb(254,62,0)" rx="2" ry="2" />
+<text  x="522.21" y="1919.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (250,000 samples, 0.41%)</title><rect x="240.1" y="1925" width="4.9" height="15.0" fill="rgb(209,182,37)" rx="2" ry="2" />
+<text  x="243.12" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="607.3" y="2021" width="4.9" height="15.0" fill="rgb(221,217,19)" rx="2" ry="2" />
+<text  x="610.34" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="582.9" y="1973" width="4.9" height="15.0" fill="rgb(226,202,32)" rx="2" ry="2" />
+<text  x="585.86" y="1983.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="73.7" y="1621" width="4.8" height="15.0" fill="rgb(239,180,1)" rx="2" ry="2" />
+<text  x="76.65" y="1631.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="933" width="29.4" height="15.0" fill="rgb(210,64,24)" rx="2" ry="2" />
+<text  x="629.93" y="943.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="264.6" y="2037" width="4.9" height="15.0" fill="rgb(216,27,25)" rx="2" ry="2" />
+<text  x="267.61" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="436.0" y="1989" width="4.9" height="15.0" fill="rgb(234,105,36)" rx="2" ry="2" />
+<text  x="438.98" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1525" width="4.9" height="15.0" fill="rgb(253,220,37)" rx="2" ry="2" />
+<text  x="483.04" y="1535.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="277" width="4.9" height="15.0" fill="rgb(208,175,18)" rx="2" ry="2" />
+<text  x="644.62" y="287.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (250,000 samples, 0.41%)</title><rect x="475.1" y="1621" width="4.9" height="15.0" fill="rgb(254,224,40)" rx="2" ry="2" />
+<text  x="478.15" y="1631.5" ></text>
+</g>
+<g >
+<title>[code] (750,000 samples, 1.24%)</title><rect x="68.8" y="1653" width="14.6" height="15.0" fill="rgb(237,130,18)" rx="2" ry="2" />
+<text  x="71.76" y="1663.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="499.6" y="1989" width="9.8" height="15.0" fill="rgb(220,44,9)" rx="2" ry="2" />
+<text  x="502.63" y="1999.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (1,500,000 samples, 2.49%)</title><rect x="186.3" y="2037" width="29.3" height="15.0" fill="rgb(215,161,30)" rx="2" ry="2" />
+<text  x="189.27" y="2047.5" >[l..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="607.3" y="1925" width="4.9" height="15.0" fill="rgb(229,161,1)" rx="2" ry="2" />
+<text  x="610.34" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="171.6" y="1909" width="14.7" height="15.0" fill="rgb(220,165,36)" rx="2" ry="2" />
+<text  x="174.58" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="149" width="4.9" height="15.0" fill="rgb(244,193,11)" rx="2" ry="2" />
+<text  x="639.72" y="159.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="917" width="29.4" height="15.0" fill="rgb(229,229,4)" rx="2" ry="2" />
+<text  x="629.93" y="927.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (23,000,000 samples, 38.17%)</title><rect x="739.5" y="2037" width="450.5" height="15.0" fill="rgb(226,9,19)" rx="2" ry="2" />
+<text  x="742.54" y="2047.5" >[unknown]</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1317" width="29.4" height="15.0" fill="rgb(234,31,28)" rx="2" ry="2" />
+<text  x="629.93" y="1327.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="558.4" y="2021" width="14.7" height="15.0" fill="rgb(245,63,7)" rx="2" ry="2" />
+<text  x="561.38" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="245" width="4.9" height="15.0" fill="rgb(225,100,53)" rx="2" ry="2" />
+<text  x="639.72" y="255.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="1973" width="4.9" height="15.0" fill="rgb(219,3,15)" rx="2" ry="2" />
+<text  x="321.46" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="1893" width="14.6" height="15.0" fill="rgb(243,191,48)" rx="2" ry="2" />
+<text  x="595.66" y="1903.5" ></text>
+</g>
+<g >
+<title>Chrome_ChildIOT (1,250,000 samples, 2.07%)</title><rect x="10.0" y="2069" width="24.5" height="15.0" fill="rgb(207,153,54)" rx="2" ry="2" />
+<text  x="13.00" y="2079.5" >C..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1397" width="29.4" height="15.0" fill="rgb(246,176,16)" rx="2" ry="2" />
+<text  x="629.93" y="1407.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1717" width="4.9" height="15.0" fill="rgb(245,139,53)" rx="2" ry="2" />
+<text  x="22.79" y="1727.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (1,750,000 samples, 2.90%)</title><rect x="450.7" y="2005" width="34.2" height="15.0" fill="rgb(237,82,43)" rx="2" ry="2" />
+<text  x="453.66" y="2015.5" >[l..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="229" width="4.9" height="15.0" fill="rgb(237,44,48)" rx="2" ry="2" />
+<text  x="644.62" y="239.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="313.6" y="1893" width="4.9" height="15.0" fill="rgb(224,133,48)" rx="2" ry="2" />
+<text  x="316.57" y="1903.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1269" width="29.4" height="15.0" fill="rgb(205,62,27)" rx="2" ry="2" />
+<text  x="629.93" y="1279.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="709" width="29.4" height="15.0" fill="rgb(237,98,15)" rx="2" ry="2" />
+<text  x="629.93" y="719.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="53" width="4.9" height="15.0" fill="rgb(214,200,28)" rx="2" ry="2" />
+<text  x="654.41" y="63.5" ></text>
+</g>
+<g >
+<title>code (5,750,000 samples, 9.54%)</title><rect x="328.3" y="2069" width="112.6" height="15.0" fill="rgb(237,206,44)" rx="2" ry="2" />
+<text  x="331.26" y="2079.5" >code</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="2053" width="4.9" height="15.0" fill="rgb(239,88,24)" rx="2" ry="2" />
+<text  x="522.21" y="2063.5" ></text>
+</g>
+<g >
+<title>ruserok2_sa (250,000 samples, 0.41%)</title><rect x="641.6" y="293" width="4.9" height="15.0" fill="rgb(225,209,42)" rx="2" ry="2" />
+<text  x="644.62" y="303.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="1973" width="4.9" height="15.0" fill="rgb(208,161,42)" rx="2" ry="2" />
+<text  x="522.21" y="1983.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="853" width="29.4" height="15.0" fill="rgb(219,176,6)" rx="2" ry="2" />
+<text  x="629.93" y="863.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="328.3" y="1973" width="4.9" height="15.0" fill="rgb(236,34,22)" rx="2" ry="2" />
+<text  x="331.26" y="1983.5" ></text>
+</g>
+<g >
+<title>Thread&lt;02&gt; (2,500,000 samples, 4.15%)</title><rect x="215.6" y="2069" width="49.0" height="15.0" fill="rgb(217,224,45)" rx="2" ry="2" />
+<text  x="218.64" y="2079.5" >Thre..</text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="1925" width="14.7" height="15.0" fill="rgb(218,72,27)" rx="2" ry="2" />
+<text  x="698.48" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="313.6" y="1877" width="4.9" height="15.0" fill="rgb(243,77,27)" rx="2" ry="2" />
+<text  x="316.57" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="1973" width="14.6" height="15.0" fill="rgb(230,156,26)" rx="2" ry="2" />
+<text  x="727.85" y="1983.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1045" width="29.4" height="15.0" fill="rgb(252,48,1)" rx="2" ry="2" />
+<text  x="629.93" y="1055.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1733" width="4.9" height="15.0" fill="rgb(218,17,4)" rx="2" ry="2" />
+<text  x="22.79" y="1743.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="475.1" y="1477" width="4.9" height="15.0" fill="rgb(208,82,54)" rx="2" ry="2" />
+<text  x="478.15" y="1487.5" ></text>
+</g>
+<g >
+<title>[code] (2,500,000 samples, 4.15%)</title><rect x="39.4" y="1797" width="48.9" height="15.0" fill="rgb(220,203,15)" rx="2" ry="2" />
+<text  x="42.38" y="1807.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="597.6" y="1877" width="9.7" height="15.0" fill="rgb(246,134,43)" rx="2" ry="2" />
+<text  x="600.55" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="475.1" y="1909" width="9.8" height="15.0" fill="rgb(248,111,51)" rx="2" ry="2" />
+<text  x="478.15" y="1919.5" ></text>
+</g>
+<g >
+<title>[perf-35671.map] (500,000 samples, 0.83%)</title><rect x="475.1" y="1893" width="9.8" height="15.0" fill="rgb(236,90,30)" rx="2" ry="2" />
+<text  x="478.15" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="213" width="4.9" height="15.0" fill="rgb(210,219,28)" rx="2" ry="2" />
+<text  x="634.83" y="223.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="165" width="4.9" height="15.0" fill="rgb(217,136,2)" rx="2" ry="2" />
+<text  x="649.51" y="175.5" ></text>
+</g>
+<g >
+<title>std::basic_ostream&lt;char, std::char_traits&lt;char&gt; &gt;::~basic_ostream (250,000 samples, 0.41%)</title><rect x="720.0" y="2053" width="4.9" height="15.0" fill="rgb(237,110,24)" rx="2" ry="2" />
+<text  x="722.96" y="2063.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="14.9" y="1877" width="4.9" height="15.0" fill="rgb(207,122,33)" rx="2" ry="2" />
+<text  x="17.90" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="568.2" y="1941" width="4.9" height="15.0" fill="rgb(214,58,5)" rx="2" ry="2" />
+<text  x="571.17" y="1951.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (4,250,000 samples, 7.05%)</title><rect x="342.9" y="1925" width="83.3" height="15.0" fill="rgb(216,210,26)" rx="2" ry="2" />
+<text  x="345.95" y="1935.5" >[libvk_sw..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="101" width="4.9" height="15.0" fill="rgb(216,83,44)" rx="2" ry="2" />
+<text  x="644.62" y="111.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1829" width="29.4" height="15.0" fill="rgb(236,147,40)" rx="2" ry="2" />
+<text  x="629.93" y="1839.5" >__..</text>
+</g>
+<g >
+<title>pthread_cond_destroy@@GLIBC_2.3.2 (250,000 samples, 0.41%)</title><rect x="421.3" y="1893" width="4.9" height="15.0" fill="rgb(232,187,11)" rx="2" ry="2" />
+<text  x="424.29" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="582.9" y="1893" width="4.9" height="15.0" fill="rgb(229,77,8)" rx="2" ry="2" />
+<text  x="585.86" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="53" width="4.9" height="15.0" fill="rgb(208,158,43)" rx="2" ry="2" />
+<text  x="649.51" y="63.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="323.4" y="1925" width="4.9" height="15.0" fill="rgb(229,89,16)" rx="2" ry="2" />
+<text  x="326.36" y="1935.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,250,000 samples, 3.73%)</title><rect x="220.5" y="1973" width="44.1" height="15.0" fill="rgb(231,162,0)" rx="2" ry="2" />
+<text  x="223.54" y="1983.5" >[lib..</text>
+</g>
+<g >
+<title>__nss_database_lookup2 (250,000 samples, 0.41%)</title><rect x="641.6" y="309" width="4.9" height="15.0" fill="rgb(232,202,27)" rx="2" ry="2" />
+<text  x="644.62" y="319.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1253" width="29.4" height="15.0" fill="rgb(208,24,10)" rx="2" ry="2" />
+<text  x="629.93" y="1263.5" >__..</text>
+</g>
+<g >
+<title>[code] (1,000,000 samples, 1.66%)</title><rect x="63.9" y="1701" width="19.5" height="15.0" fill="rgb(231,44,42)" rx="2" ry="2" />
+<text  x="66.86" y="1711.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1541" width="4.9" height="15.0" fill="rgb(250,191,13)" rx="2" ry="2" />
+<text  x="483.04" y="1551.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="165" width="4.9" height="15.0" fill="rgb(232,172,1)" rx="2" ry="2" />
+<text  x="654.41" y="175.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="2037" width="14.6" height="15.0" fill="rgb(213,221,51)" rx="2" ry="2" />
+<text  x="595.66" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1797" width="9.8" height="15.0" fill="rgb(212,120,49)" rx="2" ry="2" />
+<text  x="91.34" y="1807.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="607.3" y="1973" width="4.9" height="15.0" fill="rgb(223,63,25)" rx="2" ry="2" />
+<text  x="610.34" y="1983.5" ></text>
+</g>
+<g >
+<title>strcmp (750,000 samples, 1.24%)</title><rect x="695.5" y="2021" width="14.7" height="15.0" fill="rgb(219,15,3)" rx="2" ry="2" />
+<text  x="698.48" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="133" width="4.9" height="15.0" fill="rgb(207,65,46)" rx="2" ry="2" />
+<text  x="639.72" y="143.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="1893" width="4.9" height="15.0" fill="rgb(212,66,47)" rx="2" ry="2" />
+<text  x="321.46" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1925" width="9.8" height="15.0" fill="rgb(253,83,42)" rx="2" ry="2" />
+<text  x="532.00" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="1893" width="4.9" height="15.0" fill="rgb(208,187,7)" rx="2" ry="2" />
+<text  x="718.06" y="1903.5" ></text>
+</g>
+<g >
+<title>gaih_inet.constprop.0 (250,000 samples, 0.41%)</title><rect x="715.1" y="2053" width="4.9" height="15.0" fill="rgb(224,95,33)" rx="2" ry="2" />
+<text  x="718.06" y="2063.5" ></text>
+</g>
+<g >
+<title>g_variant_type_get_string_length (250,000 samples, 0.41%)</title><rect x="489.8" y="2037" width="4.9" height="15.0" fill="rgb(233,189,25)" rx="2" ry="2" />
+<text  x="492.83" y="2047.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1541" width="29.4" height="15.0" fill="rgb(238,123,9)" rx="2" ry="2" />
+<text  x="629.93" y="1551.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="582.9" y="1877" width="4.9" height="15.0" fill="rgb(238,96,37)" rx="2" ry="2" />
+<text  x="585.86" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1749" width="4.9" height="15.0" fill="rgb(238,136,35)" rx="2" ry="2" />
+<text  x="17.90" y="1759.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="29.6" y="1749" width="4.9" height="15.0" fill="rgb(215,194,39)" rx="2" ry="2" />
+<text  x="32.59" y="1759.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="2037" width="29.4" height="15.0" fill="rgb(254,71,31)" rx="2" ry="2" />
+<text  x="629.93" y="2047.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="1877" width="4.9" height="15.0" fill="rgb(227,29,46)" rx="2" ry="2" />
+<text  x="718.06" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="318.5" y="2053" width="9.8" height="15.0" fill="rgb(242,66,36)" rx="2" ry="2" />
+<text  x="321.46" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="548.6" y="1941" width="4.9" height="15.0" fill="rgb(218,162,35)" rx="2" ry="2" />
+<text  x="551.59" y="1951.5" ></text>
+</g>
+<g >
+<title>[code] (2,500,000 samples, 4.15%)</title><rect x="39.4" y="1893" width="48.9" height="15.0" fill="rgb(236,208,16)" rx="2" ry="2" />
+<text  x="42.38" y="1903.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="1877" width="4.9" height="15.0" fill="rgb(216,150,17)" rx="2" ry="2" />
+<text  x="321.46" y="1887.5" ></text>
+</g>
+<g >
+<title>operator new[] (250,000 samples, 0.41%)</title><rect x="83.4" y="1733" width="4.9" height="15.0" fill="rgb(212,177,53)" rx="2" ry="2" />
+<text  x="86.44" y="1743.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="710.2" y="1925" width="4.9" height="15.0" fill="rgb(245,179,53)" rx="2" ry="2" />
+<text  x="713.17" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="533.9" y="1781" width="4.9" height="15.0" fill="rgb(241,84,11)" rx="2" ry="2" />
+<text  x="536.90" y="1791.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1813" width="9.8" height="15.0" fill="rgb(219,116,38)" rx="2" ry="2" />
+<text  x="532.00" y="1823.5" ></text>
+</g>
+<g >
+<title>start_thread (1,250,000 samples, 2.07%)</title><rect x="10.0" y="2053" width="24.5" height="15.0" fill="rgb(249,61,24)" rx="2" ry="2" />
+<text  x="13.00" y="2063.5" >s..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="582.9" y="1941" width="4.9" height="15.0" fill="rgb(214,14,17)" rx="2" ry="2" />
+<text  x="585.86" y="1951.5" ></text>
+</g>
+<g >
+<title>gaiconf_init (250,000 samples, 0.41%)</title><rect x="538.8" y="1973" width="4.9" height="15.0" fill="rgb(251,6,20)" rx="2" ry="2" />
+<text  x="541.80" y="1983.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (1,500,000 samples, 2.49%)</title><rect x="186.3" y="2021" width="29.3" height="15.0" fill="rgb(235,184,3)" rx="2" ry="2" />
+<text  x="189.27" y="2031.5" >[l..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="485" width="29.4" height="15.0" fill="rgb(252,179,6)" rx="2" ry="2" />
+<text  x="629.93" y="495.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="524.1" y="2053" width="4.9" height="15.0" fill="rgb(208,132,27)" rx="2" ry="2" />
+<text  x="527.11" y="2063.5" ></text>
+</g>
+<g >
+<title>_dl_tunable_set_hwcaps (250,000 samples, 0.41%)</title><rect x="196.1" y="1925" width="4.9" height="15.0" fill="rgb(219,161,41)" rx="2" ry="2" />
+<text  x="199.06" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="524.1" y="1973" width="4.9" height="15.0" fill="rgb(247,79,38)" rx="2" ry="2" />
+<text  x="527.11" y="1983.5" ></text>
+</g>
+<g >
+<title>__validuser2_sa (250,000 samples, 0.41%)</title><rect x="651.4" y="389" width="4.9" height="15.0" fill="rgb(208,55,22)" rx="2" ry="2" />
+<text  x="654.41" y="399.5" ></text>
+</g>
+<g >
+<title>_dl_lookup_symbol_x (750,000 samples, 1.24%)</title><rect x="675.9" y="2053" width="14.7" height="15.0" fill="rgb(251,147,32)" rx="2" ry="2" />
+<text  x="678.89" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="181" width="4.9" height="15.0" fill="rgb(252,140,36)" rx="2" ry="2" />
+<text  x="649.51" y="191.5" ></text>
+</g>
+<g >
+<title>g_main_context_dispatch (250,000 samples, 0.41%)</title><rect x="323.4" y="2037" width="4.9" height="15.0" fill="rgb(220,159,9)" rx="2" ry="2" />
+<text  x="326.36" y="2047.5" ></text>
+</g>
+<g >
+<title>[perf-35671.map] (250,000 samples, 0.41%)</title><rect x="475.1" y="1637" width="4.9" height="15.0" fill="rgb(208,50,39)" rx="2" ry="2" />
+<text  x="478.15" y="1647.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1157" width="29.4" height="15.0" fill="rgb(233,147,11)" rx="2" ry="2" />
+<text  x="629.93" y="1167.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="133" width="4.9" height="15.0" fill="rgb(249,64,15)" rx="2" ry="2" />
+<text  x="629.93" y="143.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (4,750,000 samples, 7.88%)</title><rect x="338.0" y="2021" width="93.1" height="15.0" fill="rgb(219,218,37)" rx="2" ry="2" />
+<text  x="341.05" y="2031.5" >[libvk_swif..</text>
+</g>
+<g >
+<title>[code] (2,500,000 samples, 4.15%)</title><rect x="39.4" y="1861" width="48.9" height="15.0" fill="rgb(253,191,53)" rx="2" ry="2" />
+<text  x="42.38" y="1871.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="293" width="4.9" height="15.0" fill="rgb(237,149,36)" rx="2" ry="2" />
+<text  x="649.51" y="303.5" ></text>
+</g>
+<g >
+<title>[unknown]  (250,000 samples, 0.41%)</title><rect x="201.0" y="1941" width="4.9" height="15.0" fill="rgb(220,57,6)" rx="2" ry="2" />
+<text  x="203.95" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1861" width="4.9" height="15.0" fill="rgb(220,120,32)" rx="2" ry="2" />
+<text  x="22.79" y="1871.5" ></text>
+</g>
+<g >
+<title>InotifyBackend::handleEvents (250,000 samples, 0.41%)</title><rect x="431.1" y="2005" width="4.9" height="15.0" fill="rgb(215,161,31)" rx="2" ry="2" />
+<text  x="434.08" y="2015.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1989" width="29.4" height="15.0" fill="rgb(241,137,21)" rx="2" ry="2" />
+<text  x="629.93" y="1999.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="837" width="29.4" height="15.0" fill="rgb(252,39,1)" rx="2" ry="2" />
+<text  x="629.93" y="847.5" >__..</text>
+</g>
+<g >
+<title>std::__cxx11::moneypunct&lt;char, true&gt;::_M_initialize_moneypunct (250,000 samples, 0.41%)</title><rect x="612.2" y="2037" width="4.9" height="15.0" fill="rgb(247,27,21)" rx="2" ry="2" />
+<text  x="615.24" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="2005" width="9.8" height="15.0" fill="rgb(245,97,14)" rx="2" ry="2" />
+<text  x="532.00" y="2015.5" ></text>
+</g>
+<g >
+<title>perf (250,000 samples, 0.41%)</title><rect x="548.6" y="2069" width="4.9" height="15.0" fill="rgb(209,161,5)" rx="2" ry="2" />
+<text  x="551.59" y="2079.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="213" width="4.9" height="15.0" fill="rgb(206,14,35)" rx="2" ry="2" />
+<text  x="639.72" y="223.5" ></text>
+</g>
+<g >
+<title>g_slice_alloc (250,000 samples, 0.41%)</title><rect x="514.3" y="2053" width="4.9" height="15.0" fill="rgb(238,109,14)" rx="2" ry="2" />
+<text  x="517.32" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="2053" width="4.9" height="15.0" fill="rgb(252,175,54)" rx="2" ry="2" />
+<text  x="106.03" y="2063.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1413" width="29.4" height="15.0" fill="rgb(244,156,39)" rx="2" ry="2" />
+<text  x="629.93" y="1423.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="1973" width="4.9" height="15.0" fill="rgb(236,18,22)" rx="2" ry="2" />
+<text  x="106.03" y="1983.5" ></text>
+</g>
+<g >
+<title>[libgjs.so.0.0.0] (2,000,000 samples, 3.32%)</title><rect x="450.7" y="2037" width="39.1" height="15.0" fill="rgb(250,190,39)" rx="2" ry="2" />
+<text  x="453.66" y="2047.5" >[li..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (250,000 samples, 0.41%)</title><rect x="626.9" y="261" width="4.9" height="15.0" fill="rgb(206,132,10)" rx="2" ry="2" />
+<text  x="629.93" y="271.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="437" width="29.4" height="15.0" fill="rgb(226,40,47)" rx="2" ry="2" />
+<text  x="629.93" y="447.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="710.2" y="2005" width="4.9" height="15.0" fill="rgb(240,185,18)" rx="2" ry="2" />
+<text  x="713.17" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1829" width="9.8" height="15.0" fill="rgb(253,58,24)" rx="2" ry="2" />
+<text  x="91.34" y="1839.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="734.6" y="1861" width="4.9" height="15.0" fill="rgb(240,211,1)" rx="2" ry="2" />
+<text  x="737.65" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="85" width="4.9" height="15.0" fill="rgb(246,212,19)" rx="2" ry="2" />
+<text  x="654.41" y="95.5" ></text>
+</g>
+<g >
+<title>[code] (3,250,000 samples, 5.39%)</title><rect x="39.4" y="1973" width="63.6" height="15.0" fill="rgb(236,58,23)" rx="2" ry="2" />
+<text  x="42.38" y="1983.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1765" width="9.8" height="15.0" fill="rgb(253,102,29)" rx="2" ry="2" />
+<text  x="91.34" y="1775.5" ></text>
+</g>
+<g >
+<title>[code] (3,250,000 samples, 5.39%)</title><rect x="39.4" y="1989" width="63.6" height="15.0" fill="rgb(252,69,5)" rx="2" ry="2" />
+<text  x="42.38" y="1999.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="149" width="4.9" height="15.0" fill="rgb(251,96,31)" rx="2" ry="2" />
+<text  x="634.83" y="159.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1237" width="29.4" height="15.0" fill="rgb(246,51,13)" rx="2" ry="2" />
+<text  x="629.93" y="1247.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="501" width="29.4" height="15.0" fill="rgb(218,115,22)" rx="2" ry="2" />
+<text  x="629.93" y="511.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="37" width="4.9" height="15.0" fill="rgb(209,136,36)" rx="2" ry="2" />
+<text  x="644.62" y="47.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1701" width="4.9" height="15.0" fill="rgb(234,198,33)" rx="2" ry="2" />
+<text  x="605.45" y="1711.5" ></text>
+</g>
+<g >
+<title>__libc_recvmsg (250,000 samples, 0.41%)</title><rect x="318.5" y="2037" width="4.9" height="15.0" fill="rgb(254,96,53)" rx="2" ry="2" />
+<text  x="321.46" y="2047.5" ></text>
+</g>
+<g >
+<title>Compositor (3,500,000 samples, 5.81%)</title><rect x="34.5" y="2069" width="68.5" height="15.0" fill="rgb(220,203,54)" rx="2" ry="2" />
+<text  x="37.48" y="2079.5" >Composi..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1941" width="29.4" height="15.0" fill="rgb(210,11,1)" rx="2" ry="2" />
+<text  x="629.93" y="1951.5" >__..</text>
+</g>
+<g >
+<title>cmd_record (250,000 samples, 0.41%)</title><rect x="548.6" y="2005" width="4.9" height="15.0" fill="rgb(232,31,42)" rx="2" ry="2" />
+<text  x="551.59" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1781" width="4.9" height="15.0" fill="rgb(254,170,49)" rx="2" ry="2" />
+<text  x="17.90" y="1791.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="1957" width="14.6" height="15.0" fill="rgb(241,121,52)" rx="2" ry="2" />
+<text  x="595.66" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1813" width="4.9" height="15.0" fill="rgb(231,167,23)" rx="2" ry="2" />
+<text  x="17.90" y="1823.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="29.6" y="1781" width="4.9" height="15.0" fill="rgb(239,185,9)" rx="2" ry="2" />
+<text  x="32.59" y="1791.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="1909" width="4.9" height="15.0" fill="rgb(238,220,16)" rx="2" ry="2" />
+<text  x="106.03" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="29.6" y="1813" width="4.9" height="15.0" fill="rgb(250,12,32)" rx="2" ry="2" />
+<text  x="32.59" y="1823.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="279.3" y="1813" width="4.9" height="15.0" fill="rgb(236,202,49)" rx="2" ry="2" />
+<text  x="282.29" y="1823.5" ></text>
+</g>
+<g >
+<title>__nss_database_lookup2 (250,000 samples, 0.41%)</title><rect x="651.4" y="405" width="4.9" height="15.0" fill="rgb(229,94,50)" rx="2" ry="2" />
+<text  x="654.41" y="415.5" ></text>
+</g>
+<g >
+<title>[perf-35671.map] (250,000 samples, 0.41%)</title><rect x="475.1" y="1653" width="4.9" height="15.0" fill="rgb(246,116,50)" rx="2" ry="2" />
+<text  x="478.15" y="1663.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="587.8" y="2005" width="4.9" height="15.0" fill="rgb(227,51,43)" rx="2" ry="2" />
+<text  x="590.76" y="2015.5" ></text>
+</g>
+<g >
+<title>[code] (1,000,000 samples, 1.66%)</title><rect x="63.9" y="1733" width="19.5" height="15.0" fill="rgb(229,70,54)" rx="2" ry="2" />
+<text  x="66.86" y="1743.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="245" width="4.9" height="15.0" fill="rgb(244,173,45)" rx="2" ry="2" />
+<text  x="634.83" y="255.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="264.6" y="2005" width="4.9" height="15.0" fill="rgb(228,212,36)" rx="2" ry="2" />
+<text  x="267.61" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="309" width="4.9" height="15.0" fill="rgb(217,99,27)" rx="2" ry="2" />
+<text  x="654.41" y="319.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="582.9" y="1989" width="4.9" height="15.0" fill="rgb(242,13,9)" rx="2" ry="2" />
+<text  x="585.86" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="436.0" y="1973" width="4.9" height="15.0" fill="rgb(248,208,22)" rx="2" ry="2" />
+<text  x="438.98" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="499.6" y="1941" width="9.8" height="15.0" fill="rgb(210,197,44)" rx="2" ry="2" />
+<text  x="502.63" y="1951.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,500,000 samples, 4.15%)</title><rect x="269.5" y="1989" width="49.0" height="15.0" fill="rgb(236,217,53)" rx="2" ry="2" />
+<text  x="272.50" y="1999.5" >[lib..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1429" width="29.4" height="15.0" fill="rgb(235,48,22)" rx="2" ry="2" />
+<text  x="629.93" y="1439.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1925" width="4.9" height="15.0" fill="rgb(233,92,6)" rx="2" ry="2" />
+<text  x="434.08" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="254.8" y="1893" width="9.8" height="15.0" fill="rgb(242,120,29)" rx="2" ry="2" />
+<text  x="257.81" y="1903.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="581" width="29.4" height="15.0" fill="rgb(220,4,51)" rx="2" ry="2" />
+<text  x="629.93" y="591.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1093" width="29.4" height="15.0" fill="rgb(235,15,34)" rx="2" ry="2" />
+<text  x="629.93" y="1103.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="85" width="4.9" height="15.0" fill="rgb(216,161,13)" rx="2" ry="2" />
+<text  x="649.51" y="95.5" ></text>
+</g>
+<g >
+<title>all (60,250,000 samples, 100%)</title><rect x="10.0" y="2085" width="1180.0" height="15.0" fill="rgb(222,161,30)" rx="2" ry="2" />
+<text  x="13.00" y="2095.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="656.3" y="1893" width="4.9" height="15.0" fill="rgb(213,39,43)" rx="2" ry="2" />
+<text  x="659.31" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="734.6" y="1845" width="4.9" height="15.0" fill="rgb(226,108,3)" rx="2" ry="2" />
+<text  x="737.65" y="1855.5" ></text>
+</g>
+<g >
+<title>[code] (1,250,000 samples, 2.07%)</title><rect x="10.0" y="2021" width="24.5" height="15.0" fill="rgb(237,115,24)" rx="2" ry="2" />
+<text  x="13.00" y="2031.5" >[..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="333.2" y="1957" width="4.8" height="15.0" fill="rgb(208,192,40)" rx="2" ry="2" />
+<text  x="336.15" y="1967.5" ></text>
+</g>
+<g >
+<title>[code] (2,500,000 samples, 4.15%)</title><rect x="39.4" y="1813" width="48.9" height="15.0" fill="rgb(233,178,10)" rx="2" ry="2" />
+<text  x="42.38" y="1823.5" >[code]</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="901" width="29.4" height="15.0" fill="rgb(235,189,52)" rx="2" ry="2" />
+<text  x="629.93" y="911.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1445" width="29.4" height="15.0" fill="rgb(210,46,26)" rx="2" ry="2" />
+<text  x="629.93" y="1455.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="149" width="4.9" height="15.0" fill="rgb(246,60,42)" rx="2" ry="2" />
+<text  x="629.93" y="159.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="426.2" y="1893" width="4.9" height="15.0" fill="rgb(212,206,6)" rx="2" ry="2" />
+<text  x="429.18" y="1903.5" ></text>
+</g>
+<g >
+<title>strcmp (250,000 samples, 0.41%)</title><rect x="617.1" y="2037" width="4.9" height="15.0" fill="rgb(238,85,40)" rx="2" ry="2" />
+<text  x="620.14" y="2047.5" ></text>
+</g>
+<g >
+<title>[libffi.so.7.1.0] (250,000 samples, 0.41%)</title><rect x="440.9" y="2053" width="4.9" height="15.0" fill="rgb(228,47,43)" rx="2" ry="2" />
+<text  x="443.87" y="2063.5" ></text>
+</g>
+<g >
+<title>putspent (750,000 samples, 1.24%)</title><rect x="249.9" y="1957" width="14.7" height="15.0" fill="rgb(232,79,31)" rx="2" ry="2" />
+<text  x="252.92" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="309" width="4.9" height="15.0" fill="rgb(212,105,30)" rx="2" ry="2" />
+<text  x="649.51" y="319.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="323.4" y="1909" width="4.9" height="15.0" fill="rgb(237,13,36)" rx="2" ry="2" />
+<text  x="326.36" y="1919.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (500,000 samples, 0.83%)</title><rect x="122.6" y="1941" width="9.8" height="15.0" fill="rgb(205,120,23)" rx="2" ry="2" />
+<text  x="125.61" y="1951.5" ></text>
+</g>
+<g >
+<title>__res_nclose (500,000 samples, 0.83%)</title><rect x="24.7" y="1909" width="9.8" height="15.0" fill="rgb(240,145,43)" rx="2" ry="2" />
+<text  x="27.69" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1845" width="4.9" height="15.0" fill="rgb(223,54,20)" rx="2" ry="2" />
+<text  x="22.79" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="1973" width="14.7" height="15.0" fill="rgb(223,156,15)" rx="2" ry="2" />
+<text  x="698.48" y="1983.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="460.5" y="1925" width="9.7" height="15.0" fill="rgb(229,179,33)" rx="2" ry="2" />
+<text  x="463.46" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="543.7" y="1877" width="4.9" height="15.0" fill="rgb(229,126,48)" rx="2" ry="2" />
+<text  x="546.69" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="215.6" y="2005" width="4.9" height="15.0" fill="rgb(217,57,24)" rx="2" ry="2" />
+<text  x="218.64" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1621" width="4.9" height="15.0" fill="rgb(233,153,31)" rx="2" ry="2" />
+<text  x="483.04" y="1631.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1813" width="4.9" height="15.0" fill="rgb(249,158,37)" rx="2" ry="2" />
+<text  x="434.08" y="1823.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1653" width="4.9" height="15.0" fill="rgb(252,43,18)" rx="2" ry="2" />
+<text  x="483.04" y="1663.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (1,250,000 samples, 2.07%)</title><rect x="186.3" y="1957" width="24.4" height="15.0" fill="rgb(237,95,36)" rx="2" ry="2" />
+<text  x="189.27" y="1967.5" >[..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="656.3" y="1877" width="4.9" height="15.0" fill="rgb(254,185,12)" rx="2" ry="2" />
+<text  x="659.31" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="254.8" y="1877" width="9.8" height="15.0" fill="rgb(210,88,20)" rx="2" ry="2" />
+<text  x="257.81" y="1887.5" ></text>
+</g>
+<g >
+<title>evlist__prepare_workload (500,000 samples, 0.83%)</title><rect x="538.8" y="1989" width="9.8" height="15.0" fill="rgb(217,127,30)" rx="2" ry="2" />
+<text  x="541.80" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="181" width="4.9" height="15.0" fill="rgb(224,132,14)" rx="2" ry="2" />
+<text  x="654.41" y="191.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="333.2" y="1893" width="4.8" height="15.0" fill="rgb(216,47,48)" rx="2" ry="2" />
+<text  x="336.15" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="548.6" y="1925" width="4.9" height="15.0" fill="rgb(208,165,51)" rx="2" ry="2" />
+<text  x="551.59" y="1935.5" ></text>
+</g>
+<g >
+<title>[libc-2.31.so] (250,000 samples, 0.41%)</title><rect x="14.9" y="1861" width="4.9" height="15.0" fill="rgb(205,172,42)" rx="2" ry="2" />
+<text  x="17.90" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="293" width="4.9" height="15.0" fill="rgb(205,37,45)" rx="2" ry="2" />
+<text  x="654.41" y="303.5" ></text>
+</g>
+<g >
+<title>Thread&lt;01&gt; (1,500,000 samples, 2.49%)</title><rect x="186.3" y="2069" width="29.3" height="15.0" fill="rgb(246,183,41)" rx="2" ry="2" />
+<text  x="189.27" y="2079.5" >Th..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="499.6" y="2021" width="9.8" height="15.0" fill="rgb(240,64,17)" rx="2" ry="2" />
+<text  x="502.63" y="2031.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1669" width="29.4" height="15.0" fill="rgb(228,175,37)" rx="2" ry="2" />
+<text  x="629.93" y="1679.5" >__..</text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1877" width="9.8" height="15.0" fill="rgb(240,147,15)" rx="2" ry="2" />
+<text  x="478.15" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="543.7" y="1893" width="4.9" height="15.0" fill="rgb(239,186,35)" rx="2" ry="2" />
+<text  x="546.69" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="328.3" y="1925" width="4.9" height="15.0" fill="rgb(223,155,3)" rx="2" ry="2" />
+<text  x="331.26" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="133" width="4.9" height="15.0" fill="rgb(248,105,3)" rx="2" ry="2" />
+<text  x="634.83" y="143.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1077" width="29.4" height="15.0" fill="rgb(239,153,0)" rx="2" ry="2" />
+<text  x="629.93" y="1087.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (22,750,000 samples, 37.76%)</title><rect x="744.4" y="1957" width="445.6" height="15.0" fill="rgb(221,160,22)" rx="2" ry="2" />
+<text  x="747.44" y="1967.5" >[unknown]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="475.1" y="1509" width="4.9" height="15.0" fill="rgb(214,27,47)" rx="2" ry="2" />
+<text  x="478.15" y="1519.5" ></text>
+</g>
+<g >
+<title>benchmark::internal::Benchmark::Benchmark (250,000 samples, 0.41%)</title><rect x="656.3" y="2021" width="4.9" height="15.0" fill="rgb(249,60,23)" rx="2" ry="2" />
+<text  x="659.31" y="2031.5" ></text>
+</g>
+<g >
+<title>pthread_cond_signal@@GLIBC_2.3.2 (250,000 samples, 0.41%)</title><rect x="264.6" y="2053" width="4.9" height="15.0" fill="rgb(224,121,31)" rx="2" ry="2" />
+<text  x="267.61" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="568.2" y="1989" width="4.9" height="15.0" fill="rgb(229,56,45)" rx="2" ry="2" />
+<text  x="571.17" y="1999.5" ></text>
+</g>
+<g >
+<title>[code] (3,250,000 samples, 5.39%)</title><rect x="39.4" y="2037" width="63.6" height="15.0" fill="rgb(240,107,16)" rx="2" ry="2" />
+<text  x="42.38" y="2047.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1685" width="4.9" height="15.0" fill="rgb(235,19,13)" rx="2" ry="2" />
+<text  x="605.45" y="1695.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="2005" width="4.9" height="15.0" fill="rgb(249,138,3)" rx="2" ry="2" />
+<text  x="718.06" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="426.2" y="1877" width="4.9" height="15.0" fill="rgb(253,37,44)" rx="2" ry="2" />
+<text  x="429.18" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="710.2" y="1973" width="4.9" height="15.0" fill="rgb(235,120,35)" rx="2" ry="2" />
+<text  x="713.17" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="607.3" y="1909" width="4.9" height="15.0" fill="rgb(228,71,54)" rx="2" ry="2" />
+<text  x="610.34" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="171.6" y="1925" width="14.7" height="15.0" fill="rgb(234,52,5)" rx="2" ry="2" />
+<text  x="174.58" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="69" width="4.9" height="15.0" fill="rgb(212,58,54)" rx="2" ry="2" />
+<text  x="639.72" y="79.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="37" width="4.9" height="15.0" fill="rgb(245,227,19)" rx="2" ry="2" />
+<text  x="654.41" y="47.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (250,000 samples, 0.41%)</title><rect x="396.8" y="1861" width="4.9" height="15.0" fill="rgb(210,25,50)" rx="2" ry="2" />
+<text  x="399.80" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1845" width="4.9" height="15.0" fill="rgb(213,45,5)" rx="2" ry="2" />
+<text  x="605.45" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="582.9" y="1861" width="4.9" height="15.0" fill="rgb(215,5,7)" rx="2" ry="2" />
+<text  x="585.86" y="1871.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (1,500,000 samples, 2.49%)</title><rect x="186.3" y="1989" width="29.3" height="15.0" fill="rgb(208,100,41)" rx="2" ry="2" />
+<text  x="189.27" y="1999.5" >[l..</text>
+</g>
+<g >
+<title>putspent (250,000 samples, 0.41%)</title><rect x="313.6" y="1957" width="4.9" height="15.0" fill="rgb(224,121,42)" rx="2" ry="2" />
+<text  x="316.57" y="1967.5" ></text>
+</g>
+<g >
+<title>__pthread_mutex_unlock (250,000 samples, 0.41%)</title><rect x="127.5" y="1925" width="4.9" height="15.0" fill="rgb(247,213,16)" rx="2" ry="2" />
+<text  x="130.51" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="2005" width="4.9" height="15.0" fill="rgb(217,196,40)" rx="2" ry="2" />
+<text  x="106.03" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1669" width="4.9" height="15.0" fill="rgb(215,219,7)" rx="2" ry="2" />
+<text  x="483.04" y="1679.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1829" width="4.9" height="15.0" fill="rgb(214,70,52)" rx="2" ry="2" />
+<text  x="434.08" y="1839.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="1941" width="14.6" height="15.0" fill="rgb(214,62,28)" rx="2" ry="2" />
+<text  x="595.66" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="313.6" y="1845" width="4.9" height="15.0" fill="rgb(254,210,13)" rx="2" ry="2" />
+<text  x="316.57" y="1855.5" ></text>
+</g>
+<g >
+<title>strcmp (250,000 samples, 0.41%)</title><rect x="582.9" y="2005" width="4.9" height="15.0" fill="rgb(229,39,9)" rx="2" ry="2" />
+<text  x="585.86" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="85" width="4.9" height="15.0" fill="rgb(213,205,39)" rx="2" ry="2" />
+<text  x="644.62" y="95.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1573" width="4.9" height="15.0" fill="rgb(233,155,37)" rx="2" ry="2" />
+<text  x="483.04" y="1583.5" ></text>
+</g>
+<g >
+<title>VizCompositorTh (500,000 samples, 0.83%)</title><rect x="318.5" y="2069" width="9.8" height="15.0" fill="rgb(207,203,9)" rx="2" ry="2" />
+<text  x="321.46" y="2079.5" ></text>
+</g>
+<g >
+<title>putenv (500,000 samples, 0.83%)</title><rect x="538.8" y="2053" width="9.8" height="15.0" fill="rgb(209,107,45)" rx="2" ry="2" />
+<text  x="541.80" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="475.1" y="1461" width="4.9" height="15.0" fill="rgb(205,21,13)" rx="2" ry="2" />
+<text  x="478.15" y="1471.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1973" width="9.8" height="15.0" fill="rgb(232,213,15)" rx="2" ry="2" />
+<text  x="532.00" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="475.1" y="1493" width="4.9" height="15.0" fill="rgb(232,73,46)" rx="2" ry="2" />
+<text  x="478.15" y="1503.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="645" width="29.4" height="15.0" fill="rgb(252,71,12)" rx="2" ry="2" />
+<text  x="629.93" y="655.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="475.1" y="1781" width="9.8" height="15.0" fill="rgb(248,111,28)" rx="2" ry="2" />
+<text  x="478.15" y="1791.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="117" width="4.9" height="15.0" fill="rgb(229,203,38)" rx="2" ry="2" />
+<text  x="639.72" y="127.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="197" width="4.9" height="15.0" fill="rgb(227,205,18)" rx="2" ry="2" />
+<text  x="634.83" y="207.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="1861" width="4.9" height="15.0" fill="rgb(246,20,19)" rx="2" ry="2" />
+<text  x="718.06" y="1871.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (500,000 samples, 0.83%)</title><rect x="626.9" y="293" width="9.8" height="15.0" fill="rgb(224,173,11)" rx="2" ry="2" />
+<text  x="629.93" y="303.5" ></text>
+</g>
+<g >
+<title>__wcrtomb_chk (250,000 samples, 0.41%)</title><rect x="431.1" y="1973" width="4.9" height="15.0" fill="rgb(217,223,1)" rx="2" ry="2" />
+<text  x="434.08" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="2021" width="14.6" height="15.0" fill="rgb(245,175,53)" rx="2" ry="2" />
+<text  x="595.66" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="587.8" y="1973" width="4.9" height="15.0" fill="rgb(231,22,37)" rx="2" ry="2" />
+<text  x="590.76" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="264.6" y="1973" width="4.9" height="15.0" fill="rgb(231,52,51)" rx="2" ry="2" />
+<text  x="267.61" y="1983.5" ></text>
+</g>
+<g >
+<title>_dl_relocate_object (500,000 samples, 0.83%)</title><rect x="573.1" y="2005" width="9.8" height="15.0" fill="rgb(247,131,49)" rx="2" ry="2" />
+<text  x="576.07" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1685" width="4.9" height="15.0" fill="rgb(250,45,47)" rx="2" ry="2" />
+<text  x="22.79" y="1695.5" ></text>
+</g>
+<g >
+<title>InotifyBackend::start (500,000 samples, 0.83%)</title><rect x="431.1" y="2021" width="9.8" height="15.0" fill="rgb(237,170,47)" rx="2" ry="2" />
+<text  x="434.08" y="2031.5" ></text>
+</g>
+<g >
+<title>start_thread (2,500,000 samples, 4.15%)</title><rect x="269.5" y="2053" width="49.0" height="15.0" fill="rgb(231,228,52)" rx="2" ry="2" />
+<text  x="272.50" y="2063.5" >star..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="469" width="29.4" height="15.0" fill="rgb(241,113,17)" rx="2" ry="2" />
+<text  x="629.93" y="479.5" >__..</text>
+</g>
+<g >
+<title>[code] (1,250,000 samples, 2.07%)</title><rect x="10.0" y="2005" width="24.5" height="15.0" fill="rgb(221,89,15)" rx="2" ry="2" />
+<text  x="13.00" y="2015.5" >[..</text>
+</g>
+<g >
+<title>__pthread_mutex_unlock (250,000 samples, 0.41%)</title><rect x="426.2" y="1925" width="4.9" height="15.0" fill="rgb(228,204,47)" rx="2" ry="2" />
+<text  x="429.18" y="1935.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="741" width="29.4" height="15.0" fill="rgb(232,50,54)" rx="2" ry="2" />
+<text  x="629.93" y="751.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="2053" width="29.4" height="15.0" fill="rgb(242,205,49)" rx="2" ry="2" />
+<text  x="629.93" y="2063.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (250,000 samples, 0.41%)</title><rect x="626.9" y="245" width="4.9" height="15.0" fill="rgb(236,194,26)" rx="2" ry="2" />
+<text  x="629.93" y="255.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="1909" width="14.7" height="15.0" fill="rgb(251,125,15)" rx="2" ry="2" />
+<text  x="698.48" y="1919.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="460.5" y="1909" width="9.7" height="15.0" fill="rgb(230,170,52)" rx="2" ry="2" />
+<text  x="463.46" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1557" width="4.9" height="15.0" fill="rgb(215,143,36)" rx="2" ry="2" />
+<text  x="483.04" y="1567.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="695.5" y="2005" width="14.7" height="15.0" fill="rgb(214,190,3)" rx="2" ry="2" />
+<text  x="698.48" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="215.6" y="1973" width="4.9" height="15.0" fill="rgb(232,204,19)" rx="2" ry="2" />
+<text  x="218.64" y="1983.5" ></text>
+</g>
+<g >
+<title>perf_ana (9,500,000 samples, 15.77%)</title><rect x="553.5" y="2069" width="186.0" height="15.0" fill="rgb(231,94,54)" rx="2" ry="2" />
+<text  x="556.49" y="2079.5" >perf_ana</text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (250,000 samples, 0.41%)</title><rect x="240.1" y="1941" width="4.9" height="15.0" fill="rgb(220,71,18)" rx="2" ry="2" />
+<text  x="243.12" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="181" width="4.9" height="15.0" fill="rgb(242,89,44)" rx="2" ry="2" />
+<text  x="644.62" y="191.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1477" width="29.4" height="15.0" fill="rgb(245,31,41)" rx="2" ry="2" />
+<text  x="629.93" y="1487.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="1185.1" y="1941" width="4.9" height="15.0" fill="rgb(216,52,29)" rx="2" ry="2" />
+<text  x="1188.10" y="1951.5" ></text>
+</g>
+<g >
+<title>Thread&lt;00&gt; (4,000,000 samples, 6.64%)</title><rect x="107.9" y="2069" width="78.4" height="15.0" fill="rgb(221,120,26)" rx="2" ry="2" />
+<text  x="110.93" y="2079.5" >Thread&lt;00&gt;</text>
+</g>
+<g >
+<title>ib_log_files_g (250,000 samples, 0.41%)</title><rect x="519.2" y="2069" width="4.9" height="15.0" fill="rgb(244,166,53)" rx="2" ry="2" />
+<text  x="522.21" y="2079.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1749" width="9.8" height="15.0" fill="rgb(249,38,29)" rx="2" ry="2" />
+<text  x="478.15" y="1759.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1909" width="9.8" height="15.0" fill="rgb(238,75,52)" rx="2" ry="2" />
+<text  x="532.00" y="1919.5" ></text>
+</g>
+<g >
+<title>[code] (3,000,000 samples, 4.98%)</title><rect x="39.4" y="1909" width="58.7" height="15.0" fill="rgb(206,12,37)" rx="2" ry="2" />
+<text  x="42.38" y="1919.5" >[code]</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1013" width="29.4" height="15.0" fill="rgb(205,51,8)" rx="2" ry="2" />
+<text  x="629.93" y="1023.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="171.6" y="1941" width="14.7" height="15.0" fill="rgb(247,142,34)" rx="2" ry="2" />
+<text  x="174.58" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1861" width="4.9" height="15.0" fill="rgb(211,114,34)" rx="2" ry="2" />
+<text  x="605.45" y="1871.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="693" width="29.4" height="15.0" fill="rgb(228,119,23)" rx="2" ry="2" />
+<text  x="629.93" y="703.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="533.9" y="1797" width="4.9" height="15.0" fill="rgb(246,92,26)" rx="2" ry="2" />
+<text  x="536.90" y="1807.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="279.3" y="1829" width="4.9" height="15.0" fill="rgb(244,119,5)" rx="2" ry="2" />
+<text  x="282.29" y="1839.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1861" width="29.4" height="15.0" fill="rgb(226,100,19)" rx="2" ry="2" />
+<text  x="629.93" y="1871.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="29.6" y="1829" width="4.9" height="15.0" fill="rgb(230,127,44)" rx="2" ry="2" />
+<text  x="32.59" y="1839.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="333.2" y="2021" width="4.8" height="15.0" fill="rgb(232,149,3)" rx="2" ry="2" />
+<text  x="336.15" y="2031.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1829" width="4.9" height="15.0" fill="rgb(215,214,1)" rx="2" ry="2" />
+<text  x="17.90" y="1839.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="313.6" y="1861" width="4.9" height="15.0" fill="rgb(243,46,26)" rx="2" ry="2" />
+<text  x="316.57" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="261" width="4.9" height="15.0" fill="rgb(221,184,24)" rx="2" ry="2" />
+<text  x="639.72" y="271.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="29.6" y="1765" width="4.9" height="15.0" fill="rgb(212,143,31)" rx="2" ry="2" />
+<text  x="32.59" y="1775.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1765" width="4.9" height="15.0" fill="rgb(208,113,48)" rx="2" ry="2" />
+<text  x="17.90" y="1775.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="715.1" y="1973" width="4.9" height="15.0" fill="rgb(230,64,24)" rx="2" ry="2" />
+<text  x="718.06" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="558.4" y="2037" width="14.7" height="15.0" fill="rgb(229,85,48)" rx="2" ry="2" />
+<text  x="561.38" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (23,000,000 samples, 38.17%)</title><rect x="739.5" y="2021" width="450.5" height="15.0" fill="rgb(215,10,32)" rx="2" ry="2" />
+<text  x="742.54" y="2031.5" >[unknown]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="37" width="4.9" height="15.0" fill="rgb(249,161,31)" rx="2" ry="2" />
+<text  x="649.51" y="47.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="333.2" y="1941" width="4.8" height="15.0" fill="rgb(216,119,37)" rx="2" ry="2" />
+<text  x="336.15" y="1951.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="19.8" y="1701" width="4.9" height="15.0" fill="rgb(253,106,34)" rx="2" ry="2" />
+<text  x="22.79" y="1711.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1813" width="9.8" height="15.0" fill="rgb(234,168,50)" rx="2" ry="2" />
+<text  x="91.34" y="1823.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1109" width="29.4" height="15.0" fill="rgb(205,87,45)" rx="2" ry="2" />
+<text  x="629.93" y="1119.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1781" width="9.8" height="15.0" fill="rgb(236,54,24)" rx="2" ry="2" />
+<text  x="91.34" y="1791.5" ></text>
+</g>
+<g >
+<title>__vdso_clock_gettime (250,000 samples, 0.41%)</title><rect x="34.5" y="2053" width="4.9" height="15.0" fill="rgb(207,141,21)" rx="2" ry="2" />
+<text  x="37.48" y="2063.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1525" width="29.4" height="15.0" fill="rgb(226,194,17)" rx="2" ry="2" />
+<text  x="629.93" y="1535.5" >__..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1781" width="29.4" height="15.0" fill="rgb(243,78,27)" rx="2" ry="2" />
+<text  x="629.93" y="1791.5" >__..</text>
+</g>
+<g >
+<title>benchmark::internal::BenchmarkFamilies::GetInstance (250,000 samples, 0.41%)</title><rect x="661.2" y="2005" width="4.9" height="15.0" fill="rgb(214,66,40)" rx="2" ry="2" />
+<text  x="664.20" y="2015.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="2021" width="29.4" height="15.0" fill="rgb(237,121,32)" rx="2" ry="2" />
+<text  x="629.93" y="2031.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="499.6" y="1957" width="9.8" height="15.0" fill="rgb(215,50,52)" rx="2" ry="2" />
+<text  x="502.63" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="710.2" y="1909" width="4.9" height="15.0" fill="rgb(237,156,25)" rx="2" ry="2" />
+<text  x="713.17" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="568.2" y="1957" width="4.9" height="15.0" fill="rgb(226,214,42)" rx="2" ry="2" />
+<text  x="571.17" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="504.5" y="1893" width="4.9" height="15.0" fill="rgb(222,22,10)" rx="2" ry="2" />
+<text  x="507.52" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="101" width="4.9" height="15.0" fill="rgb(214,143,13)" rx="2" ry="2" />
+<text  x="649.51" y="111.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="254.8" y="1861" width="9.8" height="15.0" fill="rgb(220,94,25)" rx="2" ry="2" />
+<text  x="257.81" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="318.5" y="2005" width="4.9" height="15.0" fill="rgb(220,43,36)" rx="2" ry="2" />
+<text  x="321.46" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="656.3" y="1861" width="4.9" height="15.0" fill="rgb(248,112,4)" rx="2" ry="2" />
+<text  x="659.31" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (23,000,000 samples, 38.17%)</title><rect x="739.5" y="1989" width="450.5" height="15.0" fill="rgb(211,36,32)" rx="2" ry="2" />
+<text  x="742.54" y="1999.5" >[unknown]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="341" width="4.9" height="15.0" fill="rgb(247,219,25)" rx="2" ry="2" />
+<text  x="649.51" y="351.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (750,000 samples, 1.24%)</title><rect x="387.0" y="1877" width="14.7" height="15.0" fill="rgb(211,143,7)" rx="2" ry="2" />
+<text  x="390.01" y="1887.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1877" width="29.4" height="15.0" fill="rgb(211,81,29)" rx="2" ry="2" />
+<text  x="629.93" y="1887.5" >__..</text>
+</g>
+<g >
+<title>std::basic_ios&lt;char, std::char_traits&lt;char&gt; &gt;::init (250,000 samples, 0.41%)</title><rect x="720.0" y="2021" width="4.9" height="15.0" fill="rgb(230,11,28)" rx="2" ry="2" />
+<text  x="722.96" y="2031.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="773" width="29.4" height="15.0" fill="rgb(240,188,48)" rx="2" ry="2" />
+<text  x="629.93" y="783.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="53" width="4.9" height="15.0" fill="rgb(213,158,30)" rx="2" ry="2" />
+<text  x="644.62" y="63.5" ></text>
+</g>
+<g >
+<title>start_thread (3,250,000 samples, 5.39%)</title><rect x="39.4" y="2053" width="63.6" height="15.0" fill="rgb(239,16,36)" rx="2" ry="2" />
+<text  x="42.38" y="2063.5" >start_..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="279.3" y="1909" width="4.9" height="15.0" fill="rgb(205,214,34)" rx="2" ry="2" />
+<text  x="282.29" y="1919.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="426.2" y="1861" width="4.9" height="15.0" fill="rgb(244,148,40)" rx="2" ry="2" />
+<text  x="429.18" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="14.9" y="1797" width="4.9" height="15.0" fill="rgb(225,208,41)" rx="2" ry="2" />
+<text  x="17.90" y="1807.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1125" width="29.4" height="15.0" fill="rgb(205,96,46)" rx="2" ry="2" />
+<text  x="629.93" y="1135.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="29.6" y="1797" width="4.9" height="15.0" fill="rgb(221,50,5)" rx="2" ry="2" />
+<text  x="32.59" y="1807.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="499.6" y="2037" width="9.8" height="15.0" fill="rgb(243,141,35)" rx="2" ry="2" />
+<text  x="502.63" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="529.0" y="1829" width="9.8" height="15.0" fill="rgb(235,221,5)" rx="2" ry="2" />
+<text  x="532.00" y="1839.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="533" width="29.4" height="15.0" fill="rgb(213,78,25)" rx="2" ry="2" />
+<text  x="629.93" y="543.5" >__..</text>
+</g>
+<g >
+<title>fillin_rpath (750,000 samples, 1.24%)</title><rect x="695.5" y="2037" width="14.7" height="15.0" fill="rgb(239,67,49)" rx="2" ry="2" />
+<text  x="698.48" y="2047.5" ></text>
+</g>
+<g >
+<title>strcmp (250,000 samples, 0.41%)</title><rect x="710.2" y="2037" width="4.9" height="15.0" fill="rgb(210,168,21)" rx="2" ry="2" />
+<text  x="713.17" y="2047.5" ></text>
+</g>
+<g >
+<title>[unknown]  (250,000 samples, 0.41%)</title><rect x="132.4" y="1941" width="4.9" height="15.0" fill="rgb(222,3,17)" rx="2" ry="2" />
+<text  x="135.41" y="1951.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (3,750,000 samples, 6.22%)</title><rect x="112.8" y="1973" width="73.5" height="15.0" fill="rgb(240,114,17)" rx="2" ry="2" />
+<text  x="115.82" y="1983.5" >[libvk_s..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="725" width="29.4" height="15.0" fill="rgb(232,128,37)" rx="2" ry="2" />
+<text  x="629.93" y="735.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="69" width="4.9" height="15.0" fill="rgb(215,162,24)" rx="2" ry="2" />
+<text  x="634.83" y="79.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="2005" width="14.6" height="15.0" fill="rgb(254,122,46)" rx="2" ry="2" />
+<text  x="727.85" y="2015.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="88.3" y="1749" width="9.8" height="15.0" fill="rgb(207,213,34)" rx="2" ry="2" />
+<text  x="91.34" y="1759.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="504.5" y="1877" width="4.9" height="15.0" fill="rgb(227,2,52)" rx="2" ry="2" />
+<text  x="507.52" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="277" width="4.9" height="15.0" fill="rgb(237,185,9)" rx="2" ry="2" />
+<text  x="654.41" y="287.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="333.2" y="1989" width="4.8" height="15.0" fill="rgb(232,148,9)" rx="2" ry="2" />
+<text  x="336.15" y="1999.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="2005" width="29.4" height="15.0" fill="rgb(240,213,37)" rx="2" ry="2" />
+<text  x="629.93" y="2015.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="543.7" y="1861" width="4.9" height="15.0" fill="rgb(209,90,16)" rx="2" ry="2" />
+<text  x="546.69" y="1871.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="229" width="4.9" height="15.0" fill="rgb(252,213,49)" rx="2" ry="2" />
+<text  x="654.41" y="239.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="631.8" y="117" width="4.9" height="15.0" fill="rgb(225,118,28)" rx="2" ry="2" />
+<text  x="634.83" y="127.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="328.3" y="2005" width="4.9" height="15.0" fill="rgb(218,204,30)" rx="2" ry="2" />
+<text  x="331.26" y="2015.5" ></text>
+</g>
+<g >
+<title>[code] (1,250,000 samples, 2.07%)</title><rect x="10.0" y="1941" width="24.5" height="15.0" fill="rgb(232,224,11)" rx="2" ry="2" />
+<text  x="13.00" y="1951.5" >[..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="636.7" y="197" width="4.9" height="15.0" fill="rgb(226,49,29)" rx="2" ry="2" />
+<text  x="639.72" y="207.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="103.0" y="1925" width="4.9" height="15.0" fill="rgb(247,207,25)" rx="2" ry="2" />
+<text  x="106.03" y="1935.5" ></text>
+</g>
+<g >
+<title>meta_window_actor_get_meta_window (250,000 samples, 0.41%)</title><rect x="494.7" y="2037" width="4.9" height="15.0" fill="rgb(232,109,48)" rx="2" ry="2" />
+<text  x="497.73" y="2047.5" ></text>
+</g>
+<g >
+<title>[libvk_swiftshader.so] (2,500,000 samples, 4.15%)</title><rect x="269.5" y="2037" width="49.0" height="15.0" fill="rgb(254,63,6)" rx="2" ry="2" />
+<text  x="272.50" y="2047.5" >[lib..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="2005" width="4.9" height="15.0" fill="rgb(242,63,19)" rx="2" ry="2" />
+<text  x="522.21" y="2015.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1685" width="29.4" height="15.0" fill="rgb(236,166,47)" rx="2" ry="2" />
+<text  x="629.93" y="1695.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="1185.1" y="1893" width="4.9" height="15.0" fill="rgb(222,187,46)" rx="2" ry="2" />
+<text  x="1188.10" y="1903.5" ></text>
+</g>
+<g >
+<title>[code] (1,250,000 samples, 2.07%)</title><rect x="10.0" y="1957" width="24.5" height="15.0" fill="rgb(247,54,9)" rx="2" ry="2" />
+<text  x="13.00" y="1967.5" >[..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="426.2" y="1845" width="4.9" height="15.0" fill="rgb(246,165,13)" rx="2" ry="2" />
+<text  x="429.18" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="480.0" y="1637" width="4.9" height="15.0" fill="rgb(234,76,9)" rx="2" ry="2" />
+<text  x="483.04" y="1647.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="117" width="4.9" height="15.0" fill="rgb(234,157,25)" rx="2" ry="2" />
+<text  x="629.93" y="127.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="431.1" y="1909" width="4.9" height="15.0" fill="rgb(236,2,19)" rx="2" ry="2" />
+<text  x="434.08" y="1919.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1717" width="9.8" height="15.0" fill="rgb(246,94,4)" rx="2" ry="2" />
+<text  x="478.15" y="1727.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1717" width="4.9" height="15.0" fill="rgb(211,119,36)" rx="2" ry="2" />
+<text  x="605.45" y="1727.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="277" width="4.9" height="15.0" fill="rgb(225,37,8)" rx="2" ry="2" />
+<text  x="649.51" y="287.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="582.9" y="1957" width="4.9" height="15.0" fill="rgb(232,46,21)" rx="2" ry="2" />
+<text  x="585.86" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="592.7" y="1989" width="14.6" height="15.0" fill="rgb(224,19,3)" rx="2" ry="2" />
+<text  x="595.66" y="1999.5" ></text>
+</g>
+<g >
+<title>[code] (3,000,000 samples, 4.98%)</title><rect x="39.4" y="1925" width="58.7" height="15.0" fill="rgb(249,66,43)" rx="2" ry="2" />
+<text  x="42.38" y="1935.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="548.6" y="1957" width="4.9" height="15.0" fill="rgb(218,40,40)" rx="2" ry="2" />
+<text  x="551.59" y="1967.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="607.3" y="2005" width="4.9" height="15.0" fill="rgb(236,166,1)" rx="2" ry="2" />
+<text  x="610.34" y="2015.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1717" width="29.4" height="15.0" fill="rgb(237,134,17)" rx="2" ry="2" />
+<text  x="629.93" y="1727.5" >__..</text>
+</g>
+<g >
+<title>[perf-35671.map] (250,000 samples, 0.41%)</title><rect x="470.2" y="1909" width="4.9" height="15.0" fill="rgb(229,103,42)" rx="2" ry="2" />
+<text  x="473.25" y="1919.5" ></text>
+</g>
+<g >
+<title>start_thread (1,500,000 samples, 2.49%)</title><rect x="186.3" y="2053" width="29.3" height="15.0" fill="rgb(215,12,36)" rx="2" ry="2" />
+<text  x="189.27" y="2063.5" >st..</text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,000,000 samples, 1.66%)</title><rect x="626.9" y="357" width="19.6" height="15.0" fill="rgb(221,210,15)" rx="2" ry="2" />
+<text  x="629.93" y="367.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (250,000 samples, 0.41%)</title><rect x="475.1" y="1669" width="4.9" height="15.0" fill="rgb(240,146,21)" rx="2" ry="2" />
+<text  x="478.15" y="1679.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="436.0" y="1893" width="4.9" height="15.0" fill="rgb(228,4,39)" rx="2" ry="2" />
+<text  x="438.98" y="1903.5" ></text>
+</g>
+<g >
+<title>[code] (500,000 samples, 0.83%)</title><rect x="14.9" y="1893" width="9.8" height="15.0" fill="rgb(246,182,23)" rx="2" ry="2" />
+<text  x="17.90" y="1903.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="254.8" y="1845" width="9.8" height="15.0" fill="rgb(214,69,16)" rx="2" ry="2" />
+<text  x="257.81" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="656.3" y="1845" width="4.9" height="15.0" fill="rgb(234,121,0)" rx="2" ry="2" />
+<text  x="659.31" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="646.5" y="229" width="4.9" height="15.0" fill="rgb(227,24,15)" rx="2" ry="2" />
+<text  x="649.51" y="239.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="613" width="29.4" height="15.0" fill="rgb(244,171,53)" rx="2" ry="2" />
+<text  x="629.93" y="623.5" >__..</text>
+</g>
+<g >
+<title>__strncpy_sse2_unaligned (250,000 samples, 0.41%)</title><rect x="509.4" y="2053" width="4.9" height="15.0" fill="rgb(241,86,28)" rx="2" ry="2" />
+<text  x="512.42" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (750,000 samples, 1.24%)</title><rect x="724.9" y="1893" width="14.6" height="15.0" fill="rgb(217,209,32)" rx="2" ry="2" />
+<text  x="727.85" y="1903.5" ></text>
+</g>
+<g >
+<title>gaih_inet.constprop.0 (500,000 samples, 0.83%)</title><rect x="529.0" y="2053" width="9.8" height="15.0" fill="rgb(223,161,0)" rx="2" ry="2" />
+<text  x="532.00" y="2063.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1845" width="29.4" height="15.0" fill="rgb(223,43,22)" rx="2" ry="2" />
+<text  x="629.93" y="1855.5" >__..</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="626.9" y="69" width="4.9" height="15.0" fill="rgb(215,1,26)" rx="2" ry="2" />
+<text  x="629.93" y="79.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="1589" width="29.4" height="15.0" fill="rgb(243,194,3)" rx="2" ry="2" />
+<text  x="629.93" y="1599.5" >__..</text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="323.4" y="1973" width="4.9" height="15.0" fill="rgb(240,74,27)" rx="2" ry="2" />
+<text  x="326.36" y="1983.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="543.7" y="1845" width="4.9" height="15.0" fill="rgb(211,167,16)" rx="2" ry="2" />
+<text  x="546.69" y="1855.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="341" width="4.9" height="15.0" fill="rgb(207,170,1)" rx="2" ry="2" />
+<text  x="654.41" y="351.5" ></text>
+</g>
+<g >
+<title>__evlist__disable (250,000 samples, 0.41%)</title><rect x="548.6" y="1989" width="4.9" height="15.0" fill="rgb(241,223,33)" rx="2" ry="2" />
+<text  x="551.59" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="524.1" y="2005" width="4.9" height="15.0" fill="rgb(205,153,41)" rx="2" ry="2" />
+<text  x="527.11" y="2015.5" ></text>
+</g>
+<g >
+<title>[code] (250,000 samples, 0.41%)</title><rect x="323.4" y="1989" width="4.9" height="15.0" fill="rgb(205,186,32)" rx="2" ry="2" />
+<text  x="326.36" y="1999.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="548.6" y="1909" width="4.9" height="15.0" fill="rgb(218,99,23)" rx="2" ry="2" />
+<text  x="551.59" y="1919.5" ></text>
+</g>
+<g >
+<title>InotifyBackend::handleEvent (250,000 samples, 0.41%)</title><rect x="431.1" y="1989" width="4.9" height="15.0" fill="rgb(206,145,46)" rx="2" ry="2" />
+<text  x="434.08" y="1999.5" ></text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1733" width="9.8" height="15.0" fill="rgb(243,14,28)" rx="2" ry="2" />
+<text  x="478.15" y="1743.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="602.4" y="1733" width="4.9" height="15.0" fill="rgb(226,135,31)" rx="2" ry="2" />
+<text  x="605.45" y="1743.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="651.4" y="101" width="4.9" height="15.0" fill="rgb(253,98,12)" rx="2" ry="2" />
+<text  x="654.41" y="111.5" ></text>
+</g>
+<g >
+<title>pthread_cond_signal@@GLIBC_2.3.2 (250,000 samples, 0.41%)</title><rect x="215.6" y="2053" width="4.9" height="15.0" fill="rgb(241,217,21)" rx="2" ry="2" />
+<text  x="218.64" y="2063.5" ></text>
+</g>
+<g >
+<title>[unknown] (500,000 samples, 0.83%)</title><rect x="729.8" y="1877" width="9.7" height="15.0" fill="rgb(210,99,21)" rx="2" ry="2" />
+<text  x="732.75" y="1887.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="519.2" y="1893" width="4.9" height="15.0" fill="rgb(216,109,27)" rx="2" ry="2" />
+<text  x="522.21" y="1903.5" ></text>
+</g>
+<g >
+<title>__gxx_personality_v0 (1,500,000 samples, 2.49%)</title><rect x="626.9" y="805" width="29.4" height="15.0" fill="rgb(241,102,8)" rx="2" ry="2" />
+<text  x="629.93" y="815.5" >__..</text>
+</g>
+<g >
+<title>[libmozjs-68.so.68.6.0] (500,000 samples, 0.83%)</title><rect x="475.1" y="1813" width="9.8" height="15.0" fill="rgb(237,39,33)" rx="2" ry="2" />
+<text  x="478.15" y="1823.5" ></text>
+</g>
+<g >
+<title>[code] (2,500,000 samples, 4.15%)</title><rect x="39.4" y="1781" width="48.9" height="15.0" fill="rgb(238,131,50)" rx="2" ry="2" />
+<text  x="42.38" y="1791.5" >[code]</text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="641.6" y="165" width="4.9" height="15.0" fill="rgb(215,55,50)" rx="2" ry="2" />
+<text  x="644.62" y="175.5" ></text>
+</g>
+<g >
+<title>__pthread_mutex_unlock (250,000 samples, 0.41%)</title><rect x="279.3" y="1925" width="4.9" height="15.0" fill="rgb(215,43,47)" rx="2" ry="2" />
+<text  x="282.29" y="1935.5" ></text>
+</g>
+<g >
+<title>[unknown] (250,000 samples, 0.41%)</title><rect x="328.3" y="1909" width="4.9" height="15.0" fill="rgb(238,204,44)" rx="2" ry="2" />
+<text  x="331.26" y="1919.5" ></text>
+</g>
+</g>
+</svg>

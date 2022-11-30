@@ -1,0 +1,84 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+ no time accumulated
+
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  Ts/call  Ts/call  name    
+  0.00      0.00     0.00  2000000     0.00     0.00  BaseClass::UpdateA()
+  0.00      0.00     0.00        8     0.00     0.00  benchmark::internal::FunctionBenchmark::FunctionBenchmark(char const*, void (*)(benchmark::State&))
+  0.00      0.00     0.00        2     0.00     0.00  BaseClass::BaseClass()
+  0.00      0.00     0.00        1     0.00     0.00  _GLOBAL__sub_I__Z15test_member_obji
+  0.00      0.00     0.00        1     0.00     0.00  _GLOBAL__sub_I_main
+  0.00      0.00     0.00        1     0.00     0.00  TestUserMain()
+  0.00      0.00     0.00        1     0.00     0.00  test_member_obj(int)
+  0.00      0.00     0.00        1     0.00     0.00  test_inherit_class(int)
+  0.00      0.00     0.00        1     0.00     0.00  __static_initialization_and_destruction_0(int, int)
+  0.00      0.00     0.00        1     0.00     0.00  __static_initialization_and_destruction_0(int, int)
+  0.00      0.00     0.00        1     0.00     0.00  MemberClass::MemberClass()
+  0.00      0.00     0.00        1     0.00     0.00  InheritClass::InheritClass()
+
+			Call graph
+
+
+granularity: each sample hit covers 2 byte(s) no time propagated
+
+index % time    self  children    called     name
+                0.00    0.00 1000000/2000000     test_member_obj(int) [14]
+                0.00    0.00 1000000/2000000     test_inherit_class(int) [15]
+[8]      0.0    0.00    0.00 2000000         BaseClass::UpdateA() [8]
+-----------------------------------------------
+                0.00    0.00       4/8           __static_initialization_and_destruction_0(int, int) [16]
+                0.00    0.00       4/8           __static_initialization_and_destruction_0(int, int) [17]
+[9]      0.0    0.00    0.00       8         benchmark::internal::FunctionBenchmark::FunctionBenchmark(char const*, void (*)(benchmark::State&)) [9]
+-----------------------------------------------
+                0.00    0.00       1/2           MemberClass::MemberClass() [18]
+                0.00    0.00       1/2           InheritClass::InheritClass() [19]
+[10]     0.0    0.00    0.00       2         BaseClass::BaseClass() [10]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [4782]
+[11]     0.0    0.00    0.00       1         _GLOBAL__sub_I__Z15test_member_obji [11]
+                0.00    0.00       1/1           __static_initialization_and_destruction_0(int, int) [17]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [4782]
+[12]     0.0    0.00    0.00       1         _GLOBAL__sub_I_main [12]
+                0.00    0.00       1/1           __static_initialization_and_destruction_0(int, int) [16]
+-----------------------------------------------
+                0.00    0.00       1/1           main [6]
+[13]     0.0    0.00    0.00       1         TestUserMain() [13]
+                0.00    0.00       1/1           test_member_obj(int) [14]
+                0.00    0.00       1/1           test_inherit_class(int) [15]
+-----------------------------------------------
+                0.00    0.00       1/1           TestUserMain() [13]
+[14]     0.0    0.00    0.00       1         test_member_obj(int) [14]
+                0.00    0.00 1000000/2000000     BaseClass::UpdateA() [8]
+                0.00    0.00       1/1           MemberClass::MemberClass() [18]
+-----------------------------------------------
+                0.00    0.00       1/1           TestUserMain() [13]
+[15]     0.0    0.00    0.00       1         test_inherit_class(int) [15]
+                0.00    0.00 1000000/2000000     BaseClass::UpdateA() [8]
+                0.00    0.00       1/1           InheritClass::InheritClass() [19]
+-----------------------------------------------
+                0.00    0.00       1/1           _GLOBAL__sub_I_main [12]
+[16]     0.0    0.00    0.00       1         __static_initialization_and_destruction_0(int, int) [16]
+                0.00    0.00       4/8           benchmark::internal::FunctionBenchmark::FunctionBenchmark(char const*, void (*)(benchmark::State&)) [9]
+-----------------------------------------------
+                0.00    0.00       1/1           _GLOBAL__sub_I__Z15test_member_obji [11]
+[17]     0.0    0.00    0.00       1         __static_initialization_and_destruction_0(int, int) [17]
+                0.00    0.00       4/8           benchmark::internal::FunctionBenchmark::FunctionBenchmark(char const*, void (*)(benchmark::State&)) [9]
+-----------------------------------------------
+                0.00    0.00       1/1           test_member_obj(int) [14]
+[18]     0.0    0.00    0.00       1         MemberClass::MemberClass() [18]
+                0.00    0.00       1/2           BaseClass::BaseClass() [10]
+-----------------------------------------------
+                0.00    0.00       1/1           test_inherit_class(int) [15]
+[19]     0.0    0.00    0.00       1         InheritClass::InheritClass() [19]
+                0.00    0.00       1/2           BaseClass::BaseClass() [10]
+-----------------------------------------------
+
+Index by function name
+
+  [11] _GLOBAL__sub_I__Z15test_member_obji [15] test_inherit_class(int) [19] InheritClass::InheritClass()
+  [12] _GLOBAL__sub_I_main    [16] __static_initialization_and_destruction_0(int, int) [8] BaseClass::UpdateA()
+  [13] TestUserMain()         [17] __static_initialization_and_destruction_0(int, int) [10] BaseClass::BaseClass()
+  [14] test_member_obj(int)   [18] MemberClass::MemberClass() [9] benchmark::internal::FunctionBenchmark::FunctionBenchmark(char const*, void (*)(benchmark::State&))
