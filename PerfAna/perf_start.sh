@@ -14,8 +14,7 @@ make
 
 cd ..
 
-perf record -a --call-graph ${stack_type} ./${work_dir}/${exe_name}
-
+perf record -a -g --call-graph ${stack_type} ./${work_dir}/${exe_name}
 
 perf script -i ${work_dir}/perf.data  > ${perf_dir}/perf.script
 

@@ -6,6 +6,8 @@
 CMakeFiles/
 log/
 build/
+perf_data/
+gprof_data/
 *.so
 
 */__pycache_
@@ -28,3 +30,5 @@ gtest/vs2017/gtest_vs_2017/gtest_vs_2017/*
 gtest/vs2017/gtest_vs_2017/.vs/*
 gtest/vs2017/gtest_vs_2017/packages/*
 .vs/*
+
+
