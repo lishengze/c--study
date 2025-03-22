@@ -1,15 +1,15 @@
-# copyright [2018] [wxblockchain]
-# author: daniel.bian
-# description: galaxy project main CMakeLists.txt
-# update-date:
-#   2019-01-04  init version
+# copyright [2025]
+# description: Learning C++
+# update-date: 2021-09-25
+# update-author: <李晟泽>
 ##############################################################################################
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(algo)
+PROJECT(standard)
 
-SET("BIN_NAME" algo)
-set(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread")
+
+SET("BIN_NAME" standard)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "----- This is a Windows system. ----")
@@ -20,6 +20,8 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 
     set(BOOST_INCLUDEDIR ${BOOST_ROOT}/include/boost-1_72)
     set(BOOST_LIBRARYDIR ${BOOST_ROOT}/lib)
+
+    #cmake -G "MinGW Makefiles" ../
 else()
     message(STATUS "------This is not a Windows system.-----")
     # 在这里添加针对非Windows系统的特定设置或操作
@@ -33,19 +35,10 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 AUX_SOURCE_DIRECTORY(. MAIN_SRC)
-AUX_SOURCE_DIRECTORY(algo ALGO_SRC)
-AUX_SOURCE_DIRECTORY(hash HASH_SRC)
-AUX_SOURCE_DIRECTORY(map  MAP_SRC)
-AUX_SOURCE_DIRECTORY(sort SORT_SRC)
-AUX_SOURCE_DIRECTORY(tree TREE_SRC)
-AUX_SOURCE_DIRECTORY(stack_list STACK_LIST_SRC)
+AUX_SOURCE_DIRECTORY(coroutine coroutine_SRC)
 
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
 
-ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC} ${ALGO_SRC} ${HASH_SRC} ${MAP_SRC} ${SORT_SRC} ${TREE_SRC} ${STACK_LIST_SRC})
-
-
-TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(${BIN_NAME} Threads::Threads)
+ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC} ${coroutine_SRC})
 
