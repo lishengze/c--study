@@ -16,6 +16,8 @@
 #include "string_test/string_opt.h"
 #include "key_word/test_union.h"
 
+#include "stl_test/test_map.h"
+
 int main()
 {
 	// cout << "Test Main" << endl;
@@ -54,7 +56,9 @@ int main()
 
 	// StringOPTMain();
 
-	TestUnion();
+	// TestUnion();
+
+	test_unorder_map();
 
 	return 0;
 }

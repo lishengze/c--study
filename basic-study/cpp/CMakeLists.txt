@@ -31,12 +31,14 @@ AUX_SOURCE_DIRECTORY(string_test/ SRC_LIST)
 FIND_PACKAGE(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 
                                      chrono regex program_options unit_test_framework locale REQUIRED)
 
+# message( BOOST_INCLUDEDIR)
                                      
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 INCLUDE_DIRECTORIES("../include")
 
 INCLUDE_DIRECTORIES("../../component/pandora")
 INCLUDE_DIRECTORIES("../../component")
+INCLUDE_DIRECTORIES("/usr/local/boost_1_68/include")
 LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
 LINK_DIRECTORIES("/opt/utrade/console/lib/pandora/")
 
