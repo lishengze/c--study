@@ -29,6 +29,8 @@ else()
     FIND_PACKAGE(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 endif()
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmodules-ts")
+
 message("******* BOOST_INCLUDEDIR: ${BOOST_INCLUDEDIR}")
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)

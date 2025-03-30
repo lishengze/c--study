@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "coroutine/test_coro.h"
+#include "module/test_module.h"
 
 // // 协程包装器
 // template<typename T>
@@ -53,6 +54,9 @@
 // }
 
 int main() {
-    TestCoro();
+    // TestCoro();
+
+    TestModule();
+
     return 0;
 }

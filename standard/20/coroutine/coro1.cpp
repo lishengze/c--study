@@ -257,49 +257,49 @@ struct FileReadResult {
 };
 
 // 实现awaitable接口的类，用于控制协程在文件读取时的挂起和恢复
-struct FileReadAwaiter {
-    FileReadResult& result;
-    std::ifstream& file;
-    FileReadAwaiter(FileReadResult& res, std::ifstream& f) : result(res), file(f) {}
-    bool await_ready() const noexcept { return result.ready; }
-    void await_suspend(std::coroutine_handle<> handle) const noexcept {
-        // 启动一个新线程模拟异步文件读取操作
-        std::thread([this, handle]() {
-            if (std::getline(file, result.line)) {
-                result.ready = true;
-            }
-            handle.resume();
-        }).detach();
-    }
-    void await_resume() const noexcept {}
-};
+// struct FileReadAwaiter {
+//     FileReadResult& result;
+//     std::ifstream& file;
+//     FileReadAwaiter(FileReadResult& res, std::ifstream& f) : result(res), file(f) {}
+//     bool await_ready() const noexcept { return result.ready; }
+//     void await_suspend(std::coroutine_handle<> handle) const noexcept {
+//         // 启动一个新线程模拟异步文件读取操作
+//         std::thread([this, handle]() {
+//             if (std::getline(file, result.line)) {
+//                 result.ready = true;
+//             }
+//             handle.resume();
+//         }).detach();
+//     }
+//     void await_resume() const noexcept {}
+// };
 
-// 协程函数，用于异步读取文件
-std::coroutine_handle<> readFile() {
-    std::ifstream file("example.txt");
-    if (file.is_open()) {
-        FileReadResult result = { false };
-        while (true) {
-            // 使用co_await等待文件读取完成，协程在此处挂起，不阻塞线程
-            co_await FileReadAwaiter(result, file); 
-            if (result.ready) {
-                std::cout << result.line << std::endl;
-            } else {
-                break;
-            }
-        }
-        file.close();
-    } else {
-        std::cerr << "无法打开文件" << std::endl;
-    }
-    co_return;
-}
+// // 协程函数，用于异步读取文件
+// std::coroutine_handle<> readFile() {
+//     std::ifstream file("example.txt");
+//     if (file.is_open()) {
+//         FileReadResult result = { false };
+//         while (true) {
+//             // 使用co_await等待文件读取完成，协程在此处挂起，不阻塞线程
+//             // co_await FileReadAwaiter(result, file); 
+//             if (result.ready) {
+//                 std::cout << result.line << std::endl;
+//             } else {
+//                 break;
+//             }
+//         }
+//         file.close();
+//     } else {
+//         std::cerr << "无法打开文件" << std::endl;
+//     }
+//     co_return;
+// }
 
 int TestCoro3() {
-    auto handle = readFile();
+    // auto handle = readFile();
     // 这里可以继续执行其他任务，而不必等待文件读取完成
     // 假设其他任务耗时 1 秒
-    std::this_thread::sleep_for(std::chrono::seconds(1)); 
-    handle.resume();
+    // std::this_thread::sleep_for(std::chrono::seconds(1)); 
+    // handle.resume();
     return 0;
 }
