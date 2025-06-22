@@ -26,7 +26,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 else()
     message(STATUS "------This is not a Windows system.-----")
     # 在这里添加针对非Windows系统的特定设置或操作
-    # set(BOOST_ROOT /usr/local/boost_1_68)
+    set(BOOST_ROOT /usr/local/boost_1_73)
     FIND_PACKAGE(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 endif()
 
