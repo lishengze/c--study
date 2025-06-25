@@ -131819,33 +131819,11 @@ namespace boost
 # 6 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/order.h" 2
 
 class Order:public ElementBase {
-    public: 
-      virtual bool Accept(Visitor* v) { 
-        if (!v) { return false; } 
-        if (v->visitor_index_self_ < visitor_registry_.size()) 
-        { 
-          CallableInfo* ci = visitor_registry_[v->visitor_index_self_]; 
-          if (ci != __null ) { 
-            return 
-              (  ((VisitorCallable*)(ci->ctx))->*(*ci).entry  ) (this); 
-          } 
-          else return ElementBase::Accept(v); 
-        } 
-        else return ElementBase::Accept(v); 
-    } 
-
-    static void RegisterVisitor(Visitor* v, VisitorCallable::EntryType entry, void* ctx) 
-    { 
-        boost::lock_guard<boost::mutex> lock(element_base_mutex_g); 
-        if (visitor_registry_.size() <= v->visitor_index_self_) { 
-            visitor_registry_.resize(v->visitor_index_self_ + 1, 0); 
-        } 
-        CallableInfo* call_info = new CallableInfo; 
-        call_info->entry = entry; 
-        call_info->ctx = ctx; 
-        visitor_registry_[v->visitor_index_self_] = call_info; 
-    } 
-    static std::vector<CallableInfo* > visitor_registry_;;
+    public: virtual bool Accept(Visitor* v) { if (!v) { return false; } if (v->visitor_index_self_ < visitor_registry_.size()) { CallableInfo* ci = visitor_registry_[v->visitor_index_self_]; if (ci != 
+# 8 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/order.h" 3 4
+   __null
+# 8 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/order.h"
+   ) { return (((VisitorCallable*)(ci->ctx))-> *(*ci).entry) (this); } else return ElementBase::Accept(v); } else return ElementBase::Accept(v); } static void RegisterVisitor(Visitor* v, VisitorCallable::EntryType entry, void* ctx) { boost::lock_guard<boost::mutex> lock(element_base_mutex_g); if (visitor_registry_.size() <= v->visitor_index_self_) { visitor_registry_.resize(v->visitor_index_self_ + 1, 0); } CallableInfo* call_info = new CallableInfo; call_info->entry = entry; call_info->ctx = ctx; visitor_registry_[v->visitor_index_self_] = call_info; } static std::vector<CallableInfo* > visitor_registry_;;
 public:
     Order(int id, double amount) : id(id), amount(amount) {}
 
@@ -131870,7 +131848,7 @@ class CancelOrder:public ElementBase {
 # 29 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/order.h" 3 4
    __null
 # 29 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/order.h"
-   ) { return (((VisitorCallable*)(ci->ctx))->*(*ci).entry)(this); } else return ElementBase::Accept(v); } else return ElementBase::Accept(v); } static void RegisterVisitor(Visitor* v, VisitorCallable::EntryType entry, void* ctx) { boost::lock_guard<boost::mutex> lock(element_base_mutex_g); if (visitor_registry_.size() <= v->visitor_index_self_) { visitor_registry_.resize(v->visitor_index_self_ + 1, 0); } CallableInfo* call_info = new CallableInfo; call_info->entry = entry; call_info->ctx = ctx; visitor_registry_[v->visitor_index_self_] = call_info; } static std::vector<CallableInfo* > visitor_registry_;;
+   ) { return (((VisitorCallable*)(ci->ctx))-> *(*ci).entry) (this); } else return ElementBase::Accept(v); } else return ElementBase::Accept(v); } static void RegisterVisitor(Visitor* v, VisitorCallable::EntryType entry, void* ctx) { boost::lock_guard<boost::mutex> lock(element_base_mutex_g); if (visitor_registry_.size() <= v->visitor_index_self_) { visitor_registry_.resize(v->visitor_index_self_ + 1, 0); } CallableInfo* call_info = new CallableInfo; call_info->entry = entry; call_info->ctx = ctx; visitor_registry_[v->visitor_index_self_] = call_info; } static std::vector<CallableInfo* > visitor_registry_;;
 public:
     CancelOrder(int id, double amount) : id(id), amount(amount) {}
 
@@ -131915,9 +131893,66 @@ public:
 # 2 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/business_processor.cpp" 2
 
 BussinessProcessor::BussinessProcessor() {
-Order::RegisterVisitor(this, (VisitorCallable::EntryType)&BussinessProcessor::processOrder, this); 
-CancelOrder::RegisterVisitor(this, (VisitorCallable::EntryType)&BussinessProcessor::processCancelOrder, this);
+Order::RegisterVisitor(this, (VisitorCallable::EntryType)&BussinessProcessor::processOrder, this); CancelOrder::RegisterVisitor(this, (VisitorCallable::EntryType)&BussinessProcessor::processCancelOrder, this);
 
 
 
 }
+
+template<int assemble, int mode, typename InputMessageType>
+class PrevStageWorker : public PrevStageWorkerBasic<assemble, InputMessageType>
+{
+public:
+};
+template<int fanout, typename OutputMessageType>
+class NextStageWorker
+{
+public:
+};
+
+
+
+
+
+
+
+typedef class {} DefaultOutputType0; typedef class {} DefaultOutputType1; typedef class {} DefaultOutputType2; typedef class {} DefaultOutputType3;
+# 41 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/business_processor.cpp"
+template<int assemble, int mode, typename InputMessageType
+        , int fanout0 = 1, typename OutputMessageType0 = DefaultOutputType0 , int fanout1 = 1, typename OutputMessageType1 = DefaultOutputType1 , int fanout2 = 1, typename OutputMessageType2 = DefaultOutputType2 , int fanout3 = 1, typename OutputMessageType3 = DefaultOutputType3
+        >
+class StageWorker : public PrevStageWorker<assemble, mode, InputMessageType>
+                    , public NextStageWorker<fanout0, OutputMessageType0> , public NextStageWorker<fanout1, OutputMessageType1> , public NextStageWorker<fanout2, OutputMessageType2> , public NextStageWorker<fanout3, OutputMessageType3>
+{
+public:
+    typedef InputMessageType prev_type;
+
+
+
+
+    StageWorker()
+    {
+        
+# 55 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/business_processor.cpp" 3 4
+       (static_cast <bool> (
+# 55 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/business_processor.cpp"
+       assemble <= 4
+# 55 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/business_processor.cpp" 3 4
+       ) ? void (0) : __assert_fail (
+# 55 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/business_processor.cpp"
+       "assemble <= ADK_MAX_PIPELINE_PARALLEL"
+# 55 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/business_processor.cpp" 3 4
+       , "/home/lsz/dev/code/study/c--study/boost-study/pre_process/business_processor.cpp", 55, __extension__ __PRETTY_FUNCTION__))
+# 55 "/home/lsz/dev/code/study/c--study/boost-study/pre_process/business_processor.cpp"
+                                                    ;
+        if(fanout0 <= 4); if(fanout1 <= 4); if(fanout2 <= 4); if(fanout3 <= 4);;
+    }
+
+
+
+
+
+
+
+    inline int32_t Forward(OutputMessageType0& message, short dim, short idx) { return NextStageWorker<fanout0, OutputMessageType0>::DoForward(message, dim, idx); } inline int32_t Forward(OutputMessageType1& message, short dim, short idx) { return NextStageWorker<fanout1, OutputMessageType1>::DoForward(message, dim, idx); } inline int32_t Forward(OutputMessageType2& message, short dim, short idx) { return NextStageWorker<fanout2, OutputMessageType2>::DoForward(message, dim, idx); } inline int32_t Forward(OutputMessageType3& message, short dim, short idx) { return NextStageWorker<fanout3, OutputMessageType3>::DoForward(message, dim, idx); }
+};
