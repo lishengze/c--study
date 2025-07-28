@@ -68,19 +68,41 @@ else()
                 boost_atomic)
 endif()
 
-# PROJECT(asio_study)
-
-# SRC DIR
-aux_source_directory(src DIR_SRCS)
-
 # Include DIR
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
+INCLUDE_DIRECTORIES(asio-1.12.2/include)
 
 # Lib DIR
 LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
 
+# SRC DIR
+aux_source_directory(src SRC_FILES)
+
+foreach(FILE ${SRC_FILES})
+    get_filename_component(PARENT_DIR ${FILE} DIRECTORY)
+    set(DIR_STATS "${DIR_STATS};${PARENT_DIR}")
+endforeach()
+
+list(SORT DIR_STATS)
+list(REMOVE_DUPLICATES DIR_STATS)
+
+message(STATUS "${PROJECT_NAME} 按目录统计的编译的 CPP 文件数目:")
+foreach(DIR ${DIR_STATS})
+    file(GLOB DIR_FILES "${DIR}/*.cpp")
+    list(LENGTH DIR_FILES DIR_COUNT)
+    message(STATUS "  ${DIR}: ${DIR_COUNT} 个文件")
+endforeach()
+list(LENGTH SRC_FILES SOURCE_COUNT)
+message(STATUS "合计编译的 CPP 文件数目: ${SOURCE_COUNT}\n")
+if ( DEFINED BUILD_SUM_COUNT)
+    math(EXPR BUILD_SUM_COUNT "${BUILD_SUM_COUNT} + ${SOURCE_COUNT}")
+    set(BUILD_SUM_COUNT ${BUILD_SUM_COUNT} PARENT_SCOPE)
+endif()
+
+
+
 # Set Exectuable
-add_executable(${BIN_NAME} ${DIR_SRCS})
+add_executable(${BIN_NAME} ${SRC_FILES})
 
 # Link Lib
 TARGET_LINK_LIBRARIES(${BIN_NAME} ${LIB_LIST})
