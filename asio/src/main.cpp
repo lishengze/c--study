@@ -2,6 +2,6 @@
 
 int main()
 {
-    test_main();
+    test_asio_main();
     return 0;
 }
