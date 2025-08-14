@@ -1,9 +1,9 @@
-message("\n+++++++++++++++++++++++++ MAIN CMake [START] +++++++++++++++++++++++++")
+message("\n+++++++++++++++++++++++++ C--Study CMake [START] +++++++++++++++++++++++++")
 
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON) ## 解决可能出现的 RPATH 问题;
 
 if ( NOT DEFINED BUILD_SUM_COUNT)
-    message("########  独立编译 ######### ")
+    message("######## C--Study 独立编译 ######### ")
 
     set(WORK_MAIN ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -63,6 +63,7 @@ project(WORK_MAIN)
 
 # #添加子项目 - 按照顺序;
 add_subdirectory(asio)  
+add_subdirectory(coroutine/c++/libgo_s)
 
 message("整个工程当前 共编译 ${BUILD_SUM_COUNT} 个文件")
 
