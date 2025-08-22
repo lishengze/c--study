@@ -65,6 +65,7 @@ project(WORK_MAIN)
 add_subdirectory(asio)  
 add_subdirectory(concurrent/coroutine/c++/libgo_s)
 add_subdirectory(concurrent/multi_thread/cplus_thread)
+add_subdirectory(standard)
 
 message("整个工程当前 共编译 ${BUILD_SUM_COUNT} 个文件")
 
