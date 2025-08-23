@@ -2,18 +2,11 @@
 #include <future>
 #include <thread>
 
-#include "test_variant.h"
-#include "test_tuple.h"
-#include "test_pointer.h"
+#include "test_2025_8_23.h"
 
 int main() {
-    // TestCoro();
 
-    // TestVariant();
-
-    // TestTuple();
-
-    TestPointer();
+    test_2025_8_23();
 
     return 0;
 }

@@ -3,13 +3,13 @@
 # update-date: 2021-09-25
 # update-author: <李晟泽>
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
 PROJECT(test_17)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if (${WIN32})
     message(STATUS "----- This is a Windows system. ----")
     # 在这里添加针对Windows系统的特定设置或操作
     set(BOOST_ROOT C:/dev/cplus/boost/1_72_0)

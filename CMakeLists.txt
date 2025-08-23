@@ -29,9 +29,16 @@ if (${WIN32})
     # 在这里添加针对Windows系统的特定设置或操作
     set(BOOST_ROOT C:/dev/cplus/boost/1_72_share)
 
-    set(CMAKE_C_COMPILER "C:/dev/cplus/w64devkit/bin/gcc.exe")
-    set(CMAKE_CXX_COMPILER "C:/dev/cplus/w64devkit/bin/g++.exe")
-    set(CMAKE_LINKER "C:/dev/cplus/w64devkit/bin/ld.exe")
+    # 设置 C 编译器
+    set(CMAKE_C_COMPILER "gcc")
+    # 设置 C++ 编译器
+    set(CMAKE_CXX_COMPILER "g++")
+    # 指定 MinGW 生成器（可选，命令行指定更灵活）
+    set(CMAKE_GENERATOR "MinGW Makefiles")    
+
+    # set(CMAKE_C_COMPILER "C:/dev/cplus/w64devkit/bin/gcc.exe")
+    # set(CMAKE_CXX_COMPILER "C:/dev/cplus/w64devkit/bin/g++.exe")
+    # set(CMAKE_LINKER "C:/dev/cplus/w64devkit/bin/ld.exe")
 
     if(POLICY CMP0167)
         cmake_policy(SET CMP0167 OLD)
@@ -62,9 +69,9 @@ project(WORK_MAIN)
 
 
 # #添加子项目 - 按照顺序;
-add_subdirectory(asio)  
-add_subdirectory(concurrent/coroutine/c++/libgo_s)
-add_subdirectory(concurrent/multi_thread/cplus_thread)
+# add_subdirectory(asio)  
+# add_subdirectory(concurrent/coroutine/c++/libgo_s)
+# add_subdirectory(concurrent/multi_thread/cplus_thread)
 add_subdirectory(standard)
 
 message("整个工程当前 共编译 ${BUILD_SUM_COUNT} 个文件")

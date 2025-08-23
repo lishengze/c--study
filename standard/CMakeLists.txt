@@ -6,6 +6,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 PROJECT(standard)
 
-add_subdirectory(17)
-add_subdirectory(20)
+# add_subdirectory(17)
+# add_subdirectory(20)
+
+add_subdirectory(exam)
 
