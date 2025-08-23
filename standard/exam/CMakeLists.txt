@@ -12,15 +12,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (${WIN32})
     message(STATUS "----- This is a Windows system. ----")
 
-    # # 设置 C 编译器
-    # set(CMAKE_C_COMPILER "gcc")
-    # # 设置 C++ 编译器
-    # set(CMAKE_CXX_COMPILER "g++")
+    # 设置 C 编译器
+    set(CMAKE_C_COMPILER "gcc")
+    # 设置 C++ 编译器
+    set(CMAKE_CXX_COMPILER "g++")
 
     # 设置 C 编译器
-    set(CMAKE_C_COMPILER "C:/dev/cplus/2.3.0/w64devkit/bin/gcc")
-    # 设置 C++ 编译器
-    set(CMAKE_CXX_COMPILER "C:/dev/cplus/2.3.0/w64devkit/bin/g++")
+    # set(CMAKE_C_COMPILER "C:/dev/cplus/2.3.0/w64devkit/bin/gcc")
+    # # 设置 C++ 编译器
+    # set(CMAKE_CXX_COMPILER "C:/dev/cplus/2.3.0/w64devkit/bin/g++")
         
     # 指定 MinGW 生成器（可选，命令行指定更灵活）
     set(CMAKE_GENERATOR "MinGW Makefiles")    
