@@ -30,13 +30,9 @@ else()
     FIND_PACKAGE(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 endif()
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 
 message("******* BOOST_INCLUDEDIR: ${BOOST_INCLUDEDIR}")
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-
 
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
@@ -46,6 +42,9 @@ AUX_SOURCE_DIRECTORY(. MAIN_SRC)
 ###############################################################################################
 add_library(${PROJECT_NAME} SHARED ${MAIN_SRC})
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} boost_filesystem)
-# TARGET_LINK_LIBRARIES(${PROJECT_NAME} Threads::Threads)
+# TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${BOOST_LIBRARYDIR}/libboost_filesystem.a)
+
+
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE boost_filesystem Boost::algorithm)
+
 
