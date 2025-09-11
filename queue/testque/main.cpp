@@ -278,6 +278,8 @@ void *cmt_read_thread_func(void *arg)
     return NULL;
 }
 
+
+
 /*
  * 主函数 - 程序入口
  * 功能：解析命令行参数，初始化队列，创建线程，协调测试流程

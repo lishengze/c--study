@@ -69,12 +69,12 @@ project(WORK_MAIN)
 
 
 # #添加子项目 - 按照顺序;
-# add_subdirectory(asio)  
-# add_subdirectory(concurrent/coroutine/c++/libgo_s)
-# add_subdirectory(concurrent/multi_thread/cplus_thread)
+add_subdirectory(asio)  
+add_subdirectory(concurrent/coroutine/c++/libgo_s)
+add_subdirectory(concurrent/multi_thread/cplus_thread)
 add_subdirectory(standard)
-add_subdirectory(boost-study/hide_refre)
-
+# add_subdirectory(boost-study/hide_refre)
+add_subdirectory(queue/testque)
 message("整个工程当前 共编译 ${BUILD_SUM_COUNT} 个文件")
 
 message("\n+++++++++++++++++++++++++ MAIN CMake [END] +++++++++++++++++++++++++")

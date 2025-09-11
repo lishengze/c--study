@@ -449,7 +449,7 @@ retry_pop:
 				com_write_fence();            // 写屏障确保状态可见性
 				thead->state = QUE_HEAD_STATE_READING;  // 标记为读取中
 				ts = (ts == 0 ? rd : ts);      // 记录起始读取位置
-				break;  // 成功获取数据，跳出循环
+				// break;  // 成功获取数据，跳出循环
 			}
 			else{
 				goto retry_pop;  // CAS失败重试
@@ -490,7 +490,7 @@ retry_pop:
 				com_write_fence();
 				thead->state = QUE_HEAD_STATE_READING;
 				ts = (ts == 0 ? rd : ts);
-				break;
+				// break;
 			}
 			else{
 				goto retry_pop;
@@ -531,7 +531,7 @@ retry_pop:
 				com_write_fence();
 				thead->state = QUE_HEAD_STATE_READING;
 				ts = (ts == 0 ? tre : ts);
-				break;
+				// break;
 			}
 			else{
 				goto retry_pop;
