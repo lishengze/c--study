@@ -5,8 +5,11 @@
 #include <chrono>
 
 struct DataBlock {
-    unsigned long long start_time_; // 数据块开始时间
+    unsigned long long push_time_; // 数据块开始时间
+    unsigned long long pop_time_; // 数据块开始时间
     unsigned int  size_; // 数据块大小
+
+    virtual ~DataBlock() {}
 };
 
 struct DataBlock1:public DataBlock {
@@ -158,6 +161,6 @@ inline DataBlockPtr GetRandomDataBlock() {
             return nullptr;
     }
 
-    data_block->start_time_ = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    // data_block->start_time_ = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     return data_block;
 }
