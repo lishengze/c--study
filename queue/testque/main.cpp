@@ -8,6 +8,10 @@
 #include "comm_sys.h"
 #include "mutils.h"
 
+#include "struct.h"
+#include "test.h"
+
+
 using namespace lb_common;
 
 /* 全局变量定义 */
@@ -278,18 +282,7 @@ void *cmt_read_thread_func(void *arg)
     return NULL;
 }
 
-
-
-/*
- * 主函数 - 程序入口
- * 功能：解析命令行参数，初始化队列，创建线程，协调测试流程
- * 参数：
- *   argc - 参数数量
- *   argv - 参数数组：[0]程序名, [1]队列大小(MB), [2]写入线程数, [3]读取线程数, [4]写入长度, [5]读取类型
- * 返回值：0-成功，非0-失败
- */
-int main(int argc,char *argv[])
-{
+int TestExampe(int argc,char *argv[]) {
     if(argc < 4){
         printf("参数用法: exe que_size_MB write_thread_num read_thread_num write_len read_type\n");
         return -1;
@@ -408,5 +401,23 @@ int main(int argc,char *argv[])
         g_test_que.get_read_pos(),
         g_test_que.get_used());
     
+    return 1;
+}
+
+/*
+ * 主函数 - 程序入口
+ * 功能：解析命令行参数，初始化队列，创建线程，协调测试流程
+ * 参数：
+ *   argc - 参数数量
+ *   argv - 参数数组：[0]程序名, [1]队列大小(MB), [2]写入线程数, [3]读取线程数, [4]写入长度, [5]读取类型
+ * 返回值：0-成功，非0-失败
+ */
+int main(int argc,char *argv[])
+{
+
+    test_struct();
+
+    // TestMain();
+
     return 0;
 }
