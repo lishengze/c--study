@@ -1,10 +1,10 @@
 /*
- * test_proc_que.cpp - »ùÓÚ¹²ÏíÄÚ´æµÄ»·ĞÎ¶ÓÁĞ(que_proc_buf)µÄ¶àÏß³Ì/¶à½ø³Ì²âÊÔ³ÌĞò
- * ¹¦ÄÜ£º´´½¨¶à¸öÉú²úÕßºÍÏû·ÑÕßÏß³Ì£¬ÑéÖ¤¶ÓÁĞÔÚ²¢·¢»·¾³ÏÂµÄĞÔÄÜºÍÕıÈ·ĞÔ
- * ºËĞÄ²âÊÔ³¡¾°£º¶àÉú²úÕßĞ´ÈëÊı¾İ£¬¶àÏû·ÑÕß¶ÁÈ¡Êı¾İ£¬²âÊÔÎŞËøÍ¬²½»úÖÆµÄÓĞĞ§ĞÔ
+ * test_proc_que.cpp - åŸºäºå…±äº«å†…å­˜çš„ç¯å½¢é˜Ÿåˆ—(que_proc_buf)çš„å¤šçº¿ç¨‹/å¤šè¿›ç¨‹æµ‹è¯•ç¨‹åº
+ * åŠŸèƒ½ï¼šåˆ›å»ºå¤šä¸ªç”Ÿäº§è€…å’Œæ¶ˆè´¹è€…çº¿ç¨‹ï¼ŒéªŒè¯é˜Ÿåˆ—åœ¨å¹¶å‘ç¯å¢ƒä¸‹çš„æ€§èƒ½å’Œæ­£ç¡®æ€§
+ * æ ¸å¿ƒæµ‹è¯•åœºæ™¯ï¼šå¤šç”Ÿäº§è€…å†™å…¥æ•°æ®ï¼Œå¤šæ¶ˆè´¹è€…è¯»å–æ•°æ®ï¼Œæµ‹è¯•æ— é”åŒæ­¥æœºåˆ¶çš„æœ‰æ•ˆæ€§
  */
 #include "que_proc_buf.h"
-//#include "que_mth_buf.h"  // ¿ÉÑ¡µÄÁíÒ»ÖÖ¶ÓÁĞÊµÏÖ
+//#include "que_mth_buf.h"  // å¯é€‰çš„å¦ä¸€ç§é˜Ÿåˆ—å®ç°
 #include "comm_sys.h"
 #include "mutils.h"
 
@@ -14,162 +14,165 @@
 
 using namespace lb_common;
 
-/* È«¾Ö±äÁ¿¶¨Òå */
-// ¶ÁÈ¡Ïß³Ì²ÎÊıÊı×é£¬´æ´¢Ã¿¸ö¶ÁÈ¡Ïß³ÌµÄÎ»ÖÃĞÅÏ¢
+/* å…¨å±€å˜é‡å®šä¹‰ */
+// è¯»å–çº¿ç¨‹å‚æ•°æ•°ç»„ï¼Œå­˜å‚¨æ¯ä¸ªè¯»å–çº¿ç¨‹çš„ä½ç½®ä¿¡æ¯
 int64 g_read_th_arg[10];
-// Ğ´ÈëÏß³Ì²ÎÊıÊı×é£¬´æ´¢Ã¿¸öĞ´ÈëÏß³ÌµÄ±êÊ¶×Ö·û
+// å†™å…¥çº¿ç¨‹å‚æ•°æ•°ç»„ï¼Œå­˜å‚¨æ¯ä¸ªå†™å…¥çº¿ç¨‹çš„æ ‡è¯†å­—ç¬¦
 char g_write_th_arg[10];
 
-// Ğ´ÈëÏß³ÌÊıÁ¿
+// å†™å…¥çº¿ç¨‹æ•°é‡
 int32 g_wr_th_num = 0;
-// ¶ÁÈ¡Ïß³ÌÊıÁ¿
+// è¯»å–çº¿ç¨‹æ•°é‡
 int32 g_rd_th_num = 0;
-// Ïß³Ì¿ØÖÆ±êÖ¾£º0-Î´Æô¶¯£¬1-ÔËĞĞÖĞ£¬2-Í£Ö¹
+// çº¿ç¨‹æ§åˆ¶æ ‡å¿—ï¼š0-æœªå¯åŠ¨ï¼Œ1-è¿è¡Œä¸­ï¼Œ2-åœæ­¢
 int32 g_stop_th_flag = 0;
-// Ã¿´ÎĞ´Èë¶ÓÁĞµÄÊı¾İ³¤¶È
+// æ¯æ¬¡å†™å…¥é˜Ÿåˆ—çš„æ•°æ®é•¿åº¦
 int32 g_wr_que_len= 0;
 
-// È«¾Ö¶ÓÁĞÊµÀı£¬ÓÃÓÚ²âÊÔµÄ»ùÓÚ¹²ÏíÄÚ´æµÄ»·ĞÎ¶ÓÁĞ
+// å…¨å±€é˜Ÿåˆ—å®ä¾‹ï¼Œç”¨äºæµ‹è¯•çš„åŸºäºå…±äº«å†…å­˜çš„ç¯å½¢é˜Ÿåˆ—
 que_proc_buf g_test_que;
-//que_mth_buf g_test_que;  // ¿ÉÑ¡µÄÁíÒ»ÖÖ¶ÓÁĞÊµÏÖ
+//que_mth_buf g_test_que;  // å¯é€‰çš„å¦ä¸€ç§é˜Ÿåˆ—å®ç°
 
 /*
- * Ğ´ÈëÏß³Ìº¯Êı - Éú²úÕßÏß³Ì
- * ¹¦ÄÜ£º³ÖĞøÏò¶ÓÁĞĞ´ÈëÊı¾İ£¬¸ù¾İÅäÖÃÊ¹ÓÃÆÕÍ¨Ä£Ê½»ò¶àÏß³Ì°²È«Ä£Ê½
- * ²ÎÊı£ºarg - Ïß³Ì±êÊ¶²ÎÊı£¬´Ë´¦ÎªĞ´ÈëÊı¾İµÄÌî³ä×Ö·û
- * ·µ»ØÖµ£ºNULL - Ïß³Ì½áÊø
+ * å†™å…¥çº¿ç¨‹å‡½æ•° - ç”Ÿäº§è€…çº¿ç¨‹
+ * åŠŸèƒ½ï¼šæŒç»­å‘é˜Ÿåˆ—å†™å…¥æ•°æ®ï¼Œæ ¹æ®é…ç½®ä½¿ç”¨æ™®é€šæ¨¡å¼æˆ–å¤šçº¿ç¨‹å®‰å…¨æ¨¡å¼
+ * å‚æ•°ï¼šarg - çº¿ç¨‹æ ‡è¯†å‚æ•°ï¼Œæ­¤å¤„ä¸ºå†™å…¥æ•°æ®çš„å¡«å……å­—ç¬¦
+ * è¿”å›å€¼ï¼šNULL - çº¿ç¨‹ç»“æŸ
  */
 void *write_thread_func(void *arg)
 {
-    // ¼ÆËãÏß³ÌĞİÃßÊ±¼ä£¬¸ù¾İĞ´ÈëÏß³ÌÊıÁ¿¶¯Ì¬µ÷Õû
+    // è®¡ç®—çº¿ç¨‹ä¼‘çœ æ—¶é—´ï¼Œæ ¹æ®å†™å…¥çº¿ç¨‹æ•°é‡åŠ¨æ€è°ƒæ•´
     int32 tus = g_wr_th_num/2;
     if(tus == 0){
         tus = 1;
     }
-    // ÈôÖ»ÓĞÒ»¸ö¶ÁÈ¡Ïß³Ì£¬Ôö¼ÓĞ´ÈëÏß³ÌĞİÃßÊ±¼ä£¬½µµÍ¶ÓÁĞÑ¹Á¦
+    // è‹¥åªæœ‰ä¸€ä¸ªè¯»å–çº¿ç¨‹ï¼Œå¢åŠ å†™å…¥çº¿ç¨‹ä¼‘çœ æ—¶é—´ï¼Œé™ä½é˜Ÿåˆ—å‹åŠ›
     if(g_rd_th_num == 1)
         tus++;
     
-    // µÈ´ıÆô¶¯ĞÅºÅ(g_stop_th_flag != 0)
+    // ç­‰å¾…å¯åŠ¨ä¿¡å·(g_stop_th_flag != 0)
     while(g_stop_th_flag == 0);
     
-    // »ñÈ¡Ïß³Ì±êÊ¶×Ö·û
+    // è·å–çº¿ç¨‹æ ‡è¯†å­—ç¬¦
     char tc = *((char *)arg);
-    // ·ÖÅäĞ´ÈëÊı¾İ»º³åÇø²¢³õÊ¼»¯ÎªÖ¸¶¨×Ö·û
+    // åˆ†é…å†™å…¥æ•°æ®ç¼“å†²åŒºå¹¶åˆå§‹åŒ–ä¸ºæŒ‡å®šå­—ç¬¦
     char *tv = new char[g_wr_que_len];
     for(int32 i=0;i<g_wr_que_len;i++){
         tv[i] = tc;
     }
-    tv[g_wr_que_len-1] = '\0';  // È·±£×Ö·û´®½áÊø·û
+    tv[g_wr_que_len-1] = '\0';  // ç¡®ä¿å­—ç¬¦ä¸²ç»“æŸç¬¦
     
     printf("write thread start,c=%c\n",tc);
     
-    int64 count = 0;  // Ğ´Èë¼ÆÊıÆ÷
-    int32 i= 0;       // Ñ­»·¼ÆÊıÆ÷
-    char *pbuf;       // Ö¸Ïò¶ÓÁĞ»º³åÇøµÄÖ¸Õë
-    int64 tpos;       // Ğ´ÈëÎ»ÖÃ
+    int64 count = 0;  // å†™å…¥è®¡æ•°å™¨
+    int32 i= 0;       // å¾ªç¯è®¡æ•°å™¨
+    char *pbuf;       // æŒ‡å‘é˜Ÿåˆ—ç¼“å†²åŒºçš„æŒ‡é’ˆ
+    int64 tpos;       // å†™å…¥ä½ç½®
     do{
         i = 0;
-        // ¸ù¾İĞ´ÈëÏß³ÌÊıÁ¿Ñ¡Ôñ²»Í¬µÄĞ´ÈëÄ£Ê½
+        // æ ¹æ®å†™å…¥çº¿ç¨‹æ•°é‡é€‰æ‹©ä¸åŒçš„å†™å…¥æ¨¡å¼
         if(g_wr_th_num == 1){
-            // µ¥Éú²úÕßÄ£Ê½ - Ê¹ÓÃÆÕÍ¨Ğ´Èë½Ó¿Ú
+            // å•ç”Ÿäº§è€…æ¨¡å¼ - ä½¿ç”¨æ™®é€šå†™å…¥æ¥å£
             do{
-                // »ñÈ¡Ğ´ÈëÎ»ÖÃºÍ»º³åÇøÖ¸Õë
+                // è·å–å†™å…¥ä½ç½®å’Œç¼“å†²åŒºæŒ‡é’ˆ
                 tpos = g_test_que.write_get(pbuf,g_wr_que_len);
-                if(tpos > 0)  // ³É¹¦»ñÈ¡µ½Ğ´ÈëÎ»ÖÃ
+                if(tpos > 0)  // æˆåŠŸè·å–åˆ°å†™å…¥ä½ç½®
                     break;
                 
-                // Ã¿30000000´ÎÑ­»·´òÓ¡Ò»´Î¶ÓÁĞÒÑÂúĞÅÏ¢£¨±ÜÃâÆµ·±´òÓ¡Ó°ÏìĞÔÄÜ£©
+                // æ¯30000000æ¬¡å¾ªç¯æ‰“å°ä¸€æ¬¡é˜Ÿåˆ—å·²æ»¡ä¿¡æ¯ï¼ˆé¿å…é¢‘ç¹æ‰“å°å½±å“æ€§èƒ½ï¼‰
                 if((i/30000000) == 0){
                     // printf("write queue have fulled,count=%ld,c=%c\n",count,tc);
                     i = 0;
                 }
                 i++;
-            }while(g_stop_th_flag == 1);  // µ±±êÖ¾Îª1Ê±¼ÌĞø³¢ÊÔ
+            }while(g_stop_th_flag == 1);  // å½“æ ‡å¿—ä¸º1æ—¶ç»§ç»­å°è¯•
 
             if(tpos >0){
-                // memcpy(pbuf,tv,g_wr_que_len);  // Êµ¼ÊÓ¦ÓÃÖĞĞèÒª¸´ÖÆÊı¾İ
-                g_test_que.write_cmt(tpos,g_wr_que_len);  // Ìá½»Ğ´Èë
+                // memcpy(pbuf,tv,g_wr_que_len);  // å®é™…åº”ç”¨ä¸­éœ€è¦å¤åˆ¶æ•°æ®
+                g_test_que.write_cmt(tpos,g_wr_que_len);  // æäº¤å†™å…¥
                 count++;
             }
+
+            printf("Single Thread Write data,count=%ld,\n", count);
         }
         else{
-            // ¶àÉú²úÕßÄ£Ê½ - Ê¹ÓÃ¶àÏß³Ì°²È«Ğ´Èë½Ó¿Ú
+            // å¤šç”Ÿäº§è€…æ¨¡å¼ - ä½¿ç”¨å¤šçº¿ç¨‹å®‰å…¨å†™å…¥æ¥å£
             do{
-                // »ñÈ¡Ğ´ÈëÎ»ÖÃºÍ»º³åÇøÖ¸Õë£¨¶àÏß³Ì°²È«°æ±¾£©
+                // è·å–å†™å…¥ä½ç½®å’Œç¼“å†²åŒºæŒ‡é’ˆï¼ˆå¤šçº¿ç¨‹å®‰å…¨ç‰ˆæœ¬ï¼‰
                 tpos = g_test_que.write_get_mth(pbuf,g_wr_que_len);
-                if(tpos > 0)  // ³É¹¦»ñÈ¡µ½Ğ´ÈëÎ»ÖÃ
+                if(tpos > 0)  // æˆåŠŸè·å–åˆ°å†™å…¥ä½ç½®
                     break;
                 
-                // Ã¿30000000´ÎÑ­»·´òÓ¡Ò»´Î¶ÓÁĞÒÑÂúĞÅÏ¢
+                // æ¯30000000æ¬¡å¾ªç¯æ‰“å°ä¸€æ¬¡é˜Ÿåˆ—å·²æ»¡ä¿¡æ¯
                 if((i/30000000) == 0){
                     // printf("write queue have fulled,count=%ld,c=%c\n",count,tc);
                     i = 0;
                 }
                 i++;
-            }while(g_stop_th_flag == 1);  // µ±±êÖ¾Îª1Ê±¼ÌĞø³¢ÊÔ
+            }while(g_stop_th_flag == 1);  // å½“æ ‡å¿—ä¸º1æ—¶ç»§ç»­å°è¯•
             
             if(tpos >0){
-                // memcpy(pbuf,tv,g_wr_que_len);  // Êµ¼ÊÓ¦ÓÃÖĞĞèÒª¸´ÖÆÊı¾İ
-                g_test_que.write_cmt_mth(tpos,g_wr_que_len);  // Ìá½»Ğ´Èë£¨¶àÏß³Ì°²È«°æ±¾£©
+                // memcpy(pbuf,tv,g_wr_que_len);  // å®é™…åº”ç”¨ä¸­éœ€è¦å¤åˆ¶æ•°æ®
+                g_test_que.write_cmt_mth(tpos,g_wr_que_len);  // æäº¤å†™å…¥ï¼ˆå¤šçº¿ç¨‹å®‰å…¨ç‰ˆæœ¬ï¼‰
                 count++;
             }
         }
         
-        // comm_utils::sleep_us(tus);  // ¿ÉÑ¡£º¿ØÖÆĞ´ÈëËÙÂÊ
+        comm_utils::sleep_us(10000);  // å¯é€‰ï¼šæ§åˆ¶å†™å…¥é€Ÿç‡
         
-    }while(g_stop_th_flag == 1);  // µ±±êÖ¾Îª1Ê±¼ÌĞøÔËĞĞ£¬Îª2Ê±ÍË³ö
+    }while(g_stop_th_flag == 1);  // å½“æ ‡å¿—ä¸º1æ—¶ç»§ç»­è¿è¡Œï¼Œä¸º2æ—¶é€€å‡º
     
     printf("write thread end,count=%ld,c=%c\n",count,tc);
     
-    delete[] tv;  // ÊÍ·Å»º³åÇø
+    delete[] tv;  // é‡Šæ”¾ç¼“å†²åŒº
     return NULL;
 }
 
 /*
- * ¶ÁÈ¡Ïß³Ìº¯Êı - Ïû·ÑÕßÏß³Ì£¨Ä£Ê½1£©
- * ¹¦ÄÜ£º´Ó¶ÓÁĞÖĞ¶ÁÈ¡Êı¾İ£¬¸ù¾İÅäÖÃÊ¹ÓÃ²»Í¬µÄ¶ÁÈ¡Ä£Ê½
- * ²ÎÊı£ºarg - Ïß³Ì²ÎÊı£¨Î´Ê¹ÓÃ£©
- * ·µ»ØÖµ£ºNULL - Ïß³Ì½áÊø
+ * è¯»å–çº¿ç¨‹å‡½æ•° - æ¶ˆè´¹è€…çº¿ç¨‹ï¼ˆæ¨¡å¼1ï¼‰
+ * åŠŸèƒ½ï¼šä»é˜Ÿåˆ—ä¸­è¯»å–æ•°æ®ï¼Œæ ¹æ®é…ç½®ä½¿ç”¨ä¸åŒçš„è¯»å–æ¨¡å¼
+ * å‚æ•°ï¼šarg - çº¿ç¨‹å‚æ•°ï¼ˆæœªä½¿ç”¨ï¼‰
+ * è¿”å›å€¼ï¼šNULL - çº¿ç¨‹ç»“æŸ
  */
 void *read_thread_func(void *arg)
 {
-    // ¼ÆËãÏß³ÌĞİÃßÊ±¼ä£¬¸ù¾İ¶ÁÈ¡Ïß³ÌÊıÁ¿¶¯Ì¬µ÷Õû
+    // è®¡ç®—çº¿ç¨‹ä¼‘çœ æ—¶é—´ï¼Œæ ¹æ®è¯»å–çº¿ç¨‹æ•°é‡åŠ¨æ€è°ƒæ•´
     int32 tus = g_rd_th_num/2;
     if(tus == 0)
         tus = 1;
     
-    // µÈ´ıÆô¶¯ĞÅºÅ
+    // ç­‰å¾…å¯åŠ¨ä¿¡å·
     while(g_stop_th_flag == 0);
     
     printf("read thread start\n");
     
-    char tcache[4096];  // ¶ÁÈ¡Êı¾İ»º³åÇø
-    char tc;             // ÓÃÓÚÑéÖ¤Êı¾İÒ»ÖÂĞÔµÄ×Ö·û
-    int64 count = 0;     // ¶ÁÈ¡¼ÆÊıÆ÷
-    int32 len = 0;       // µ¥´Î¶ÁÈ¡³¤¶È
-    char *pbuf;          // Ö¸Ïò¶ÓÁĞÊı¾İµÄÖ¸Õë
+    char tcache[4096];  // è¯»å–æ•°æ®ç¼“å†²åŒº
+    char tc;             // ç”¨äºéªŒè¯æ•°æ®ä¸€è‡´æ€§çš„å­—ç¬¦
+    int64 count = 0;     // è¯»å–è®¡æ•°å™¨
+    int32 len = 0;       // å•æ¬¡è¯»å–é•¿åº¦
+    char *pbuf;          // æŒ‡å‘é˜Ÿåˆ—æ•°æ®çš„æŒ‡é’ˆ
     
     do{
         if(g_rd_th_num == 1){
-            // µ¥Ïû·ÑÕßÄ£Ê½ - Ö±½Ó¶ÁÈ¡²¢Ìá½»
+            // å•æ¶ˆè´¹è€…æ¨¡å¼ - ç›´æ¥è¯»å–å¹¶æäº¤
             while((len = g_test_que.read_get(pbuf)) > 0){
-                assert(len == g_wr_que_len);  // ÑéÖ¤¶ÁÈ¡³¤¶ÈÊÇ·ñ·ûºÏÔ¤ÆÚ
-                /* Êı¾İÑéÖ¤´úÂë£¨×¢ÊÍµôÒÔÌá¸ßĞÔÄÜ£©
+                assert(len == g_wr_que_len);  // éªŒè¯è¯»å–é•¿åº¦æ˜¯å¦ç¬¦åˆé¢„æœŸ
+                /* æ•°æ®éªŒè¯ä»£ç ï¼ˆæ³¨é‡Šæ‰ä»¥æé«˜æ€§èƒ½ï¼‰
                 tc = pbuf[0];
                 for(int32 j=1;j<len-2;j++){
                     assert(tc == pbuf[j]);
                 }
                 */
-                g_test_que.read_cmt();  // Ìá½»¶ÁÈ¡£¨µ¥Ïû·ÑÕßÄ£Ê½£©
+                std::cout << "Single Thread read data, count: " << count << std::endl;
+                g_test_que.read_cmt();  // æäº¤è¯»å–ï¼ˆå•æ¶ˆè´¹è€…æ¨¡å¼ï¼‰
                 count++;
             }
         }
         else{
-            // ¶àÏû·ÑÕßÄ£Ê½ - Ê¹ÓÃµ¯³ö½Ó¿Ú
+            // å¤šæ¶ˆè´¹è€…æ¨¡å¼ - ä½¿ç”¨å¼¹å‡ºæ¥å£
             while((len = g_test_que.read_pop(tcache,sizeof(tcache))) > 0){
-                assert(len == g_wr_que_len);  // ÑéÖ¤¶ÁÈ¡³¤¶ÈÊÇ·ñ·ûºÏÔ¤ÆÚ
-                /* Êı¾İÑéÖ¤´úÂë£¨×¢ÊÍµôÒÔÌá¸ßĞÔÄÜ£©
+                assert(len == g_wr_que_len);  // éªŒè¯è¯»å–é•¿åº¦æ˜¯å¦ç¬¦åˆé¢„æœŸ
+                /* æ•°æ®éªŒè¯ä»£ç ï¼ˆæ³¨é‡Šæ‰ä»¥æé«˜æ€§èƒ½ï¼‰
                 tc = tcache[0];
                 for(int32 j=1;j<len-2;j++){
                     assert(tc == tcache[j]);
@@ -179,60 +182,60 @@ void *read_thread_func(void *arg)
             }
         }
         
-        // comm_utils::sleep_us(tus);  // ¿ÉÑ¡£º¿ØÖÆ¶ÁÈ¡ËÙÂÊ
+        // comm_utils::sleep_us(tus);  // å¯é€‰ï¼šæ§åˆ¶è¯»å–é€Ÿç‡
         
-    }while(g_stop_th_flag == 1 || g_test_que.get_used()>0);  // ±êÖ¾Îª1»ò¶ÓÁĞ·Ç¿ÕÊ±¼ÌĞøÔËĞĞ
+    }while(g_stop_th_flag == 1 || g_test_que.get_used()>0);  // æ ‡å¿—ä¸º1æˆ–é˜Ÿåˆ—éç©ºæ—¶ç»§ç»­è¿è¡Œ
     
-    printf("read thread end,count=%ld\n",count);
+    printf("EXAMPE : read thread end,count=%ld\n",count);
     
     return NULL;
 }
 
 /*
- * ¶ÁÈ¡Ïß³Ìº¯Êı - Ïû·ÑÕßÏß³Ì£¨Ä£Ê½2£©
- * ¹¦ÄÜ£º¶ÁÈ¡Ö¸¶¨Î»ÖÃµÄÊı¾İ£¬ÓÃÓÚ¶àÏû·ÑÕß·Ö±ğ¶ÁÈ¡²»Í¬ÇøÓòµÄ³¡¾°
- * ²ÎÊı£ºarg - Ö¸Ïò´æ´¢¶ÁÈ¡Î»ÖÃµÄÖ¸Õë
- * ·µ»ØÖµ£ºNULL - Ïß³Ì½áÊø
+ * è¯»å–çº¿ç¨‹å‡½æ•° - æ¶ˆè´¹è€…çº¿ç¨‹ï¼ˆæ¨¡å¼2ï¼‰
+ * åŠŸèƒ½ï¼šè¯»å–æŒ‡å®šä½ç½®çš„æ•°æ®ï¼Œç”¨äºå¤šæ¶ˆè´¹è€…åˆ†åˆ«è¯»å–ä¸åŒåŒºåŸŸçš„åœºæ™¯
+ * å‚æ•°ï¼šarg - æŒ‡å‘å­˜å‚¨è¯»å–ä½ç½®çš„æŒ‡é’ˆ
+ * è¿”å›å€¼ï¼šNULL - çº¿ç¨‹ç»“æŸ
  */
 void *readpos_thread_func(void *arg)
 {
-    // ¼ÆËãÏß³ÌĞİÃßÊ±¼ä
+    // è®¡ç®—çº¿ç¨‹ä¼‘çœ æ—¶é—´
     int32 tus = g_rd_th_num/2;
     if(tus == 0)
         tus = 1;
     
-    // µÈ´ıÆô¶¯ĞÅºÅ
+    // ç­‰å¾…å¯åŠ¨ä¿¡å·
     while(g_stop_th_flag == 0);
     
-    int64 &tpos = *((int64 *)arg);  // µ±Ç°¶ÁÈ¡Î»ÖÃ£¨ÒıÓÃ´«µİ£©
-    char tc;                       // ÓÃÓÚÑéÖ¤Êı¾İÒ»ÖÂĞÔµÄ×Ö·û
-    int64 count = 0;               // ¶ÁÈ¡¼ÆÊıÆ÷
-    int32 len = 0;                 // µ¥´Î¶ÁÈ¡³¤¶È
-    char *pbuf;                    // Ö¸Ïò¶ÓÁĞÊı¾İµÄÖ¸Õë
-    tpos = g_test_que.get_read_pos();  // ³õÊ¼»¯¶ÁÈ¡Î»ÖÃ
+    int64 &tpos = *((int64 *)arg);  // å½“å‰è¯»å–ä½ç½®ï¼ˆå¼•ç”¨ä¼ é€’ï¼‰
+    char tc;                       // ç”¨äºéªŒè¯æ•°æ®ä¸€è‡´æ€§çš„å­—ç¬¦
+    int64 count = 0;               // è¯»å–è®¡æ•°å™¨
+    int32 len = 0;                 // å•æ¬¡è¯»å–é•¿åº¦
+    char *pbuf;                    // æŒ‡å‘é˜Ÿåˆ—æ•°æ®çš„æŒ‡é’ˆ
+    tpos = g_test_que.get_read_pos();  // åˆå§‹åŒ–è¯»å–ä½ç½®
     
     printf("read pos thread start,read_pos=%ld\n",tpos);
     
     do{
-        // ´ÓÖ¸¶¨Î»ÖÃ¶ÁÈ¡Êı¾İ
+        // ä»æŒ‡å®šä½ç½®è¯»å–æ•°æ®
         while((len = g_test_que.read_get(pbuf,tpos)) > 0){
-            assert(len == g_wr_que_len);  // ÑéÖ¤¶ÁÈ¡³¤¶È
-            /* Êı¾İÑéÖ¤´úÂë£¨×¢ÊÍµôÒÔÌá¸ßĞÔÄÜ£©
+            assert(len == g_wr_que_len);  // éªŒè¯è¯»å–é•¿åº¦
+            /* æ•°æ®éªŒè¯ä»£ç ï¼ˆæ³¨é‡Šæ‰ä»¥æé«˜æ€§èƒ½ï¼‰
             tc = pbuf[0];
             for(int32 j=1;j<len-2;j++){
                 assert(tc == pbuf[j]);
             }
             */
-            tpos = g_test_que.next_pos(tpos,len);  // ¸üĞÂ¶ÁÈ¡Î»ÖÃ
+            tpos = g_test_que.next_pos(tpos,len);  // æ›´æ–°è¯»å–ä½ç½®
             if(g_rd_th_num == 1)
-                g_test_que.read_cmt_pos(tpos);  // Ìá½»¶ÁÈ¡Î»ÖÃ£¨µ¥Ïû·ÑÕßÄ£Ê½£©
+                g_test_que.read_cmt_pos(tpos);  // æäº¤è¯»å–ä½ç½®ï¼ˆå•æ¶ˆè´¹è€…æ¨¡å¼ï¼‰
             
             count++;
         }
         
-        // comm_utils::sleep_us(tus);  // ¿ÉÑ¡£º¿ØÖÆ¶ÁÈ¡ËÙÂÊ
+        // comm_utils::sleep_us(tus);  // å¯é€‰ï¼šæ§åˆ¶è¯»å–é€Ÿç‡
         
-    }while(g_stop_th_flag == 1 || g_test_que.get_used()>0);  // ±êÖ¾Îª1»ò¶ÓÁĞ·Ç¿ÕÊ±¼ÌĞøÔËĞĞ
+    }while(g_stop_th_flag == 1 || g_test_que.get_used()>0);  // æ ‡å¿—ä¸º1æˆ–é˜Ÿåˆ—éç©ºæ—¶ç»§ç»­è¿è¡Œ
     
     printf("read pos thread end,count=%ld,read_pos=%ld\n",count,tpos);
     
@@ -240,21 +243,21 @@ void *readpos_thread_func(void *arg)
 }
 
 /*
- * Ìá½»¶ÁÈ¡Î»ÖÃÏß³Ìº¯Êı
- * ¹¦ÄÜ£ºĞ­µ÷¶à¸ö¶ÁÈ¡Ïß³ÌµÄ½ø¶È£¬Ìá½»×îĞ¡µÄÒÑ¶ÁÈ¡Î»ÖÃ
- * ²ÎÊı£ºarg - Ïß³Ì²ÎÊı£¨Î´Ê¹ÓÃ£©
- * ·µ»ØÖµ£ºNULL - Ïß³Ì½áÊø
+ * æäº¤è¯»å–ä½ç½®çº¿ç¨‹å‡½æ•°
+ * åŠŸèƒ½ï¼šåè°ƒå¤šä¸ªè¯»å–çº¿ç¨‹çš„è¿›åº¦ï¼Œæäº¤æœ€å°çš„å·²è¯»å–ä½ç½®
+ * å‚æ•°ï¼šarg - çº¿ç¨‹å‚æ•°ï¼ˆæœªä½¿ç”¨ï¼‰
+ * è¿”å›å€¼ï¼šNULL - çº¿ç¨‹ç»“æŸ
  */
 void *cmt_read_thread_func(void *arg)
 {
-    // ¼ÆËãÏß³ÌĞİÃßÊ±¼ä
+    // è®¡ç®—çº¿ç¨‹ä¼‘çœ æ—¶é—´
     int32 tus = g_rd_th_num/2;
     if(tus == 0)
         tus = 1;
     if(g_rd_th_num == 1)
-        return NULL;  // µ¥Ïû·ÑÕßÄ£Ê½ÏÂ²»ĞèÒª´ËÏß³Ì
+        return NULL;  // å•æ¶ˆè´¹è€…æ¨¡å¼ä¸‹ä¸éœ€è¦æ­¤çº¿ç¨‹
     
-    // µÈ´ıÆô¶¯ĞÅºÅ
+    // ç­‰å¾…å¯åŠ¨ä¿¡å·
     while(g_stop_th_flag == 0);
     
     printf("commit pos thread start\n");
@@ -264,78 +267,66 @@ void *cmt_read_thread_func(void *arg)
     
     do{
         tpos = g_read_th_arg[0];
-        // ÕÒ³öËùÓĞ¶ÁÈ¡Ïß³ÌÖĞµÄ×îĞ¡¶ÁÈ¡Î»ÖÃ
+        // æ‰¾å‡ºæ‰€æœ‰è¯»å–çº¿ç¨‹ä¸­çš„æœ€å°è¯»å–ä½ç½®
         for(i=1;i<g_rd_th_num;i++){
             int64 t= g_read_th_arg[i];
             if(tpos > t){
                 tpos = t;
             }
         }
-        // g_test_que.read_cmt_mth(tpos);  // Ê¹ÓÃ¶àÏß³Ì°²È«Ä£Ê½Ìá½»
-        g_test_que.read_cmt_pos(tpos);    // Ìá½»×îĞ¡¶ÁÈ¡Î»ÖÃ
-        // comm_utils::sleep_us(tus);  // ¿ÉÑ¡£º¿ØÖÆÌá½»ÆµÂÊ
+        // g_test_que.read_cmt_mth(tpos);  // ä½¿ç”¨å¤šçº¿ç¨‹å®‰å…¨æ¨¡å¼æäº¤
+        g_test_que.read_cmt_pos(tpos);    // æäº¤æœ€å°è¯»å–ä½ç½®
+        // comm_utils::sleep_us(tus);  // å¯é€‰ï¼šæ§åˆ¶æäº¤é¢‘ç‡
         
-    }while(g_stop_th_flag == 1 || g_test_que.get_used()>0);  // ±êÖ¾Îª1»ò¶ÓÁĞ·Ç¿ÕÊ±¼ÌĞøÔËĞĞ
+    }while(g_stop_th_flag == 1 || g_test_que.get_used()>0);  // æ ‡å¿—ä¸º1æˆ–é˜Ÿåˆ—éç©ºæ—¶ç»§ç»­è¿è¡Œ
     
     printf("commit pos thread end,commit_pos=%ld\n",tpos);
     
     return NULL;
 }
 
-int TestExampe(int argc,char *argv[]) {
-    if(argc < 4){
-        printf("²ÎÊıÓÃ·¨: exe que_size_MB write_thread_num read_thread_num write_len read_type\n");
-        return -1;
-    }
-    int32 read_type= 0;  // ¶ÁÈ¡ÀàĞÍ£º0-ÆÕÍ¨Ä£Ê½£¬1-Î»ÖÃÄ£Ê½
-    int64 que_size = atoi(argv[1]);
-    que_size = (que_size<<20);  // ×ª»»Îª×Ö½Ú(MB -> B)
-    g_wr_th_num = atoi(argv[2]);
-    g_rd_th_num = atoi(argv[3]);
-    if(argc > 4){
-        g_wr_que_len = atoi(argv[4]);
-    }
-    else{
-        g_wr_que_len = 120;  // Ä¬ÈÏĞ´Èë³¤¶È
-    }
-    if(argc > 5){
-        read_type = atoi(argv[5]);
-    }
-    else{
-        read_type = 0;  // Ä¬ÈÏ¶ÁÈ¡ÀàĞÍ
-    }
-    
-    // ´òÓ¡²âÊÔÅäÖÃĞÅÏ¢
+int TestExampe(int iWriteThreadNum=1,int iReadThreadNum=1,int iDataBlockLen=1024,int iReadType=0, int iQueueSize=2) {
+
+    int32 read_type= 0;  // è¯»å–ç±»å‹ï¼š0-æ™®é€šæ¨¡å¼ï¼Œ1-ä½ç½®æ¨¡å¼
+    int64 que_size = iQueueSize; // å•ä½MB;
+    que_size = (que_size<<20);  // è½¬æ¢ä¸ºå­—èŠ‚(MB -> B)
+    g_wr_th_num = iWriteThreadNum;
+    g_rd_th_num = iReadThreadNum;
+    g_wr_que_len = iDataBlockLen;
+    read_type = iReadType;
+
+
+    // æ‰“å°æµ‹è¯•é…ç½®ä¿¡æ¯
     printf("que_size=%lx, write_thread_num=%d, write_len=%d\n",que_size,g_wr_th_num,g_wr_que_len);
     printf("read_thread_num=%d, read_type=%d, cache_line=%d\n",g_rd_th_num,read_type,CACHE_ALIGN_SIZE);
     
-    // ³õÊ¼»¯Ïß³Ì²ÎÊı
+    // åˆå§‹åŒ–çº¿ç¨‹å‚æ•°
     for(int8 i=0;i<10;i++){
-        g_write_th_arg[i] = '0' + i;  // Ğ´ÈëÏß³Ì±êÊ¶×Ö·û£º'0'-'9'
-        g_read_th_arg[i] = 64;        // ¶ÁÈ¡Ïß³Ì³õÊ¼Î»ÖÃ
+        g_write_th_arg[i] = '0' + i;  // å†™å…¥çº¿ç¨‹æ ‡è¯†å­—ç¬¦ï¼š'0'-'9'
+        g_read_th_arg[i] = 64;        // è¯»å–çº¿ç¨‹åˆå§‹ä½ç½®
     }
     
-    // ¼ÆËãËùĞè¹²ÏíÄÚ´æ´óĞ¡
+    // è®¡ç®—æ‰€éœ€å…±äº«å†…å­˜å¤§å°
     int64 ts = que_proc_buf::need_buf_size(que_size);
-    ts += sizeof(que_proc_info);  // ¼ÓÉÏ¶ÓÁĞÔªÊı¾İ´óĞ¡
+    ts += sizeof(que_proc_info);  // åŠ ä¸Šé˜Ÿåˆ—å…ƒæ•°æ®å¤§å°
     
     void *tp = NULL;
-    // ´´½¨»ò´ò¿ª¹²ÏíÄÚ´æ
+    // åˆ›å»ºæˆ–æ‰“å¼€å…±äº«å†…å­˜
     int32 ret = comm_utils::map_shm(tp,"test_proc_que",ts,0);
     printf("mmap que,ret=%d\n",ret);
     if(ret < 0){
-        return ret;  // ¹²ÏíÄÚ´æ´´½¨Ê§°Ü
+        return ret;  // å…±äº«å†…å­˜åˆ›å»ºå¤±è´¥
     }
     
-    // ³õÊ¼»¯¶ÓÁĞ
+    // åˆå§‹åŒ–é˜Ÿåˆ—
     que_proc_info *tqinfo = (que_proc_info *)tp;
     g_test_que.init_shm(tqinfo,((char *)tp) + sizeof(que_proc_info),que_size,ret,1024,0);
-    g_test_que.start(QUE_RECOVE_TYPE_RESTART);  // Æô¶¯¶ÓÁĞ£¬ÉèÖÃÖØÆô»Ö¸´Ä£Ê½
+    g_test_que.start(QUE_RECOVE_TYPE_RESTART);  // å¯åŠ¨é˜Ÿåˆ—ï¼Œè®¾ç½®é‡å¯æ¢å¤æ¨¡å¼
     
     
-    g_stop_th_flag = 0;  // ³õÊ¼»¯Ïß³Ì¿ØÖÆ±êÖ¾
+    g_stop_th_flag = 0;  // åˆå§‹åŒ–çº¿ç¨‹æ§åˆ¶æ ‡å¿—
     ret = 0;
-    // ´´½¨¶ÁÈ¡Ïß³Ì
+    // åˆ›å»ºè¯»å–çº¿ç¨‹
     for(int32 i=0;i<g_rd_th_num;i++)
     {
         pthread_t thid;
@@ -343,21 +334,21 @@ int TestExampe(int argc,char *argv[]) {
         pthread_attr_init(&attr);
         void *tparg = reinterpret_cast<void *>(&(g_read_th_arg[i]));
         if(read_type == 0){
-            // ´´½¨ÆÕÍ¨¶ÁÈ¡Ïß³Ì
+            // åˆ›å»ºæ™®é€šè¯»å–çº¿ç¨‹
             if(::pthread_create(&thid,&attr,read_thread_func,tparg) !=0){
                 g_stop_th_flag = 2;
                 ret = -1;
             }
         }
         else{
-            // ´´½¨Î»ÖÃÄ£Ê½¶ÁÈ¡Ïß³Ì
+            // åˆ›å»ºä½ç½®æ¨¡å¼è¯»å–çº¿ç¨‹
             if(::pthread_create(&thid,&attr,readpos_thread_func,tparg) !=0){
                 g_stop_th_flag = 2;
                 ret = -1;
             }
         }
     }
-    // ´´½¨Ìá½»Ïß³Ì£¨¶àÏû·ÑÕßÄ£Ê½£©
+    // åˆ›å»ºæäº¤çº¿ç¨‹ï¼ˆå¤šæ¶ˆè´¹è€…æ¨¡å¼ï¼‰
     if(read_type != 0 && ret == 0){
         pthread_t thid;
         pthread_attr_t attr;
@@ -367,7 +358,7 @@ int TestExampe(int argc,char *argv[]) {
             ret = -1;
         }
     }
-    // ´´½¨Ğ´ÈëÏß³Ì
+    // åˆ›å»ºå†™å…¥çº¿ç¨‹
     if(ret == 0){
         for(int32 i=0;i<g_wr_th_num;i++){
             pthread_t thid;
@@ -385,17 +376,17 @@ int TestExampe(int argc,char *argv[]) {
     
     printf("create thread,ret=%d\n",ret);
     
-    // Æô¶¯²âÊÔ
+    // å¯åŠ¨æµ‹è¯•
     if(ret == 0){
-        g_stop_th_flag = 1;  // ÉèÖÃ±êÖ¾ÎªÔËĞĞÖĞ
-        sleep(10);  // ²âÊÔ³ÖĞøÊ±¼ä10Ãë
+        g_stop_th_flag = 1;  // è®¾ç½®æ ‡å¿—ä¸ºè¿è¡Œä¸­
+        sleep(2);  // æµ‹è¯•æŒç»­æ—¶é—´10ç§’
     }
     
-    // ½áÊø²âÊÔ
-    g_stop_th_flag = 2;  // ÉèÖÃ±êÖ¾ÎªÍ£Ö¹
-    sleep(10);  // µÈ´ıÏß³Ì½áÊø
+    // ç»“æŸæµ‹è¯•
+    g_stop_th_flag = 2;  // è®¾ç½®æ ‡å¿—ä¸ºåœæ­¢
+    sleep(2);  // ç­‰å¾…çº¿ç¨‹ç»“æŸ
     
-    // ´òÓ¡²âÊÔ½á¹û
+    // æ‰“å°æµ‹è¯•ç»“æœ
     printf("thread end,que_wrcmt=%ld,que_rdcmt=%ld,que_uesd=%ld\n",
         g_test_que.get_write_pos(),
         g_test_que.get_read_pos(),
@@ -405,19 +396,21 @@ int TestExampe(int argc,char *argv[]) {
 }
 
 /*
- * Ö÷º¯Êı - ³ÌĞòÈë¿Ú
- * ¹¦ÄÜ£º½âÎöÃüÁîĞĞ²ÎÊı£¬³õÊ¼»¯¶ÓÁĞ£¬´´½¨Ïß³Ì£¬Ğ­µ÷²âÊÔÁ÷³Ì
- * ²ÎÊı£º
- *   argc - ²ÎÊıÊıÁ¿
- *   argv - ²ÎÊıÊı×é£º[0]³ÌĞòÃû, [1]¶ÓÁĞ´óĞ¡(MB), [2]Ğ´ÈëÏß³ÌÊı, [3]¶ÁÈ¡Ïß³ÌÊı, [4]Ğ´Èë³¤¶È, [5]¶ÁÈ¡ÀàĞÍ
- * ·µ»ØÖµ£º0-³É¹¦£¬·Ç0-Ê§°Ü
+ * ä¸»å‡½æ•° - ç¨‹åºå…¥å£
+ * åŠŸèƒ½ï¼šè§£æå‘½ä»¤è¡Œå‚æ•°ï¼Œåˆå§‹åŒ–é˜Ÿåˆ—ï¼Œåˆ›å»ºçº¿ç¨‹ï¼Œåè°ƒæµ‹è¯•æµç¨‹
+ * å‚æ•°ï¼š
+ *   argc - å‚æ•°æ•°é‡
+ *   argv - å‚æ•°æ•°ç»„ï¼š[0]ç¨‹åºå, [1]é˜Ÿåˆ—å¤§å°(MB), [2]å†™å…¥çº¿ç¨‹æ•°, [3]è¯»å–çº¿ç¨‹æ•°, [4]å†™å…¥é•¿åº¦, [5]è¯»å–ç±»å‹
+ * è¿”å›å€¼ï¼š0-æˆåŠŸï¼Œé0-å¤±è´¥
  */
 int main(int argc,char *argv[])
 {
 
-    test_struct();
+    // test_struct();
 
-    // TestMain();
+    TestMain();
+
+    // TestExampe();
 
     return 0;
 }

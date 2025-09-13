@@ -1,0 +1,11 @@
+[
+    {
+        "iMemMBSize":2,
+        "iWriteThreadCount":1,
+        "iReadThreadCount":1,
+        "iSleepTimeUs":1000,
+        "iReadType":0,
+        "iWriteSecs":10,
+        "iWriteBlockCount":4000
+    }
+]

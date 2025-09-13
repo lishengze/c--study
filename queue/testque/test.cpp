@@ -13,32 +13,12 @@ using namespace std;
 #include "comm_sys.h"
 #include "que_proc_buf.h"
 #include "struct.h"
+#include "base_util.h"
+#include <algorithm>
 
 using threadPtr = std::shared_ptr<std::thread>;
 
 using namespace lb_common;
-
-
-struct MetaData {
-    unsigned int iMemSize;
-    unsigned int iWriteThreadCount;
-    unsigned int iReadThreadCount;
-    unsigned int iSleepTimeUs;    
-    unsigned int iReadType;
-    unsigned int iWriteSecs;
-    unsigned int iWriteBlockCount;
-
-    string str() {
-        return "iMemSize=" + std::to_string(iMemSize) +
-               ",iWriteThreadCount=" + std::to_string(iWriteThreadCount) +
-               ",iReadThreadCount=" + std::to_string(iReadThreadCount) +
-               ",iSleepTimeUs=" + std::to_string(iSleepTimeUs) +
-               ",iReadType=" + std::to_string(iReadType) +
-               ",iWriteSecs=" + std::to_string(iWriteSecs) +
-               ",iWriteBlockCount=" + std::to_string(iWriteBlockCount);
-    }
-};
-
 
 
 /*
@@ -63,79 +43,29 @@ void AnaRst(std::vector<DataBlockPtr>& vecPushBlocks, std::vector<DataBlockPtr>&
     unsigned long long ulMax = 0;
     unsigned long long ulAve = 0;
     unsigned long long ulSum = 0;
+    std::vector<unsigned long long> vecTime;
     for (auto& pBlock : vecPopBlocks) {
         unsigned long long ulTime = pBlock->pop_time_ - pBlock->push_time_;
+        // printf("pop_time=%lld, push_time=%lld, time=%lld\n", pBlock->pop_time_, pBlock->push_time_, ulTime);
         if(ulTime < ulMin)
             ulMin = ulTime;
         if(ulTime > ulMax)
             ulMax = ulTime;
         ulSum += ulTime;
+        vecTime.push_back(ulTime);
     }
+
+    std::sort(vecTime.begin(), vecTime.end());
+
     ulAve = ulSum / vecPopBlocks.size();
-    printf("min=%lld,max=%lld,ave=%lld\n",ulMin,ulMax,ulAve);   
-}
+
+    unsigned long long ul50 = vecTime[std::floor(vecTime.size()/2)];
+    unsigned long long ul75 = vecTime[std::floor(vecTime.size()*75/100)];
+    unsigned long long ul90 = vecTime[std::floor(vecTime.size()*9/10)];
+    
+    printf("min=%lld,max=%lld,ave=%lld,50%%=%lld,75%%=%lld,90%%=%lld\n",ulMin,ulMax,ulAve,ul50,ul75,ul90);   
 
 
-
-
-void read_thread_func_quota_simple(int& iStopFlag, que_proc_buf& queProBuf,  std::vector<DataBlockPtr>& vecPopBlocks, MetaData metaData)
-{
-    // 计算线程休眠时间，根据读取线程数量动态调整
-    int32 tus = metaData.iReadThreadCount/2;
-    if(tus == 0)
-        tus = 1;
-    
-    // 等待启动信号
-    while(iStopFlag == 0);
-    
-    printf("read thread start\n");
-    
-    char tcache[4096];  // 读取数据缓冲区
-    char tc;             // 用于验证数据一致性的字符
-    int64 count = 0;     // 读取计数器
-    int32 len = 0;       // 单次读取长度
-    char *pbuf;          // 指向队列数据的指针
-    
-    do{
-        if(metaData.iReadThreadCount == 1){
-            // 单消费者模式 - 直接读取并提交
-            while((len = queProBuf.read_get(pbuf)) > 0){
-                DataBlock* pBlock = (DataBlock*)pbuf;
-                pBlock->pop_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-                vecPopBlocks.push_back(GetCopyBlock(pBlock));
-                // assert(len == g_wr_que_len);  // 验证读取长度是否符合预期
-                /* 数据验证代码（注释掉以提高性能）
-                tc = pbuf[0];
-                for(int32 j=1;j<len-2;j++){
-                    assert(tc == pbuf[j]);
-                }
-                */
-                queProBuf.read_cmt();  // 提交读取（单消费者模式）
-                count++;
-            }
-        }
-        else{
-            // 多消费者模式 - 使用弹出接口
-            while((len = queProBuf.read_pop(tcache,sizeof(tcache))) > 0){
-                DataBlock* pBlock = (DataBlock*)tcache;
-                pBlock->pop_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-                vecPopBlocks.push_back(GetCopyBlock(pBlock));
-                // assert(len == g_wr_que_len);  // 验证读取长度是否符合预期
-                /* 数据验证代码（注释掉以提高性能）
-                tc = tcache[0];
-                for(int32 j=1;j<len-2;j++){
-                    assert(tc == tcache[j]);
-                }
-                */
-                count++;
-            }
-        }
-        
-        // comm_utils::sleep_us(tus);  // 可选：控制读取速率
-        
-    }while(iStopFlag == 1 || queProBuf.get_used()>0);  // 标志为1或队列非空时继续运行
-    
-    printf("read thread end,count=%ld\n",count);
 }
 
 
@@ -168,7 +98,7 @@ void *read_thread_func_quota_pos(int& iStopFlag, int64& readPos, que_proc_buf& q
         while((len = queProBuf.read_get(pbuf,readPos)) > 0){
             DataBlock* pBlock = (DataBlock*)pbuf;
             pBlock->pop_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-            vecPopBlocks.push_back(GetCopyBlock(pBlock));
+            // vecPopBlocks.push_back(GetCopyBlock(pBlock));
             // assert(len == g_wr_que_len);  // 验证读取长度
             /* 数据验证代码（注释掉以提高性能）
             tc = pbuf[0];
@@ -236,14 +166,14 @@ void *read_thread_func_quota_cmt(int& iStopFlag, que_proc_buf& queProBuf, vector
 bool IsWriteEnd(MetaData& metaData, bool isStopFlag, int writeIndex, unsigned long long ulStartNanoTime) {
     if (!isStopFlag) return true;
 
-    if (metaData.iWriteSecs > 0) {
+    if (metaData.iWriteSecs > 0) {  // 写入时间限制模式
         unsigned long long ulCurTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         if (ulCurTime - ulStartNanoTime >= metaData.iWriteSecs * 1000000000) {
             return true;
         }
     }
 
-    if (metaData.iWriteBlockCount > 0) {
+    if (metaData.iWriteBlockCount > 0) { //写入数量限制模式
         if (writeIndex >= metaData.iWriteBlockCount) {
             return true;
         }
@@ -252,8 +182,10 @@ bool IsWriteEnd(MetaData& metaData, bool isStopFlag, int writeIndex, unsigned lo
     return false;   
 }
 
-void *write_thread_func_quta(int& iStopFlag, que_proc_buf& queProBuf, std::vector<DataBlockPtr>& vecPushBlocks, MetaData metaData)
+void write_thread_func_quta(int& iStopFlag, que_proc_buf& queProBuf, std::vector<DataBlockPtr>& vecPushBlocks, MetaData metaData)
 {
+    // std::cout << "[START] write_thread_func_quta , metaData=" << metaData.str() << std::endl;
+
     // 计算线程休眠时间，根据写入线程数量动态调整
     int32 tus = metaData.iWriteThreadCount/2;
     if(tus == 0){
@@ -265,6 +197,8 @@ void *write_thread_func_quta(int& iStopFlag, que_proc_buf& queProBuf, std::vecto
     
     // 等待启动信号(iStopFlag != 0)
     while(iStopFlag == 0);
+
+    printf("[START] Write thread start\n");
         
     int64 count = 0;  // 写入计数器
     int32 i= 0;       // 循环计数器
@@ -275,8 +209,7 @@ void *write_thread_func_quta(int& iStopFlag, que_proc_buf& queProBuf, std::vecto
 
     do{
         i = 0;
-        DataBlockPtr  pBlock = GetRandomDataBlock(); 
-        char* pData = (char*)(pBlock.get());
+        DataBlockPtr  pBlock = GetRandomDataBlock();
         if(pBlock == nullptr){
             continue;
         }
@@ -300,12 +233,17 @@ void *write_thread_func_quta(int& iStopFlag, que_proc_buf& queProBuf, std::vecto
             }while(iStopFlag == 1);  // 当标志为1时继续尝试
 
             if(tpos >0){
-                pBlock->push_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
                 vecPushBlocks.push_back(pBlock);
-                memcpy(pbuf,pBlock.get(),pBlock->size_);  // 实际应用中需要复制数据
+                // memcpy(pbuf,pBlock.get(),pBlock->size_);  // 实际应用中需要复制数据
+
+                // 此次拷贝的结构体含有虚函数，无法通过memcpy 直接进行拷贝, 因此需要调用CopyDataBlockToBuffer函数, 拷贝的最后一步，会自动更新时间戳
+                CopyDataBlockToBuffer(pbuf, pBlock.get()); 
                 queProBuf.write_cmt(tpos,pBlock->size_);  // 提交写入
                 count++;
             }
+
+            // printf("Write thread get used=%d\n",queProBuf.get_used());
+            // printf("Single Thread Write count: %ld,len=%u\n", count, pBlock->size_);
         }
         else{
             // 多生产者模式 - 使用多线程安全写入接口
@@ -324,26 +262,97 @@ void *write_thread_func_quta(int& iStopFlag, que_proc_buf& queProBuf, std::vecto
             }while(iStopFlag == 1);  // 当标志为1时继续尝试
             
             if(tpos >0){
-                pBlock->push_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
                 vecPushBlocks.push_back(pBlock);                
-                memcpy(pbuf,pBlock.get(),pBlock->size_);  // 实际应用中需要复制数据
+                // memcpy(pbuf,pBlock.get(),pBlock->size_);  // 实际应用中需要复制数据
+                // CopyDataBlockToBuffer(pbuf, pBlock.get()); // 拷贝的最后一步，会自动更新时间戳
                 queProBuf.write_cmt_mth(tpos,pBlock->size_);  // 提交写入（多线程安全版本）
                 count++;
             }
         }
         
-        // comm_utils::sleep_us(iWriteSleepTimeUs);  // 可选：控制写入速率
+        comm_utils::sleep_us(metaData.iSleepTimeUs);  // 可选：控制写入速率
         
     } while(!IsWriteEnd(metaData, iStopFlag, count, ulStartNanoTime));  // 当标志为1时继续运行，为2时退出
     
     unsigned long long ulEndNanoTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-    cout << "write thread end,count=" << count << ",time=" << (ulEndNanoTime - ulStartNanoTime) / 1000000 << " microseconds" << endl;
+    cout << "[END] Write Thread Count=" << count << ",time=" << (ulEndNanoTime - ulStartNanoTime)  << " nanoseconds" << endl;
+
+    iStopFlag = 2;  // 结束信号,写线程结束，读线程也就结束了；
 
     // printf("write thread end,count=%ld,c=%c\n",count,tc);
     
     // delete[] tv;  // 释放缓冲区
-    return NULL;
+}
+
+void read_thread_func_quota_simple(int& iStopFlag, que_proc_buf& queProBuf,  std::vector<DataBlockPtr>& vecPopBlocks, MetaData metaData)
+{
+    // std::cout << "[START] read_thread_func_quota_simple ,metaData=" << metaData.str() << std::endl;
+
+    // 计算线程休眠时间，根据读取线程数量动态调整
+    // int32 tus = metaData.iReadThreadCount/2;
+    // if(tus == 0)
+    //     tus = 1;
+    
+    // 等待启动信号
+    while(iStopFlag == 0);
+    
+    printf("[START] Read thread start\n");
+    
+    char tcache[4096];  // 读取数据缓冲区
+    char tc;             // 用于验证数据一致性的字符
+    int64 count = 0;     // 读取计数器
+    int32 len = 0;       // 单次读取长度
+    char *pbuf;          // 指向队列数据的指针
+    
+    do{
+        if(metaData.iReadThreadCount == 1){
+
+            // printf("Read thread get used=%d\n", queProBuf.get_used());
+
+            // 单消费者模式 - 直接读取并提交
+            while((len = queProBuf.read_get(pbuf)) > 0){
+                DataBlock* pBlock = (DataBlock*)pbuf;
+                pBlock->pop_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                vecPopBlocks.push_back(GetCopyBlock(pBlock));
+
+                // assert(len == g_wr_que_len);  // 验证读取长度是否符合预期
+                /* 数据验证代码（注释掉以提高性能）
+                tc = pbuf[0];
+                for(int32 j=1;j<len-2;j++){
+                    assert(tc == pbuf[j]);
+                }
+                */
+                queProBuf.read_cmt();  // 提交读取（单消费者模式）
+                count++;
+                // std::cout << "Single Thread Read count: " << count << " len: " << len << std::endl;
+            }
+
+            // std::cout << "[Read Failed] read_thread_func_quota_simple,count=" << count << std::endl;
+        }
+        else{
+            // 多消费者模式 - 使用弹出接口
+            while((len = queProBuf.read_pop(tcache,sizeof(tcache))) > 0){
+                DataBlock* pBlock = (DataBlock*)tcache;
+                pBlock->pop_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                vecPopBlocks.push_back(GetCopyBlock(pBlock));
+
+                // assert(len == g_wr_que_len);  // 验证读取长度是否符合预期
+                /* 数据验证代码（注释掉以提高性能）
+                tc = tcache[0];
+                for(int32 j=1;j<len-2;j++){
+                    assert(tc == tcache[j]);
+                }
+                */
+                count++;
+            }
+        }
+        
+        // comm_utils::sleep_us(metaData.iSleepTimeUs);  // 可选：控制读取速率
+        
+    }while(iStopFlag == 1 || queProBuf.get_used()>0);  // 标志为1或队列非空时继续运行
+    
+    printf("[END] Read Thread Count=%ld\n",count);
 }
 
 
@@ -351,7 +360,7 @@ int test_atomic(MetaData& metaData) {
     cout << "test_atomic" << endl;
 
     // 初始化共享内存相关;
-    unsigned long  ulQueSize = (metaData.iMemSize<<20);  // 转换为字节(MB -> B)    
+    unsigned long  ulQueSize = (metaData.iMemMBSize<<20);  // 转换为字节(MB -> B)    
 
     // 计算所需共享内存大小
     unsigned long  ulShareSize = que_proc_buf::need_buf_size(ulQueSize);
@@ -360,7 +369,7 @@ int test_atomic(MetaData& metaData) {
     void *pSharedMem = NULL;
 
     int ret = comm_utils::map_shm(pSharedMem,"test_proc_que",ulShareSize,0);
-    printf("mmap que,ret=%d\n",ret);
+    printf("Create shared memory mmap que,ret=%d\n",ret);
     if(ret < 0) {
         return ret;  // 共享内存创建失败
     }
@@ -381,13 +390,13 @@ int test_atomic(MetaData& metaData) {
     vecReadPos.reserve(metaData.iReadThreadCount);
 
     std::vector<DataBlockPtr> vecPushBlocks;
+    vecPushBlocks.reserve(metaData.iWriteBlockCount);
     std::vector<DataBlockPtr> vecPopBlocks;
+    vecPopBlocks.reserve(metaData.iWriteBlockCount);
 
-    int iStopFlag = 1;
+    int iStopFlag = 1;        
 
-        
     /* 开启读线程 */
-
     for (int i = 0; i < metaData.iReadThreadCount; i++) {
         if(metaData.iReadType == 0){
             // 创建普通读取线程
@@ -428,6 +437,7 @@ int test_atomic(MetaData& metaData) {
         vecWriteTheads.push_back(pThread);
     }
     
+    // iStopFlag = 1;
 
     for (auto pThread : vecWriteTheads) {
         if (pThread->joinable()) {
@@ -441,28 +451,59 @@ int test_atomic(MetaData& metaData) {
             }
     }
 
-    // AnaRst(vecPushBlocks, vecPopBlocks,metaData);
+    AnaRst(vecPushBlocks, vecPopBlocks,metaData);
 
     // 释放共享内存
-    comm_utils::close_shm(pSharedMem,"test_proc_que",ulShareSize);
+    // comm_utils::close_shm(pSharedMem,"test_proc_que",ulShareSize);
+
+    printf("[END] Thread All end,que_wrcmt=%ld,que_rdcmt=%ld,que_uesd=%ld\n",
+    queProBuf.get_write_pos(),
+    queProBuf.get_read_pos(),
+    queProBuf.get_used());
+    
 
     return 0;
 }
 
 // 测试一个基础场景；
 void Test1() {
+    std::string sConfigFileName = GetWorkDir() + "config.json";
+    std::cout << "sConfigFileName: " << sConfigFileName << std::endl;
+    njson fileJson;
+    Error error;
+    if ((error = GetJsonFromFile(fileJson, sConfigFileName)).IsFailed()) {
+        std::cout << "GetJsonFromFile failed, error: " << error.Str() << std::endl;
+    }
+
     MetaData metaData;
-    metaData.iMemSize = 10; //10MB
-    metaData.iWriteThreadCount = 1;
-    metaData.iReadThreadCount = 1;
-    metaData.iWriteBlockCount = 100;
-    metaData.iWriteSecs = 0;
-    metaData.iReadType = 0;
-    test_atomic(metaData);
+    string sErrMsg;    
+    if (fileJson.is_array()) {
+        for (njson::iterator it = fileJson.begin(); it != fileJson.end(); ++it) {           
+            njson jsAtom = *it;
+            if (!metaData.InitFromJson(jsAtom, sErrMsg)) {
+                std::cout << "InitFromJson failed, error: " << sErrMsg << std::endl;
+            }
+            std::cout << "metaData: " << metaData.str() << std::endl;
+
+            test_atomic(metaData);
+        }
+    }
+    // MetaData metaData;
+    // metaData.iMemMBSize = fileJson["mem_mb_size"].GetInt();
+    // metaData.iWriteThreadCount = fileJson["write_thread_count"].GetInt();
+    // metaData.iReadThreadCount = fileJson["read_thread_count"].GetInt();
+    // metaData.iMemMBSize = 2; //10MB
+    // metaData.iWriteThreadCount = 1;
+    // metaData.iReadThreadCount = 1;
+    // metaData.iWriteBlockCount = 1000;
+    // metaData.iWriteSecs = 0;
+    // metaData.iReadType = 0;
+    // metaData.iSleepTimeUs = 10000;
+    
 }
 
 void TestMain() {
     printf("Test Queue Main\n");
 
-    // Test1();
+    Test1();
 }

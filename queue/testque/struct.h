@@ -5,8 +5,60 @@
 #include <chrono>
 #include <cstring>
 #include <iostream>
+#include <string>
+
+#include "json_util.hpp"
+#include "base_util.h"
+
+using namespace std;
 
 #define MAX_POP_TIME 1000000000*3600 // 1h
+
+struct MetaData {
+    unsigned int iMemMBSize;
+    unsigned int iWriteThreadCount;
+    unsigned int iReadThreadCount;
+    unsigned int iSleepTimeUs;    
+    unsigned int iReadType;
+    unsigned int iWriteSecs;
+    unsigned int iWriteBlockCount;
+
+    string str() {
+        return "iMemMBSize=" + std::to_string(iMemMBSize) +
+               ",iWriteThreadCount=" + std::to_string(iWriteThreadCount) +
+               ",iReadThreadCount=" + std::to_string(iReadThreadCount) +
+               ",iSleepTimeUs=" + std::to_string(iSleepTimeUs) +
+               ",iReadType=" + std::to_string(iReadType) +
+               ",iWriteSecs=" + std::to_string(iWriteSecs) +
+               ",iWriteBlockCount=" + std::to_string(iWriteBlockCount);
+    }
+
+    bool InitFromJson(njson& jsonSrc, string& sErrMsg) {
+        if (!GetJsonUnsignedIntField(jsonSrc, "iMemMBSize", iMemMBSize, sErrMsg)) {
+            return false;
+        }
+        if (!GetJsonUnsignedIntField(jsonSrc, "iWriteThreadCount", iWriteThreadCount, sErrMsg)) {
+            return false;
+        }
+        if (!GetJsonUnsignedIntField(jsonSrc, "iReadThreadCount", iReadThreadCount, sErrMsg)) {
+            return false;
+        }
+        if (!GetJsonUnsignedIntField(jsonSrc, "iSleepTimeUs", iSleepTimeUs, sErrMsg)) {
+            return false;
+        }
+        if (!GetJsonUnsignedIntField(jsonSrc, "iReadType", iReadType, sErrMsg)) {
+            return false;
+        }
+        if (!GetJsonUnsignedIntField(jsonSrc, "iWriteSecs", iWriteSecs, sErrMsg)) {
+            return false;
+        }
+        if (!GetJsonUnsignedIntField(jsonSrc, "iWriteBlockCount", iWriteBlockCount, sErrMsg)) {
+            return false;
+        }   
+        return true;
+    }
+};
+
 
 struct DataBlock {
     unsigned long long push_time_; // 数据块开始时间
@@ -48,12 +100,19 @@ struct DataBlock {
 
     virtual ~DataBlock() {}
 
-    void CopyBlock(DataBlock* pBlock) {    
+    void CopyBlock(DataBlock* pBlock, bool IsNeedSetPushTime=true) {    
         size_ = pBlock->size_;
-        push_time_ = pBlock->push_time_;
+        
         pop_time_ = pBlock->pop_time_;
         array_size_ = pBlock->array_size_;
-        // CopyData(pBlock->GetData());
+        CopyData(pBlock->GetData());
+
+        if(IsNeedSetPushTime){
+            push_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            pBlock->push_time_ = push_time_;
+        } else {
+            push_time_ = pBlock->push_time_;
+        }
     }
 
     virtual void CopyData (unsigned char* pSrcData) {
@@ -77,7 +136,7 @@ struct DataBlock1:public DataBlock {
     unsigned char data_[4]; // 数据块
 
     virtual unsigned char* GetData() {
-        std::cout << "DataBlock1::GetData" << std::endl;
+        // std::cout << "DataBlock1::GetData" << std::endl;
         return data_;
     }
 
