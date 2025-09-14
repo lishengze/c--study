@@ -9,6 +9,8 @@ PROJECT(test_queue)
 set(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
 
+include_directories(include)
+
 ######################  统计编译文件数目  ######################
 file(GLOB_RECURSE SRC_FILES "./*.cpp") #添加SRC子目录下全部源代码文件，排除特定文件;
 list(FILTER SRC_FILES EXCLUDE REGEX "./CMakeFiles/.*")

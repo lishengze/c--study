@@ -22,15 +22,31 @@ struct MetaData {
     unsigned int iReadType;
     unsigned int iWriteSecs;
     unsigned int iWriteBlockCount;
+    unsigned int iFixedBlock;   // 0 - 可变，1 - 固定 -结构体, 2 - 固定 - unsigned long long 极限测试读写性能;
+    unsigned int iQueueType;    // 1 - Quant 队列, 2 - mpmc 队列，0 - 两者都测试;
+
+    MetaData() {
+        iMemMBSize = 0;
+        iWriteThreadCount = 0;
+        iReadThreadCount = 0;
+        iSleepTimeUs = 0;
+        iReadType = 0;
+        iWriteSecs = 0;
+        iWriteBlockCount = 0;
+        iFixedBlock = 0;
+        iQueueType = 0;
+    }
 
     string str() {
-        return "iMemMBSize=" + std::to_string(iMemMBSize) +
-               ",iWriteThreadCount=" + std::to_string(iWriteThreadCount) +
-               ",iReadThreadCount=" + std::to_string(iReadThreadCount) +
-               ",iSleepTimeUs=" + std::to_string(iSleepTimeUs) +
-               ",iReadType=" + std::to_string(iReadType) +
-               ",iWriteSecs=" + std::to_string(iWriteSecs) +
-               ",iWriteBlockCount=" + std::to_string(iWriteBlockCount);
+        return "iMemMBSize=" + std::to_string(iMemMBSize) + ",\n"
+               "iWriteThreadCount=" + std::to_string(iWriteThreadCount) + ",\n"
+               "iReadThreadCount=" + std::to_string(iReadThreadCount) + ",\n"
+               "iSleepTimeUs=" + std::to_string(iSleepTimeUs) + ",\n"
+               "iReadType=" + std::to_string(iReadType) + ",\n"
+               "iWriteSecs=" + std::to_string(iWriteSecs) + ",\n"
+               "iWriteBlockCount=" + std::to_string(iWriteBlockCount) + ",\n"
+               "iFixedBlock=" + std::to_string(iFixedBlock) + ",\n"
+               "iQueueType=" + std::to_string(iQueueType) + ",\n";
     }
 
     bool InitFromJson(njson& jsonSrc, string& sErrMsg) {
@@ -55,10 +71,36 @@ struct MetaData {
         if (!GetJsonUnsignedIntField(jsonSrc, "iWriteBlockCount", iWriteBlockCount, sErrMsg)) {
             return false;
         }   
+        if (!GetJsonUnsignedIntField(jsonSrc, "iFixedBlock", iFixedBlock, sErrMsg)) {
+            return false;
+        }          
+
+        if (!GetJsonUnsignedIntField(jsonSrc, "iQueueType", iQueueType, sErrMsg, "", true)) {
+            return false;
+        }  
+
+        // cout << "iQueueType = " << iQueueType << endl;
+        
         return true;
     }
 };
 
+struct DataBlockFixed {
+    unsigned long long push_time_; // 数据块开始时间
+    unsigned long long pop_time_; // 数据块开始时间
+    unsigned int  size_; // 数据块大小
+    unsigned char data_[512]; // 数据块指针
+    unsigned int  array_size_; // 数据块数组大小
+    DataBlockFixed() {
+        push_time_ = 0;
+        size_ = 0;
+        array_size_ = 512;
+    }
+};
+
+using DataBlockFixedPtr = std::shared_ptr<DataBlockFixed>; 
+
+DataBlockFixedPtr GetDataBlockFixed();
 
 struct DataBlock {
     unsigned long long push_time_; // 数据块开始时间
@@ -365,5 +407,8 @@ DataBlockPtr GetCopyBlock(DataBlockPtr pBlockShptr);
 DataBlockPtr GetCopyBlock(DataBlock* pBlock);
 
 void CopyDataBlockToBuffer(char* pDstBuffer, DataBlock* pSrcBlock);
+
+void CopyDataBlockToBuffer(char* pDstBuffer, char* pSrcBlock);
+
 
 void test_struct();

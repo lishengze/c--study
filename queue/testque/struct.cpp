@@ -1,5 +1,11 @@
 #include "struct.h"
 
+DataBlockFixedPtr GetDataBlockFixed() {
+    DataBlockFixedPtr data_block = std::make_shared<DataBlockFixed>();
+    data_block->size_ = sizeof(DataBlockFixed);
+    data_block->push_time_ = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    return data_block;
+}
 
 DataBlockPtr GetRandomDataBlock() {
     std::random_device rd;  // 用于获取随机种子
@@ -148,6 +154,10 @@ DataBlockPtr GetCopyBlock(DataBlock* pBlock) {
         data_block2->CopyBlock(pBlock, false);
     }
     return data_block2;    
+}
+
+void CopyDataBlockToBuffer(char* pDstBuffer, char* pSrcBlock) {
+    CopyDataBlockToBuffer(pDstBuffer, (DataBlock*)pSrcBlock);
 }
 
 void CopyDataBlockToBuffer(char* pBuffer, DataBlock* pSrcBlockOri) {

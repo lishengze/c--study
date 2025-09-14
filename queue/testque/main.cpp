@@ -10,6 +10,7 @@
 
 #include "struct.h"
 #include "test.h"
+#include "test_log.h"
 
 
 using namespace lb_common;
@@ -405,7 +406,7 @@ int TestExampe(int iWriteThreadNum=1,int iReadThreadNum=1,int iDataBlockLen=1024
  */
 int main(int argc,char *argv[])
 {
-
+    LOG->Init();
     // test_struct();
 
     TestMain();
