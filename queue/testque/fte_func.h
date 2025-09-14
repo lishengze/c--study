@@ -118,10 +118,14 @@ void con_func(int id, vector<uint32_t>& vec, T& queue, std::atomic<uint32_t>& co
 
 template <typename T>
 void write_thread_func_mpmc(tech::mpmc_queue<T>& queue, std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount, MetaData metaData) {
+    while(ulAtoWriteCount < metaData.iWriteBlockCount) {
 
+    }
 }
 
 template <typename T>
 void read_thread_func_mpmc(tech::mpmc_queue<T>& queue, std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, std::vector<unsigned long long>& vecCostTime, MetaData metaData) {
-
+    while(ulAtoReadCount < metaData.iWriteBlockCount || queue.size()) {
+        
+    }
 }
