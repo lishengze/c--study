@@ -14,6 +14,29 @@ using namespace std;
 
 #define MAX_POP_TIME 1000000000*3600 // 1h
 
+enum class ProcessStatus {
+    NotInit = 0,
+    Running = 1,
+    Stop = 2,
+};
+
+enum class ReadType {
+    Simple = 0,     // 普通读取;
+    Position = 1,        // 位置读取;
+};
+
+enum class QueueType {
+    Both = 0,   // 两种队列都测试;
+    Quant = 1,  // Quant 队列测试;
+    Mpmc = 2,   // mpmc 队列测试;
+};
+
+enum class BlockType {
+    DYNAMIC = 0,   // 动态分配内存;
+    FixedStruct = 1,   // 固定大小数据块;
+    FixedPOD = 2,   // 固定大小 POD 类型数据块;
+};
+
 struct MetaData {
     unsigned int iMemMBSize;
     unsigned int iWriteThreadCount;
@@ -21,6 +44,7 @@ struct MetaData {
     unsigned int iSleepTimeUs;    
     unsigned int iReadType;
     unsigned int iWriteSecs;
+    unsigned int iReadSecs;
     unsigned int iWriteBlockCount;
     unsigned int iFixedBlock;   // 0 - 可变，1 - 固定 -结构体, 2 - 固定 - unsigned long long 极限测试读写性能;
     unsigned int iQueueType;    // 1 - Quant 队列, 2 - mpmc 队列，0 - 两者都测试;
@@ -32,6 +56,7 @@ struct MetaData {
         iSleepTimeUs = 0;
         iReadType = 0;
         iWriteSecs = 0;
+        iReadSecs = 0;
         iWriteBlockCount = 0;
         iFixedBlock = 0;
         iQueueType = 0;
@@ -44,6 +69,7 @@ struct MetaData {
                "iSleepTimeUs=" + std::to_string(iSleepTimeUs) + ",\n"
                "iReadType=" + std::to_string(iReadType) + ",\n"
                "iWriteSecs=" + std::to_string(iWriteSecs) + ",\n"
+               "iReadSecs=" + std::to_string(iReadSecs) + ",\n"
                "iWriteBlockCount=" + std::to_string(iWriteBlockCount) + ",\n"
                "iFixedBlock=" + std::to_string(iFixedBlock) + ",\n"
                "iQueueType=" + std::to_string(iQueueType) + ",\n";
@@ -66,6 +92,9 @@ struct MetaData {
             return false;
         }
         if (!GetJsonUnsignedIntField(jsonSrc, "iWriteSecs", iWriteSecs, sErrMsg)) {
+            return false;
+        }
+        if (!GetJsonUnsignedIntField(jsonSrc, "iReadSecs", iReadSecs, sErrMsg)) {
             return false;
         }
         if (!GetJsonUnsignedIntField(jsonSrc, "iWriteBlockCount", iWriteBlockCount, sErrMsg)) {
@@ -96,6 +125,14 @@ struct DataBlockFixed {
         size_ = 0;
         array_size_ = 512;
     }
+    DataBlockFixed(const DataBlockFixed& other) {
+        printf("DataBlockFixed(const DataBlockFixed& other) \n");
+        push_time_ = other.push_time_;
+        pop_time_ = other.pop_time_;
+        size_ = other.size_;
+        array_size_ = other.array_size_;
+        memcpy(data_, other.data_, array_size_);
+    }    
 };
 
 using DataBlockFixedPtr = std::shared_ptr<DataBlockFixed>; 

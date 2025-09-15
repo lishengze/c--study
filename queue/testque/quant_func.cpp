@@ -31,9 +31,12 @@ void *read_thread_func_quant_pos(int& iStopFlag, int64& readPos, que_proc_buf& q
         // 从指定位置读取数据
         while((len = queProBuf.read_get(pbuf,readPos)) > 0){
             unsigned long long ulPushTime = 0;
-            unsigned long long ulPopTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            unsigned long long ulPopTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
-            if (metaData.iFixedBlock == 1) {
+                if (metaData.iFixedBlock == (int)(BlockType::FixedPOD)) {
+                    ulPushTime = *((unsigned long long*)pbuf);
+                }
+                else if (metaData.iFixedBlock == (int)(BlockType::FixedStruct)){
                 DataBlockFixed* pFixedBlock = (DataBlockFixed*)pbuf;
                 // printf("read push_time=%lld\n",pFixedBlock->push_time_);
                 ulPushTime = pFixedBlock->push_time_;                    
@@ -116,7 +119,7 @@ bool IsWriteEnd(MetaData& metaData, bool isStopFlag, int writeIndex, unsigned lo
     if (isStopFlag != 1) return true;
 
     if (metaData.iWriteSecs > 0) {  // 写入时间限制模式
-        unsigned long long ulCurTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        unsigned long long ulCurTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
         if (ulCurTime - ulStartNanoTime >= metaData.iWriteSecs * 1000000000) {
             return true;
         }
@@ -153,7 +156,7 @@ void write_thread_func_quant(int& iStopFlag, que_proc_buf& queProBuf, std::vecto
     int32 i= 0;       // 循环计数器
     char *pbuf;       // 指向队列缓冲区的指针
     int64 tpos;       // 写入位置
-    unsigned long long ulStartNanoTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    unsigned long long ulStartNanoTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
 
     do{
@@ -194,9 +197,13 @@ void write_thread_func_quant(int& iStopFlag, que_proc_buf& queProBuf, std::vecto
             }while(iStopFlag == 1);  // 当标志为1时继续尝试
 
             if(tpos >0){                
-                if (metaData.iFixedBlock == 1) {
+                if (metaData.iFixedBlock == (int)(BlockType::FixedPOD)) {
+                    unsigned long long ulPushTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+                    *((unsigned long long*)pbuf) = ulPushTime;
+                }
+                else if (metaData.iFixedBlock == (int)(BlockType::FixedStruct)) {
                     //POD类型的数据，可以直接拷贝;
-                    pFixedBlock->push_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    pFixedBlock->push_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
                     memcpy(pbuf,pFixedBlock.get(),iBufferSize); 
                     // printf("write push_time=%lld\n",pFixedBlock->push_time_);
                 } else {
@@ -229,9 +236,13 @@ void write_thread_func_quant(int& iStopFlag, que_proc_buf& queProBuf, std::vecto
             }while(iStopFlag == 1);  // 当标志为1时继续尝试
             
             if(tpos >0){
-                if (metaData.iFixedBlock == 1) { 
+                if (metaData.iFixedBlock == (int)(BlockType::FixedPOD)) {
+                    unsigned long long ulPushTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+                    *((unsigned long long*)pbuf) = ulPushTime;
+                }
+                else if (metaData.iFixedBlock == (int)(BlockType::FixedStruct)){ 
                     //POD类型的数据，可以直接拷贝;
-                    pFixedBlock->push_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    pFixedBlock->push_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
                     memcpy(pbuf,pFixedBlock.get(),iBufferSize); 
                     // printf("write push_time=%lld\n",pFixedBlock->push_time_);
                 } else {
@@ -249,7 +260,7 @@ void write_thread_func_quant(int& iStopFlag, que_proc_buf& queProBuf, std::vecto
         }        
     } while(!IsWriteEnd(metaData, iStopFlag, count, ulStartNanoTime));  // 当标志为1时继续运行，为2时退出
     
-    unsigned long long ulEndNanoTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    unsigned long long ulEndNanoTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
     TEST_LOG_DETAIL( "[END] Write Thread ulAtoWriteCount=" + std::to_string(ulAtoWriteCount) + ",count=" + std::to_string(count) + ",time=" + std::to_string((ulEndNanoTime - ulStartNanoTime)/1000)  + " micros");
 
@@ -284,9 +295,12 @@ void read_thread_func_quant_simple(int& iStopFlag, que_proc_buf& queProBuf,  std
             // 单消费者模式 - 直接读取并提交
             while((len = queProBuf.read_get(pbuf)) > 0){
                 unsigned long long ulPushTime = 0;
-                unsigned long long ulPopTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                unsigned long long ulPopTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
-                if (metaData.iFixedBlock == 1) {
+                if (metaData.iFixedBlock == (int)(BlockType::FixedPOD)) {
+                    ulPushTime = *((unsigned long long*)pbuf);
+                }
+                else if (metaData.iFixedBlock == (int)(BlockType::FixedStruct)) {
                     DataBlockFixed* pFixedBlock = (DataBlockFixed*)pbuf;
                     // printf("read push_time=%lld\n",pFixedBlock->push_time_);
                     ulPushTime = pFixedBlock->push_time_;                    
@@ -318,7 +332,7 @@ void read_thread_func_quant_simple(int& iStopFlag, que_proc_buf& queProBuf,  std
             // 多消费者模式 - 使用弹出接口
             while((len = queProBuf.read_pop(tcache,sizeof(tcache))) > 0){
                 unsigned long long ulPushTime = 0;
-                unsigned long long ulPopTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                unsigned long long ulPopTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
                 if (metaData.iFixedBlock == 1) {
                     DataBlock* pBlock = (DataBlock*)pbuf;

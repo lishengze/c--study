@@ -1,5 +1,7 @@
 #include "test.h"
 #include "quant_func.h"
+#include "fte_func.h"
+#include "struct.h"
 
 
 
@@ -25,34 +27,6 @@ using threadPtr = std::shared_ptr<std::thread>;
 *  共享内存大小: 10-100MB 也就是队列的容量;
 */
 
-
-void AnaRst(std::vector<DataBlockPtr>& vecPushBlocks, std::vector<DataBlockPtr>& vecPopBlocks, MetaData metaData) {
-    unsigned long long ulMin = 3600000000000; // 1小时
-    unsigned long long ulMax = 0;
-    unsigned long long ulAve = 0;
-    unsigned long long ulSum = 0;
-    std::vector<unsigned long long> vecTime;
-    for (auto& pBlock : vecPopBlocks) {
-        unsigned long long ulTime = pBlock->pop_time_ - pBlock->push_time_;
-        // printf("pop_time=%lld, push_time=%lld, time=%lld\n", pBlock->pop_time_, pBlock->push_time_, ulTime);
-        if(ulTime < ulMin)
-            ulMin = ulTime;
-        if(ulTime > ulMax)
-            ulMax = ulTime;
-        ulSum += ulTime;
-        vecTime.push_back(ulTime);
-    }
-
-    std::sort(vecTime.begin(), vecTime.end());
-
-    ulAve = ulSum / vecPopBlocks.size();
-
-    unsigned long long ul50 = vecTime[std::floor(vecTime.size()/2)];
-    unsigned long long ul75 = vecTime[std::floor(vecTime.size()*75/100)];
-    unsigned long long ul90 = vecTime[std::floor(vecTime.size()*9/10)];
-    
-    printf("min=%lld,max=%lld,ave=%lld,50%%=%lld,75%%=%lld,90%%=%lld\n",ulMin,ulMax,ulAve,ul50,ul75,ul90);   
-}
 
 void AnaRst(std::vector<unsigned long long>& vecTime, MetaData metaData) {
     unsigned long long ulMin = 3600000000000; // 1小时
@@ -93,9 +67,13 @@ int test_quant(MetaData& metaData) {
     // 初始化共享内存相关;
     unsigned long  ulQueSize = (metaData.iMemMBSize<<20);  // 转换为字节(MB -> B)    
 
-    // 计算所需共享内存大小
+    // 计算所需内存大小
     unsigned long  ulMemorySize = que_proc_buf::need_buf_size(ulQueSize);
+
+    TEST_LOG_DETAIL("Memory Size=" + std::to_string(ulMemorySize) + "B, Que Size=" + std::to_string(ulQueSize) + " B");
+
     ulMemorySize += sizeof(que_proc_info);  // 加上队列元数据大小
+    
     
     void *pSharedMem = NULL;
 
@@ -202,24 +180,127 @@ int test_quant(MetaData& metaData) {
     return 0;
 }
 
+// template <typename T>
+// void write_thread_func_mpmc(ProcessStatus& eProcStatus, tech::mpmc_queue<T>& queue, std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount, MetaData& metaData)
+
+// template <typename T>
+// void read_thread_func_mpmc(ProcessStatus& eProcStatus, tech::mpmc_queue<T>& queue, std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
+//                             std::vector<unsigned long long>& vecCostTime, MetaData& metaData)
+
 int test_mpmc(MetaData& metaData) {
     TEST_LOG_DETAIL("****************Test MPMC Start****************\n");
 
-    unsigned long  ulQueSize = (metaData.iMemMBSize<<20);  // 转换为字节(MB -> B)    
+    unsigned long  ulQueSize = (metaData.iMemMBSize<<10);  // 转换为字节(MB -> B)    
 
-    // 计算所需共享内存大小
+    // 计算所需内存大小
     unsigned long  ulMemorySize = que_proc_buf::need_buf_size(ulQueSize);
+
+    std::vector<threadPtr> vecWriteTheads;
+    vecWriteTheads.reserve(metaData.iWriteThreadCount);
+
+    std::vector<threadPtr> vecReadTheads;
+    vecReadTheads.reserve(metaData.iReadThreadCount);   
     
+    std::vector<unsigned long long> vecCostTime;
+    vecCostTime.reserve(metaData.iWriteBlockCount);
+
+    ProcessStatus eProcStatus = ProcessStatus::NotInit;          
+    std::atomic<unsigned long long> ulAtoReadCount(0);  // 原子计数器
+    std::atomic<unsigned long long> ulAtoWriteCount(0);  // 原子计数器
+    std::mutex mtx;
+
+    unsigned int uiQueueSize = 1000;
+
+    // tech::mpmc_queue<int> queue;
+    // queue.create(uiQueueSize);
+
+    if (metaData.iFixedBlock == 1) {
+        tech::mpmc_queue<DataBlockFixed> queue;
+        queue.create(uiQueueSize);
+
+        /* 开启读线程 */
+        for (int i = 0; i < metaData.iReadThreadCount; i++) {
+            threadPtr pThread = std::make_shared<std::thread>(read_thread_func_mpmc<DataBlockFixed>, std::ref(eProcStatus), std::ref(queue),  
+                                                                std::ref(mtx), std::ref(ulAtoReadCount), std::ref(vecCostTime), std::ref(metaData));
+            if (nullptr == pThread) {
+                TEST_LOG_DETAIL("create read simple thread failed\n");
+                continue;
+            }
+            vecReadTheads.push_back(pThread);
+        }
+
+
+        /* 开启写线程 */
+        for (int i = 0; i < metaData.iWriteThreadCount; i++) {
+            threadPtr pThread = std::make_shared<std::thread>(write_thread_func_mpmc<DataBlockFixed>, std::ref(eProcStatus), std::ref(queue),  
+                                    std::ref(mtx), std::ref(ulAtoWriteCount), std::ref(metaData));
+            if (nullptr == pThread) {
+                TEST_LOG_DETAIL("create write thread failed\n");
+                continue;
+            }
+            vecWriteTheads.push_back(pThread);
+        }        
+    }
+    else if (metaData.iFixedBlock == 2) {
+        tech::mpmc_queue<unsigned long long> queue;
+        queue.create(uiQueueSize);
+
+        /* 开启读线程 */
+        for (int i = 0; i < metaData.iReadThreadCount; i++) {
+            threadPtr pThread = std::make_shared<std::thread>(read_thread_func_mpmc<unsigned long long>, std::ref(eProcStatus), std::ref(queue),  
+                                                                std::ref(mtx), std::ref(ulAtoReadCount), std::ref(vecCostTime), std::ref(metaData));
+            if (nullptr == pThread) {
+                TEST_LOG_DETAIL("create read simple thread failed\n");
+                continue;
+            }
+            vecReadTheads.push_back(pThread);
+        }
+
+
+        /* 开启写线程 */
+        for (int i = 0; i < metaData.iWriteThreadCount; i++) {
+            threadPtr pThread = std::make_shared<std::thread>(write_thread_func_mpmc<unsigned long long>, std::ref(eProcStatus), std::ref(queue),  
+                                    std::ref(mtx), std::ref(ulAtoWriteCount), std::ref(metaData));
+            if (nullptr == pThread) {
+                TEST_LOG_DETAIL("create write thread failed\n");
+                continue;
+            }
+            vecWriteTheads.push_back(pThread);
+        }           
+    }
+
+    
+    eProcStatus = ProcessStatus::Running;
+
+    for (auto pThread : vecWriteTheads) {
+        if (pThread->joinable()) {
+            pThread->join();
+        }
+    }
+
+    for (auto pThread : vecReadTheads) {
+            if (pThread->joinable()) {
+                pThread->join();
+            }
+    }
+
+    AnaRst(vecCostTime,metaData);
+
+
+    TEST_LOG_DETAIL("[END] MPMC Thread All end, \n");    
+
+    return 1;
 }
 
 void TestMain() {
 
     std::string sConfigFileName = GetWorkDir() + "config.json";
-    std::cout << "sConfigFileName: " << sConfigFileName << std::endl;
+    // std::cout << "sConfigFileName: " << sConfigFileName << std::endl;
     njson fileJson;
     Error error;
     if ((error = GetJsonFromFile(fileJson, sConfigFileName)).IsFailed()) {
-        std::cout << "GetJsonFromFile failed, error: " << error.Str() << std::endl;
+        TEST_LOG_FAIL("GetJsonFromFile failed, error: " + error.Str() + "\n");
+        return;
     }
 
     MetaData metaData;
@@ -228,12 +309,13 @@ void TestMain() {
         for (njson::iterator it = fileJson.begin(); it != fileJson.end(); ++it) {           
             njson jsAtom = *it;
             if (!metaData.InitFromJson(jsAtom, sErrMsg)) {
-                std::cout << "InitFromJson failed, error: " << sErrMsg << std::endl;
+                TEST_LOG_ERROR( "InitFromJson failed, error: " + sErrMsg + "\n");
+                continue;
             }
             TEST_LOG_DETAIL("Test Meta Info:\n" + metaData.str());
 
             if (metaData.iQueueType == 0) {
-                // test_mpmc(metaData);
+                test_mpmc(metaData);
                 test_quant(metaData);
             }
             else if (metaData.iQueueType == 1) {

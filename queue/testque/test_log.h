@@ -108,15 +108,15 @@ public:
 
 
 
-#define LOG ThreadSafeSingleton<TestLog>::DoubleCheckInstance()
+#define TEST_LOG ThreadSafeSingleton<TestLog>::DoubleCheckInstance()
 
-#define TEST_LOG_INFO(sCaseName, jsonCaseRst) LOG->logInfo(sCaseName, jsonCaseRst);
-#define LOG_RST_PASS(sCaseInfo) LOG->logResut(sCaseInfo, true);
-#define LOG_RST_FAILD(sCaseInfo, sErrMsg) LOG->logResut(sCaseInfo, false, sErrMsg);
-#define LOG_RST(info) LOG->logResult(info);
-// #define TEST_LOG_DETAIL(info) LOG->logInfoBase(0, info);
+#define TEST_LOG_INFO(sCaseName, jsonCaseRst) TEST_LOG->logInfo(sCaseName, jsonCaseRst);
+#define LOG_RST_PASS(sCaseInfo) TEST_LOG->logResut(sCaseInfo, true);
+#define LOG_RST_FAILD(sCaseInfo, sErrMsg) TEST_LOG->logResut(sCaseInfo, false, sErrMsg);
+#define LOG_RST(info) TEST_LOG->logResult(info);
+// #define TEST_LOG_DETAIL(info) TEST_LOG->logInfoBase(0, info);
 
-#define TEST_LOG_DETAIL(info) LOG->logInfoBase(0, LOG_HEADER + string("|") + info);
-#define LOG_DEBUG(info) LOG->logInfoBase(1, LOG_HEADER + string("|") + info);
-#define LOG_WARN(info) LOG->logInfoBase(2, LOG_HEADER + string("|") + info);
-#define LOG_FAIL(info) LOG->logInfoBase(3, LOG_HEADER + string("|") + info);
+#define TEST_LOG_DETAIL(info) TEST_LOG->logInfoBase(0, LOG_HEADER + string("|") + info);
+#define TEST_LOG_WARN(info) TEST_LOG->logInfoBase(1, LOG_HEADER + string("|") + info);
+#define TEST_LOG_ERROR(info) TEST_LOG->logInfoBase(2, LOG_HEADER + string("|") + info);
+#define TEST_LOG_FAIL(info) TEST_LOG->logInfoBase(3, LOG_HEADER + string("|") + info);
