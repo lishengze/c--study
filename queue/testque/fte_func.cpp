@@ -15,17 +15,10 @@
 /// @param ulStartWriteTimeNanosecs 写入开始时间
 /// @return true 写入结束
 /// @return false 写入未结束
-bool IsFteWriteEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoWriteCount, MetaData& metaData, unsigned long long& ulStartWriteTimeNanosecs) {
+bool IsFteWriteEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoWriteCount, MetaData& metaData) {
     if (ProcessStatus::Running != eProcStatus) return true;
 
-    if (metaData.iWriteBlockCount > 0 && ulAtoWriteCount++ < metaData.iWriteBlockCount) return true;
-
-    if (metaData.iWriteSecs > 0) {
-        unsigned long long ulEndTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-        if (ulEndTimeNanosecs - ulStartWriteTimeNanosecs >= metaData.iWriteSecs * NANO_PER_SECOND) {
-            return true;
-        }
-    }
+    if (ulAtoWriteCount++ < metaData.iWriteBlockCount && metaData.iWorkSecs == 0 && metaData.iWriteBlockCount > 0) return true;
 
     return false;
 }
@@ -36,17 +29,10 @@ bool IsFteWriteEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& 
 /// @param ulStartWriteTimeNanosecs 写入开始时间
 /// @return true 写入结束
 /// @return false 写入未结束
-bool IsFteReadEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoReadCount, MetaData& metaData, unsigned long long& ulStartReadTimeNanosecs) {
+bool IsFteReadEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoReadCount, MetaData& metaData) {
     if (ProcessStatus::Running != eProcStatus) return true;
 
-    if (metaData.iWriteBlockCount > 0 && ulAtoReadCount++ < metaData.iWriteBlockCount) return true;
-
-    if (metaData.iWriteSecs > 0 || metaData.iReadSecs > 0) {
-        unsigned long long ulEndTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-        if (ulEndTimeNanosecs - ulStartReadTimeNanosecs >= std::max(metaData.iWriteSecs, metaData.iReadSecs) * NANO_PER_SECOND) {
-            return true;
-        }
-    }
+    if (ulAtoReadCount++ < metaData.iWriteBlockCount && metaData.iWriteBlockCount > 0 && metaData.iWorkSecs == 0) return true;
 
     return false;
 }
@@ -57,10 +43,8 @@ void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mp
 
     TEST_LOG_DETAIL("[START] MPMC Write Thread DataBlockFixed Start ***********************\n");
     while(eProcStatus == ProcessStatus::NotInit ); // wait for init
-    unsigned long long ulStartWriteTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
-
-    while(IsFteWriteEnd(eProcStatus, ulAtoWriteCount, metaData, ulStartWriteTimeNanosecs)) {
+    while(!IsFteWriteEnd(eProcStatus, ulAtoWriteCount, metaData)) {
             DataBlockFixed dataBlock;
             dataBlock.size_ = sizeof(DataBlockFixed);
             dataBlock.push_time_  = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
@@ -86,10 +70,7 @@ void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech
     TEST_LOG_DETAIL("[START] MPMC Write Thread unsigned long long Start ***********************\n");
     while(eProcStatus == ProcessStatus::NotInit ); // wait for init
 
-    unsigned long long ulStartWriteTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-
-
-    while(IsFteWriteEnd(eProcStatus, ulAtoWriteCount, metaData, ulStartWriteTimeNanosecs)) {
+    while(!IsFteWriteEnd(eProcStatus, ulAtoWriteCount, metaData)) {
             unsigned long long ulCurTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
             
             queue.push(ulCurTimeNanosecs);
@@ -113,15 +94,13 @@ void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpm
     TEST_LOG_DETAIL("[START] MPMC Read Thread DataBlockFixed Start ***********************\n");
     while(eProcStatus == ProcessStatus::NotInit ); // wait for init
 
-    // unsigned long long ulStartReadTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    while(!IsFteReadEnd(eProcStatus, ulAtoReadCount, metaData) ) {
+        DataBlockFixed dataBlock;
+        queue.pop(dataBlock);
+        unsigned long long ulCurTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
-    // while(IsFteReadEnd(eProcStatus, ulAtoReadCount, metaData, ulStartReadTimeNanosecs) ) {
-    //     DataBlockFixed dataBlock;
-    //     queue.pop(dataBlock);
-    //     unsigned long long ulCurTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-
-    //     vecCostTime.push_back(ulCurTimeNanosecs - dataBlock.push_time_);
-    // }
+        vecCostTime.push_back(ulCurTimeNanosecs - dataBlock.push_time_);
+    }
 
     TEST_LOG_DETAIL("[END] MPMC Read Thread DataBlockFixed End ulAtoReadCount: "
                     + std::to_string(ulAtoReadCount)
@@ -134,14 +113,13 @@ void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech:
 
     TEST_LOG_DETAIL("[START] MPMC Read Thread unsigned long long Start ***********************\n");
     while(eProcStatus == ProcessStatus::NotInit ); // wait for init
-    // unsigned long long ulStartReadTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
-    // while(IsFteReadEnd(eProcStatus, ulAtoReadCount, metaData, ulStartReadTimeNanosecs) ) {
-    //     unsigned long long ulCurTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    //     unsigned long long ulPushTimeNanosecs = 0;
-    //     queue.pop(ulPushTimeNanosecs);
-    //     vecCostTime.push_back(ulCurTimeNanosecs - ulPushTimeNanosecs);
-    // }
+    while(!IsFteReadEnd(eProcStatus, ulAtoReadCount, metaData) ) {
+        unsigned long long ulCurTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        unsigned long long ulPushTimeNanosecs = 0;
+        queue.pop(ulPushTimeNanosecs);
+        vecCostTime.push_back(ulCurTimeNanosecs - ulPushTimeNanosecs);
+    }
 
     TEST_LOG_DETAIL("[END] MPMC Read Thread unsigned long long End ulAtoReadCount: "
                     + std::to_string(ulAtoReadCount)

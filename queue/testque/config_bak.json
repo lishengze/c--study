@@ -5,7 +5,7 @@
         "iReadThreadCount":1,
         "iSleepTimeUs":0,
         "iReadType":0,
-        "iWriteSecs":0,
+        "iWorkSecs":0,
         "iWriteBlockCount":10000,
         "iFixedBlock":1
     },
@@ -15,7 +15,7 @@
         "iReadThreadCount":1,
         "iSleepTimeUs":0,
         "iReadType":0,
-        "iWriteSecs":0,
+        "iWorkSecs":0,
         "iWriteBlockCount":20000,
         "iFixedBlock":1
     }  ,    
@@ -25,7 +25,7 @@
         "iReadThreadCount":1,
         "iSleepTimeUs":0,
         "iReadType":0,
-        "iWriteSecs":0,
+        "iWorkSecs":0,
         "iWriteBlockCount":20000,
         "iFixedBlock":1
     }  ,      
@@ -35,7 +35,7 @@
         "iReadThreadCount":1,
         "iSleepTimeUs":0,
         "iReadType":0,
-        "iWriteSecs":0,
+        "iWorkSecs":0,
         "iWriteBlockCount":40000,
         "iFixedBlock":1
     }  ,  
@@ -45,7 +45,7 @@
         "iReadThreadCount":1,
         "iSleepTimeUs":0,
         "iReadType":0,
-        "iWriteSecs":0,
+        "iWorkSecs":0,
         "iWriteBlockCount":40000,
         "iFixedBlock":1
     }  ,      
@@ -55,7 +55,7 @@
         "iReadThreadCount":1,
         "iSleepTimeUs":0,
         "iReadType":0,
-        "iWriteSecs":0,
+        "iWorkSecs":0,
         "iWriteBlockCount":80000,
         "iFixedBlock":1
     } ,
@@ -65,7 +65,7 @@
         "iReadThreadCount":1,
         "iSleepTimeUs":0,
         "iReadType":0,
-        "iWriteSecs":0,
+        "iWorkSecs":0,
         "iWriteBlockCount":80000,
         "iFixedBlock":1
     }                   

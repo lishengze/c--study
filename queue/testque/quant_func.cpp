@@ -118,9 +118,9 @@ void *read_thread_func_quant_cmt(int& iStopFlag, que_proc_buf& queProBuf, vector
 bool IsWriteEnd(MetaData& metaData, bool isStopFlag, int writeIndex, unsigned long long ulStartNanoTime) {
     if (isStopFlag != 1) return true;
 
-    if (metaData.iWriteSecs > 0) {  // 写入时间限制模式
+    if (metaData.iWorkSecs > 0) {  // 写入时间限制模式
         unsigned long long ulCurTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-        if (ulCurTime - ulStartNanoTime >= metaData.iWriteSecs * 1000000000) {
+        if (ulCurTime - ulStartNanoTime >= metaData.iWorkSecs * 1000000000) {
             return true;
         }
     }
@@ -138,14 +138,14 @@ void write_thread_func_quant(int& iStopFlag, que_proc_buf& queProBuf, std::vecto
 {
     // std::cout << "[START] write_thread_func_quta , metaData=" << metaData.str() << std::endl;
 
-    // 计算线程休眠时间，根据写入线程数量动态调整
-    int32 tus = metaData.iWriteThreadCount/2;
-    if(tus == 0){
-        tus = 1;
-    }
-    // 若只有一个读取线程，增加写入线程休眠时间，降低队列压力
-    if(metaData.iReadThreadCount == 1)
-        tus++;
+    // // 计算线程休眠时间，根据写入线程数量动态调整
+    // int32 tus = metaData.iWriteThreadCount/2;
+    // if(tus == 0){
+    //     tus = 1;
+    // }
+    // // 若只有一个读取线程，增加写入线程休眠时间，降低队列压力
+    // if(metaData.iReadThreadCount == 1)
+    //     tus++;
     
     // 等待启动信号(iStopFlag != 0)
     while(iStopFlag == 0);

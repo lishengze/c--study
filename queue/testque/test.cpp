@@ -28,7 +28,7 @@ using threadPtr = std::shared_ptr<std::thread>;
 */
 
 
-void AnaRst(std::vector<unsigned long long>& vecTime, MetaData metaData) {
+void AnaRst(std::vector<unsigned long long>& vecTime, MetaData metaData, string sQueueName) {
     unsigned long long ulMin = 3600000000000; // 1小时
     unsigned long long ulMax = 0;
     unsigned long long ulAve = 0;
@@ -47,11 +47,11 @@ void AnaRst(std::vector<unsigned long long>& vecTime, MetaData metaData) {
     unsigned long long ul75 = vecTime[std::floor(vecTime.size()*75/100)];
     unsigned long long ul90 = vecTime[std::floor(vecTime.size()*9/10)];
     
-    std::string strMsg =string("*********Test Meta Info:\n") + metaData.str() 
-                                + "Test Static Info:\ncount=" + std::to_string(vecTime.size()) 
+    std::string strMsg =string("*********Test Result::") + sQueueName + "*********\n" + metaData.str() 
+                                + "\ncount=" + std::to_string(vecTime.size()) 
                                 + ",min=" + std::to_string(ulMin) + ",max=" + std::to_string(ulMax) + ",ave=" + std::to_string(ulAve) 
                                 + ",50%=" + std::to_string(ul50) + ",75%=" + std::to_string(ul75) + ",90%=" + std::to_string(ul90) 
-                                + "\n*********";
+                                + "\n*********\n";
    
     // printf("min=%lld,max=%lld,ave=%lld,50%%=%lld,75%%=%lld,90%%=%lld\n",ulMin,ulMax,ulAve,ul50,ul75,ul90);   
 
@@ -64,6 +64,10 @@ void AnaRst(std::vector<unsigned long long>& vecTime, MetaData metaData) {
 
 int test_quant(MetaData& metaData) {
     TEST_LOG_DETAIL("****************Test Quant Start****************\n");
+    if (metaData.iWriteBlockCount == 0 && metaData.iWorkSecs == 0) {
+        TEST_LOG_ERROR("Test MPMC failed, both write block count and write secs is 0\n");
+    }
+
     // 初始化共享内存相关;
     unsigned long  ulQueSize = (metaData.iMemMBSize<<20);  // 转换为字节(MB -> B)    
 
@@ -106,7 +110,7 @@ int test_quant(MetaData& metaData) {
     std::vector<unsigned long long> vecCostTime;
     vecCostTime.reserve(metaData.iWriteBlockCount);
 
-    int iStopFlag = 1;        
+    int eProcStatus = 1;        
 
     std::atomic<unsigned long long> ulAtoReadCount(0);  // 原子计数器
     std::atomic<unsigned long long> ulAtoWriteCount(0);  // 原子计数器
@@ -115,7 +119,7 @@ int test_quant(MetaData& metaData) {
     for (int i = 0; i < metaData.iReadThreadCount; i++) {
         if(metaData.iReadType == 0){
             // 创建普通读取线程
-            threadPtr pThread = std::make_shared<std::thread>(read_thread_func_quant_simple, std::ref(iStopFlag), std::ref(queProBuf),  
+            threadPtr pThread = std::make_shared<std::thread>(read_thread_func_quant_simple, std::ref(eProcStatus), std::ref(queProBuf),  
                                                                 std::ref(vecPopBlocks), std::ref(vecCostTime), std::ref(ulAtoReadCount), metaData);
             if (nullptr == pThread) {
                 printf("create read simple thread failed\n");
@@ -125,7 +129,7 @@ int test_quant(MetaData& metaData) {
         }
         else{
             // 创建位置模式读取线程
-            threadPtr pThread = std::make_shared<std::thread>(read_thread_func_quant_pos, std::ref(iStopFlag), std::ref(vecReadPos[i]), std::ref(queProBuf),  
+            threadPtr pThread = std::make_shared<std::thread>(read_thread_func_quant_pos, std::ref(eProcStatus), std::ref(vecReadPos[i]), std::ref(queProBuf),  
                                                     std::ref(vecPopBlocks), std::ref(vecCostTime), std::ref(ulAtoReadCount), metaData);
             if (nullptr == pThread) {
                 printf("create read pos thread failed\n");
@@ -137,7 +141,7 @@ int test_quant(MetaData& metaData) {
 
     if (metaData.iReadType > 0) {
         // 创建提交线程
-        threadPtr pThread = std::make_shared<std::thread>(read_thread_func_quant_cmt, std::ref(iStopFlag), std::ref(queProBuf),  std::ref(vecReadPos), std::ref(vecPopBlocks), metaData);    
+        threadPtr pThread = std::make_shared<std::thread>(read_thread_func_quant_cmt, std::ref(eProcStatus), std::ref(queProBuf),  std::ref(vecReadPos), std::ref(vecPopBlocks), metaData);    
         if (nullptr == pThread) {
             printf("create commit thread failed\n");
         }
@@ -146,7 +150,7 @@ int test_quant(MetaData& metaData) {
 
     /* 开启写线程 */
     for (int i = 0; i < metaData.iWriteThreadCount; i++) {
-        threadPtr pThread = std::make_shared<std::thread>(write_thread_func_quant, std::ref(iStopFlag), std::ref(queProBuf),  
+        threadPtr pThread = std::make_shared<std::thread>(write_thread_func_quant, std::ref(eProcStatus), std::ref(queProBuf),  
                                 std::ref(vecPushBlocks), std::ref(ulAtoWriteCount), metaData);
         if (nullptr == pThread) {
             printf("create write thread failed\n");
@@ -155,7 +159,13 @@ int test_quant(MetaData& metaData) {
         vecWriteTheads.push_back(pThread);
     }
     
-    iStopFlag = 1;
+    eProcStatus = 1;
+
+    // 如果未设置写入的块数，则等待指定的时间
+    if (metaData.iWorkSecs > 0) {
+        std::this_thread::sleep_for(std::chrono::seconds(metaData.iWorkSecs));
+        eProcStatus = 2;
+    }
 
     for (auto pThread : vecWriteTheads) {
         if (pThread->joinable()) {
@@ -164,12 +174,14 @@ int test_quant(MetaData& metaData) {
     }
 
     for (auto pThread : vecReadTheads) {
-            if (pThread->joinable()) {
-                pThread->join();
-            }
+        if (pThread->joinable()) {
+            pThread->join();
+        }
     }
 
-    AnaRst(vecCostTime,metaData);
+
+
+    AnaRst(vecCostTime,metaData, "Quant_Queue");
 
     // 释放共享内存
     // comm_utils::close_shm(pSharedMem,"test_proc_que",ulMemorySize);
@@ -190,6 +202,10 @@ int test_quant(MetaData& metaData) {
 int test_mpmc(MetaData& metaData) {
     TEST_LOG_DETAIL("****************Test MPMC Start****************\n");
 
+    if (metaData.iWriteBlockCount == 0 && metaData.iWorkSecs == 0) {
+        TEST_LOG_ERROR("Test MPMC failed, both write block count and write secs is 0\n");
+    }
+
     unsigned long  ulQueSize = (metaData.iMemMBSize<<10);  // 转换为字节(MB -> B)    
 
     // 计算所需内存大小
@@ -209,7 +225,10 @@ int test_mpmc(MetaData& metaData) {
     std::atomic<unsigned long long> ulAtoWriteCount(0);  // 原子计数器
     std::mutex mtx;
 
-    unsigned int uiQueueSize = 1000;
+    unsigned int uiQueueSize = 1000;  // 队列长度
+    // if (metaData.iWriteBlockCount > 0) {
+    //     uiQueueSize = metaData.iWriteBlockCount;
+    // }
 
     // tech::mpmc_queue<int> queue;
     // queue.create(uiQueueSize);
@@ -272,6 +291,13 @@ int test_mpmc(MetaData& metaData) {
     
     eProcStatus = ProcessStatus::Running;
 
+    // 如果未设置写入的块数，则等待指定的时间
+    if (metaData.iWorkSecs > 0) {
+        std::this_thread::sleep_for(std::chrono::seconds(metaData.iWorkSecs));
+        eProcStatus = ProcessStatus::Stop;
+    }    
+    
+    
     for (auto pThread : vecWriteTheads) {
         if (pThread->joinable()) {
             pThread->join();
@@ -284,7 +310,9 @@ int test_mpmc(MetaData& metaData) {
             }
     }
 
-    AnaRst(vecCostTime,metaData);
+
+
+    AnaRst(vecCostTime,metaData, "MPMC_Queue");
 
 
     TEST_LOG_DETAIL("[END] MPMC Thread All end, \n");    
@@ -305,8 +333,9 @@ void TestMain() {
 
     MetaData metaData;
     string sErrMsg;    
-    if (fileJson.is_array()) {
-        for (njson::iterator it = fileJson.begin(); it != fileJson.end(); ++it) {           
+    njson jsCaseList = fileJson["CaseList"];
+    if (jsCaseList.is_array()) {
+        for (njson::iterator it = jsCaseList.begin(); it != jsCaseList.end(); ++it) {           
             njson jsAtom = *it;
             if (!metaData.InitFromJson(jsAtom, sErrMsg)) {
                 TEST_LOG_ERROR( "InitFromJson failed, error: " + sErrMsg + "\n");
@@ -324,5 +353,7 @@ void TestMain() {
                 test_mpmc(metaData);
             }
         }
+    } else {
+        TEST_LOG_ERROR("Test CaseList is not array\n");
     }
 }

@@ -43,7 +43,7 @@ struct MetaData {
     unsigned int iReadThreadCount;
     unsigned int iSleepTimeUs;    
     unsigned int iReadType;
-    unsigned int iWriteSecs;
+    unsigned int iWorkSecs;
     unsigned int iReadSecs;
     unsigned int iWriteBlockCount;
     unsigned int iFixedBlock;   // 0 - 可变，1 - 固定 -结构体, 2 - 固定 - unsigned long long 极限测试读写性能;
@@ -55,7 +55,7 @@ struct MetaData {
         iReadThreadCount = 0;
         iSleepTimeUs = 0;
         iReadType = 0;
-        iWriteSecs = 0;
+        iWorkSecs = 0;
         iReadSecs = 0;
         iWriteBlockCount = 0;
         iFixedBlock = 0;
@@ -68,7 +68,7 @@ struct MetaData {
                "iReadThreadCount=" + std::to_string(iReadThreadCount) + ",\n"
                "iSleepTimeUs=" + std::to_string(iSleepTimeUs) + ",\n"
                "iReadType=" + std::to_string(iReadType) + ",\n"
-               "iWriteSecs=" + std::to_string(iWriteSecs) + ",\n"
+               "iWorkSecs=" + std::to_string(iWorkSecs) + ",\n"
                "iReadSecs=" + std::to_string(iReadSecs) + ",\n"
                "iWriteBlockCount=" + std::to_string(iWriteBlockCount) + ",\n"
                "iFixedBlock=" + std::to_string(iFixedBlock) + ",\n"
@@ -91,7 +91,7 @@ struct MetaData {
         if (!GetJsonUnsignedIntField(jsonSrc, "iReadType", iReadType, sErrMsg)) {
             return false;
         }
-        if (!GetJsonUnsignedIntField(jsonSrc, "iWriteSecs", iWriteSecs, sErrMsg)) {
+        if (!GetJsonUnsignedIntField(jsonSrc, "iWorkSecs", iWorkSecs, sErrMsg)) {
             return false;
         }
         if (!GetJsonUnsignedIntField(jsonSrc, "iReadSecs", iReadSecs, sErrMsg)) {

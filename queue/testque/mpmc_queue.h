@@ -170,12 +170,12 @@ public:
     template <class... Args>
     void push(Args&&... args)
     {
-        printf("-------- mpmc_queue push\n");
+        // printf("-------- mpmc_queue push\n");
         // 获取并自增生产者ticket
         uint64_t ticket = push_ticket_++;
         auto index = idx(ticket);
         auto cur_turn = turn(ticket);
-        printf("-------- mpmc_queue push ticket: %ld, index: %ld, cur_turn: %d\n", ticket, index, cur_turn);
+        // printf("-------- mpmc_queue push ticket: %ld, index: %ld, cur_turn: %d\n", ticket, index, cur_turn);
         // 执行入队操作，可能阻塞
         slots_[index].enqueue(cur_turn, std::forward<Args>(args)...);
     }
@@ -299,16 +299,16 @@ element_slot():current_turn_(0){}
     template <class... Args>
     void enqueue(uint32_t turn, Args&&... args)
     {
-        printf("++++++ enqueue , turn: %d\n", turn);
+        // printf("++++++ enqueue , turn: %d\n", turn);
         auto cur_turn = current_turn_.load(std::memory_order_acquire);        
         // 等待直到可以入队
-        printf("++++++ enqueue , cur_turn: %d\n", cur_turn);
+        // printf("++++++ enqueue , cur_turn: %d\n", cur_turn);
         while (cur_turn != (turn << 1))
         {
             cur_turn = current_turn_.load(std::memory_order_acquire);
         }
         // 在元素存储位置原地构造对象
-        printf("++++++ enqueue , cur_turn: %d\n", cur_turn);
+        // printf("++++++ enqueue , cur_turn: %d\n", cur_turn);
         new (&element_) T(std::forward<Args>(args)...);
         // 更新状态为已入队，使用release内存序
         current_turn_.store(cur_turn + 1, std::memory_order_release);
@@ -424,14 +424,14 @@ element_slot():current_turn_(0),spin_lock_obj_(){}
     template <class... Args>
     void enqueue(uint32_t turn, Args&&... args)
     {
-        printf("+++++++ enqueue 2222\n");
+        // printf("+++++++ enqueue 2222\n");
         auto cur_turn = current_turn_.load(std::memory_order_acquire);
         while (cur_turn != (turn << 1))
         {
             cur_turn = current_turn_.load(std::memory_order_acquire);
         }
 
-        printf("+++++++ enqueue cur_turn: %d\n", cur_turn);
+        // printf("+++++++ enqueue cur_turn: %d\n", cur_turn);
         
         // 使用自旋锁保护临界区
         { 
