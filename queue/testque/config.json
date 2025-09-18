@@ -1,0 +1,28 @@
+{
+    "属性说明": {
+        "iMemMBSize": "Quant队列需要, 表示需要申请的内存大小，单位MB",
+        "iWriteThreadCount": "表示写线程数",
+        "iReadThreadCount": "表示读线程数",
+        "iSleepTimeUs": "表示写线程在写每个数据块时睡眠的时间，单位us, 0表示不睡眠",
+        "iReadType": "表示读线程的类型，0表示顺序读，1表示按照位置读取",
+        "iWorkSecs": "表示读写线程运行的时间，单位s",
+        "iWriteBlockCount": "表示写线程一共写的块数, 若是设置了 iWorkSecs，则此项设置无效",
+        "iFixedBlock": "表示写线程每次写的块大小是否固定， 1-表示固定大小的自定义结构体， 2-表示固定大小的内置变量，当前是unsigned long long, 0 - 表示随机大小的自定义结构体[MPMC队列无法测试]",
+        "iQueueType": "表示队列类型，1表示Quant队列，2表示MPMC队列, 0表示两个队列都测试"
+    },
+    "CaseList": 
+        [
+            {
+                "iMemMBSize":2,
+                "iWriteThreadCount":1,
+                "iReadThreadCount":1,
+                "iSleepTimeUs":1,
+                "iReadType":0,
+                "iWorkSecs":0,
+                "iWriteBlockCount":1000,
+                "iFixedBlock":1,
+                "iQueueType":1
+            }   
+        ]    
+}
+

@@ -1,0 +1,6 @@
+{
+  global:
+    check_path_type;  
+  local:
+    *;
+};

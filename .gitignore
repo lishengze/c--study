@@ -8,7 +8,7 @@ log/
 build/
 perf_data/
 gprof_data/
-*.so
+# *.so
 
 */__pycache_
 
@@ -16,7 +16,7 @@ lib/
 __pycache__/
 .vscode/
 
-*.so
+# *.so
 .cache/*
 .idea/*
 
