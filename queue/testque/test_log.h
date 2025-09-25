@@ -80,6 +80,8 @@ class TestLog {
 
 		void logInfoBase(int iLogLevel,  string info);
 
+		void logInfoBase(int iLogLevel,  string info, std::mutex& logMutex);
+
 public:
 	string	     sRstFileName;
 
@@ -120,3 +122,8 @@ public:
 #define TEST_LOG_WARN(info) TEST_LOG->logInfoBase(1, LOG_HEADER + string("|") + info);
 #define TEST_LOG_ERROR(info) TEST_LOG->logInfoBase(2, LOG_HEADER + string("|") + info);
 #define TEST_LOG_FAIL(info) TEST_LOG->logInfoBase(3, LOG_HEADER + string("|") + info);
+
+#define TEST_LOG_DETAIL_THREADS(info, mutex) TEST_LOG->logInfoBase(0, LOG_HEADER + string("|") + info, mutex);
+#define TEST_LOG_DEBUG_THREADS(info, mutex) TEST_LOG->logInfoBase(1, LOG_HEADER + string("|") + info, mutex);
+#define TEST_LOG_ERROR_THREADS(info,mutex) TEST_LOG->logInfoBase(2, LOG_HEADER + string("|") + info, mutex);
+#define TEST_LOG_FAIL_THREADS(info, mutex) TEST_LOG->logInfoBase(3, LOG_HEADER + string("|") + info, mutex);

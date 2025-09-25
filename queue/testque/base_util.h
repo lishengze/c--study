@@ -784,3 +784,5 @@ inline vector<string> StringSplit(const string &s, vector<string>& vecSeperator)
     return srcResult;
 }
 
+// 将整形纳秒按照每三位一个逗号的形式输出;
+ string NanoStr(unsigned long long ulNanoSecs);

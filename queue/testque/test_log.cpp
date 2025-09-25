@@ -249,3 +249,18 @@ void TestLog::logInfoBase(int iLogLevel,  string info) {
     }
     cout << msg << endl;
 }
+
+
+void TestLog::logInfoBase(int iLogLevel,  string info,  std::mutex& logMutex) {
+    std::lock_guard<std::mutex> lk(logMutex);
+
+    size_t pos = info.find_first_of("|");
+    string sLeftStr = info.substr(0, pos);
+    string sRightStr = info.substr(pos+1);
+    string msg = sLeftStr + mapLogLevelInfo_[iLogLevel] + " " + sRightStr;
+    for (int i = 0; i <= iLogLevel; ++i) {
+        *(vecFSHandler_[i]) << msg << "\n";
+        *(vecFSHandler_[i]) << std::unitbuf;
+    }
+    cout << msg << endl;
+}

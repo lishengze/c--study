@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <mutex>
 
 #include "struct.h"
 #include "mpmc_queue.h"
@@ -101,19 +102,27 @@ void pro_func(int id, T& queue, std::atomic<uint32_t>& pro_count, uint32_t max_c
 /// @param ulStartWriteTimeNanosecs 写入开始时间
 /// @return true 写入结束
 /// @return false 写入未结束
-bool IsFteWriteEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoWriteCount, MetaData& metaData, unsigned long long& ulStartWriteTimeNanosecs);
+bool IsFteWriteEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoWriteCount, 
+                    MetaData& metaData, unsigned long long& ulStartWriteTimeNanosecs);
 
 template <typename T>
-void write_thread_func_mpmc(ProcessStatus& eProcStatus, tech::mpmc_queue<T>& queue, std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount, MetaData& metaData) {
+void write_thread_func_mpmc(ProcessStatus& eProcStatus, tech::mpmc_queue<T>& queue, std::mutex& mtx, 
+                            std::atomic<unsigned long long>& ulAtoWriteCount, 
+                            TestOutput& testOutput, int iCpuID,  
+                            std::mutex& LogMutex, MetaData& metaData) {
 
 }
 
 template <>
-void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, std::mutex& mtx, 
-                        std::atomic<unsigned long long>& ulAtoWriteCount, MetaData& metaData) ;
+void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+                                            std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount, 
+                                            TestOutput& testOutput, int iCpuID,  
+                                            std::mutex& LogMutex, MetaData& metaData) ;
 template <>
 void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech::mpmc_queue<unsigned long long>& queue,
-                        std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount, MetaData& metaData) ;
+                                                std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount, 
+                                                TestOutput& testOutput, int iCpuID, 
+                                                std::mutex& LogMutex, MetaData& metaData) ;
 
 /// @brief 判断是否写入结束: 写入的数量, 写入的时间;
 /// @param ulAtoWriteCount 写入的块数
@@ -121,7 +130,8 @@ void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech
 /// @param ulStartWriteTimeNanosecs 写入开始时间
 /// @return true 写入结束
 /// @return false 写入未结束
-bool IsFteReadEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoReadCount, MetaData& metaData, unsigned long long& ulStartReadTimeNanosecs);
+bool IsFteReadEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoReadCount, 
+                    MetaData& metaData, unsigned long long& ulStartReadTimeNanosecs);
 
 /*
 template <typename T>
@@ -149,15 +159,21 @@ void con_func(int id, vector<uint32_t>& vec, T& queue, std::atomic<uint32_t>& co
 }
 */
 template <typename T>
-void read_thread_func_mpmc(ProcessStatus& eProcStatus, tech::mpmc_queue<T>& queue, std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
-                            std::vector<unsigned long long>& vecCostTime, MetaData& metaData) {
+void read_thread_func_mpmc(ProcessStatus& eProcStatus, tech::mpmc_queue<T>& queue, 
+                            std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
+                            TestOutput& testOutput, int iCpuID, 
+                            std::mutex& LogMutex, MetaData& metaData) {
 
 }
 
 template <>
-void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
-                            std::vector<unsigned long long>& vecCostTime, MetaData& metaData);
+void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+                                            std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
+                                            TestOutput& testOutput,int iCpuID,
+                                            std::mutex& LogMutex, MetaData& metaData);
 
 template <>
-void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech::mpmc_queue<unsigned long long>& queue, std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
-                            std::vector<unsigned long long>& vecCostTime, MetaData& metaData);
+void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech::mpmc_queue<unsigned long long>& queue, 
+                                                std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
+                                                TestOutput& testOutput, int iCpuID, 
+                                                std::mutex& LogMutex, MetaData& metaData);

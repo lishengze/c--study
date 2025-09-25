@@ -67,7 +67,12 @@ public:
      */
     ~mpmc_queue() 
     {
-        delete[] slots_;
+        // printf("delete[] slots_;");
+        if (!slots_) {
+            delete[] slots_;
+        } else {
+            printf("Slots Has Been Released!\n");
+        }  
     }
 
     /**
@@ -93,7 +98,7 @@ public:
         mask_ = size - 1;
         bit_mask_ = __builtin_ctz((uint64_t)size);
         // 步长值，用于哈希计算索引，减少冲突
-        stride_ = 37;
+        stride_ = 1;
         // 初始化生产者和消费者ticket
         push_ticket_ = 0;
         pop_ticket_ = 0;
@@ -168,16 +173,17 @@ public:
      * @note 阻塞版本，会一直等待直到入队成功
      */
     template <class... Args>
-    void push(Args&&... args)
+    int push(Args&&... args)
     {
         // printf("-------- mpmc_queue push\n");
         // 获取并自增生产者ticket
         uint64_t ticket = push_ticket_++;
-        auto index = idx(ticket);
+        auto index = idx(ticket);  // slot 位置;
         auto cur_turn = turn(ticket);
         // printf("-------- mpmc_queue push ticket: %ld, index: %ld, cur_turn: %d\n", ticket, index, cur_turn);
         // 执行入队操作，可能阻塞
         slots_[index].enqueue(cur_turn, std::forward<Args>(args)...);
+        return index;
     }
 
     /**
@@ -210,7 +216,7 @@ public:
      * @param element 用于存储出队元素的引用
      * @note 阻塞版本，会一直等待直到出队成功
      */
-    void pop(T& element)
+    int pop(T& element)
     {
         // 获取并自增消费者ticket
         uint64_t ticket = pop_ticket_++;
@@ -218,6 +224,7 @@ public:
         auto cur_turn = turn(ticket); 
         // 执行出队操作，可能阻塞
         slots_[index].dequeue(cur_turn, element);
+        return index;
     }
 
 

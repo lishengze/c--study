@@ -22,71 +22,19 @@
                 "iMemMBSize":2,
                 "iWriteThreadCount":1,
                 "iReadThreadCount":1,
-                "iSleepTimeUs":1,
+                "iSleepTimeUs":0,
                 "iReadType":0,
-                "iWorkSecs":1,
+                "iWorkSecs":0,
                 "iCheckDetailValue":0,                
                 "iWriteBlockCount":10000,
                 "iFixedBlock":1,
                 "iQueueType":0,
                 "iNumaNode":0,
-                "vecWriteCpuList":[8,9,10,11,12,13,14,15],
+                "vecWriteCpuList":[8, 9,10,11,12,13,14,15],
                 "vecReadCpuList":[7],
-                "iTestType":0,
-                "iTestCount":1
-            } ,
-            {
-                "iMemMBSize":2,
-                "iWriteThreadCount":2,
-                "iReadThreadCount":1,
-                "iSleepTimeUs":1,
-                "iReadType":0,
-                "iWorkSecs":1,
-                "iCheckDetailValue":0,                
-                "iWriteBlockCount":10000,
-                "iFixedBlock":1,
-                "iQueueType":0,
-                "iNumaNode":0,
-                "vecWriteCpuList":[8,9,10,11,12,13,14,15],
-                "vecReadCpuList":[7],
-                "iTestType":0,
-                "iTestCount":1
-            }     ,
-            
-            {
-                "iMemMBSize":2,
-                "iWriteThreadCount":4,
-                "iReadThreadCount":1,
-                "iSleepTimeUs":1,
-                "iReadType":0,
-                "iWorkSecs":1,
-                "iCheckDetailValue":0,                
-                "iWriteBlockCount":10000,
-                "iFixedBlock":1,
-                "iQueueType":0,
-                "iNumaNode":0,
-                "vecWriteCpuList":[8,9,10,11,12,13,14,15],
-                "vecReadCpuList":[7],
-                "iTestType":0,
-                "iTestCount":1
-            }     ,
-            {
-                "iMemMBSize":2,
-                "iWriteThreadCount":8,
-                "iReadThreadCount":1,
-                "iSleepTimeUs":1,
-                "iReadType":0,
-                "iWorkSecs":1,
-                "iCheckDetailValue":0,                
-                "iWriteBlockCount":10000,
-                "iFixedBlock":1,
-                "iQueueType":0,
-                "iNumaNode":0,
-                "vecWriteCpuList":[8,9,10,11,12,13,14,15],
-                "vecReadCpuList":[7],
-                "iTestType":0,
-                "iTestCount":1
-            }                             
+                "iTestType":2,
+                "iTestCount":4
+            }                                     
 
         ]    
 }
