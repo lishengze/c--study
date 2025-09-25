@@ -173,7 +173,7 @@ void *read_thread_func_quant_cmt(ProcessStatus& eProcStatus, que_proc_buf& workQ
     return NULL;
 }
 
-void write_thread_func_quant(ProcessStatus& eProcStatus, que_proc_buf& workQueue,
+void write_thread_func_quant2(ProcessStatus& eProcStatus, que_proc_buf& workQueue,
                             std::atomic<unsigned long long>& ulAtoWriteCount,
                             TestOutput& testOutput,int iCpuID, 
                             std::mutex& LogMutex, MetaData metaData)
@@ -346,6 +346,92 @@ void write_thread_func_quant(ProcessStatus& eProcStatus, que_proc_buf& workQueue
                 + ", workQueue.get_used(): " + std::to_string(workQueue.get_used()) 
                 + ", endTime:" + NanoToMicroString(testOutput.ulWriteEndTime ) + "\n", LogMutex);
 }
+
+
+void write_thread_func_quant(ProcessStatus& eProcStatus, que_proc_buf& workQueue,
+                            std::atomic<unsigned long long>& ulAtoWriteCount,
+                            TestOutput& testOutput,int iCpuID, 
+                            std::mutex& LogMutex, MetaData metaData)
+{    
+    TEST_LOG_DETAIL_THREADS("[START] Quant Queue Write thread Initing \n", LogMutex);
+    // 等待启动信号(eProcStatus != 0)
+    BindCpuID(iCpuID,metaData.iNumaNode, "Quant Write ");
+    while(eProcStatus == ProcessStatus::Initing ) {
+        // std::this_thread::sleep_for(std::chrono::microseconds(1));
+    }
+    
+        
+    int64 count = 0;  // 当前线程, 写入计数器
+    char *pbuf;       // 指向队列缓冲区的指针
+    int64 tpos;       // 写入位置
+
+    unsigned long long ulBeforePushTimes = 0;
+    unsigned long long ulAfterPushTimes = 0;
+
+    int iBufferSize = 8;
+    char* pSrcBuffer = nullptr;
+    DataBlockFixedPtr pFixedBlock = nullptr;
+    DataBlockPtr  pVirtualBlock = nullptr;
+
+    if (metaData.iFixedBlock == 1) {
+        pFixedBlock = GetDataBlockFixed();
+        iBufferSize = pFixedBlock->size_;
+        pSrcBuffer = (char*)pFixedBlock.get();
+    } else if (metaData.iFixedBlock == 2) {
+        iBufferSize = 8;
+        pSrcBuffer = (char*)(&ulBeforePushTimes);
+    }else {
+        pVirtualBlock = GetRandomDataBlock();
+        if(pVirtualBlock == nullptr){
+        }        
+        iBufferSize = pVirtualBlock->size_;
+    }
+
+    testOutput.ulWriteStartTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    TEST_LOG_DETAIL_THREADS("[START] Quant Queue Write thread Working \n", LogMutex);
+
+
+    while(!IsQuantWriteEnd(metaData,eProcStatus, ulAtoWriteCount, count)) {
+
+        ulBeforePushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+        if (metaData.iFixedBlock == (int)(BlockType::FixedStruct)) {
+            //POD类型的数据，可以直接拷贝;
+            pFixedBlock->push_time_ = ulBeforePushTimes;
+        } 
+
+        if (metaData.iWriteThreadCount == 1) {
+            workQueue.write(pSrcBuffer,iBufferSize);  // 提交写入
+        } else {
+            workQueue.write_mth(pSrcBuffer,iBufferSize);  // 提交写入（多线程安全版本）
+        }
+        
+        if (metaData.iTestType == (int)TestType::Write) {
+            ulAfterPushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+            testOutput.vecWriteAfterPushTimeList[count] = (ulAfterPushTimes);  
+            testOutput.vecWriteBeforePushTimeList[count] = (ulBeforePushTimes);
+        }                
+        ++count; 
+        ++ulAtoWriteCount;
+        
+        if (metaData.iSleepTimeUs > 0) {
+            comm_utils::sleep_us(metaData.iSleepTimeUs);  // 可选：控制写入速率
+        }        
+    } 
+    
+    
+    if (metaData.iTestType == (int)(TestType::Read)) {
+        eProcStatus = ProcessStatus::WriteEnd;
+    } 
+
+    testOutput.ulWriteEndTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+    TEST_LOG_DETAIL_THREADS( "[END] Quant Write Thread ulAtoWriteCount=" + std::to_string(ulAtoWriteCount) 
+                + ", count=" + std::to_string(count) + ", eProcStatus: " + std::to_string((int)(eProcStatus)) 
+                + ", workQueue.get_used(): " + std::to_string(workQueue.get_used()) 
+                + ", endTime:" + NanoToMicroString(testOutput.ulWriteEndTime ) + "\n", LogMutex);
+}
+
 
 void read_thread_func_quant_simple(ProcessStatus& eProcStatus, que_proc_buf& workQueue,
                                      std::atomic<unsigned long long>& ulAtoReadCount, 

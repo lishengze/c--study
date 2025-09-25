@@ -519,9 +519,9 @@ std::string GetAnaTestOutputTimeRst(TestOutput& testOutput, int iTestType) {
 
         std::string sTest="";
         int testCount = std::min(10, (int)(testOutput.vecReadBeforePopTimeList.size()));
-        for (int i = 0; i < testCount; ++i) {
-            sTest += NanoToMicroString(testOutput.vecReadBeforePopTimeList[i]) + ", " + NanoToMicroString(testOutput.vecReadAfterPopTimeList[i]) + "\n";
-        }        
+        // for (int i = 0; i < testCount; ++i) {
+        //     sTest += NanoToMicroString(testOutput.vecReadBeforePopTimeList[i]) + ", " + NanoToMicroString(testOutput.vecReadAfterPopTimeList[i]) + "\n";
+        // }        
 
         return std::string("costNano: ") + NanoStr(costNano) + ", "+ GetSimpleTimeData(vecPopCostTime)+ sTest;
     }    
