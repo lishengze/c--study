@@ -8,6 +8,11 @@ typedef void (*OnMessage)(int iMsgID, const char* pMsgBuf, const int iMsgLen);
 
 using UINT64 = unsigned long long;
 
+/// @brief 用于管理策略进程和UTE进程之间的消息通信;
+/// 问题: 
+/// 1. 是否要增加专门存储 stratey_id 和 batch_id 的结构体, 这两者合起来可以唯一确定一个策略进程;
+/// 2. UTE 进程向策略进程发送消息的接口, 是否需要增加参数, 用于指定发送给哪个策略进程;
+/// 3. 
 class MessageManager {
 public:
     MessageManager() {
@@ -33,7 +38,8 @@ public:
     ///        所以需要在调用 Init 之前调用 SetOnMessage, SetOnEvent;
     /// @param StrategySysID 策略进程的系统ID;
     /// @param UTESysID UTE进程的系统ID;
-    bool Init(UINT64 StrategySysID, UINT64 UTESysID);
+    /// 入参是否要增加共享队列相关参数？
+    bool Init(UINT64 UTESysID);
 
     /// @brief 策略进程发送消息给UTE进程;
     /// @param iMsgID 消息ID;
