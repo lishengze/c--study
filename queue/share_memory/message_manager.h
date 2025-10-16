@@ -1,5 +1,6 @@
 #pragma once
 
+
 typedef void (*OnEvent)(int iErrCode, const char* pErrDesc);
 typedef void (*OnMessage)(int iMsgID, const char* pMsgBuf, const int iMsgLen);
 
@@ -11,8 +12,7 @@ public:
         m_pfnOnEvent = nullptr;
         m_pfnOnMessage = nullptr;
         m_iEventSleepSec = 0;
-        m_StrategySysID = 0;
-        m_UTESysID = 0;
+        memset(m_UteName, 0, sizeof(m_UteName));
     }
 
     /// @brief 设置事件回调函数, 告知策略进程, UTE进程是否正常运行;
@@ -30,7 +30,7 @@ public:
     ///        所以需要在调用 Init 之前调用 SetOnMessage, SetOnEvent;
     /// @param StrategySysID 策略进程的系统ID;
     /// @param UTESysID UTE进程的系统ID;
-    bool Init(UINT64 StrategySysID, UINT64 UTESysID);
+    bool Init(const char* UteName, UINT64 StrategySysID, UINT64 BatchID);
 
     /// @brief 策略进程发送消息给UTE进程;
     /// @param iMsgID 消息ID;
@@ -39,16 +39,16 @@ public:
     /// @return true 发送成功;
     /// @return false 发送失败 -- 未正确初始化;
     bool SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen);
-
+    
 private:
 
     /// 外部设置的参数;
     OnMessage m_pfnOnMessage;       // 消息回调函数,策略进程向UTE进程发送消息的接口;
     OnEvent m_pfnOnEvent;           // 事件回调函数,告知策略进程, UTE进程是否正常运行;
 
-    int m_iEventSleepSec;             // 检测UTE进程是否正常运行的间隔时间, 单位秒;
-    UINT64 m_StrategySysID;           // 策略进程的系统ID;
-    UINT64 m_UTESysID;                // UTE进程的系统ID;
+    int  m_iEventSleepSec;             // 检测UTE进程是否正常运行的间隔时间, 单位秒;
+    char m_UteName[32];                // UTE进程的系统ID;
+    char m_StrategyKey[16];           // 策略进程的系统ID, 由策略ID+批次号组成;
 
     /// 内部运行的参数;
     bool m_bInit;                     // 是否初始化成功;

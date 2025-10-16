@@ -306,16 +306,13 @@ element_slot():current_turn_(0){}
     template <class... Args>
     void enqueue(uint32_t turn, Args&&... args)
     {
-        // printf("++++++ enqueue , turn: %d\n", turn);
-        auto cur_turn = current_turn_.load(std::memory_order_acquire);        
-        // 等待直到可以入队
-        // printf("++++++ enqueue , cur_turn: %d\n", cur_turn);
+        auto cur_turn = current_turn_.load(std::memory_order_acquire);  
+
         while (cur_turn != (turn << 1))
         {
             cur_turn = current_turn_.load(std::memory_order_acquire);
         }
         // 在元素存储位置原地构造对象
-        // printf("++++++ enqueue , cur_turn: %d\n", cur_turn);
         new (&element_) T(std::forward<Args>(args)...);
         // 更新状态为已入队，使用release内存序
         current_turn_.store(cur_turn + 1, std::memory_order_release);
