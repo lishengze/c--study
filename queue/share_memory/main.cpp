@@ -11,6 +11,11 @@ void StragegyOnMessage(int iMsgID, const char* pMsgBuf, const int iMsgLen)
 {
 	//举例进行订单回报处理
 
+
+}
+
+// 举例进行登录请求设置
+void SetLoginReq(StrategyMessageManager& stragegyMsgManager) {
     
 }
 
