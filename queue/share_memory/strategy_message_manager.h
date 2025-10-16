@@ -1,14 +1,16 @@
 #pragma once
-
+#include <cstring>
+#include "req_queue.h"
 
 typedef void (*OnEvent)(int iErrCode, const char* pErrDesc);
 typedef void (*OnMessage)(int iMsgID, const char* pMsgBuf, const int iMsgLen);
 
 using UINT64 = unsigned long long;
+using UINT32 = unsigned int;
 
-class MessageManager {
+class StrategyMessageManager {
 public:
-    MessageManager() {
+    StrategyMessageManager() {
         m_pfnOnEvent = nullptr;
         m_pfnOnMessage = nullptr;
         m_iEventSleepSec = 0;
@@ -30,7 +32,7 @@ public:
     ///        所以需要在调用 Init 之前调用 SetOnMessage, SetOnEvent;
     /// @param StrategySysID 策略进程的系统ID;
     /// @param UTESysID UTE进程的系统ID;
-    bool Init(const char* UteName, UINT64 StrategySysID, UINT64 BatchID);
+    bool Init(const char* UteName, UINT32 StrategySysID);
 
     /// @brief 策略进程发送消息给UTE进程;
     /// @param iMsgID 消息ID;
@@ -47,8 +49,10 @@ private:
     OnEvent m_pfnOnEvent;           // 事件回调函数,告知策略进程, UTE进程是否正常运行;
 
     int  m_iEventSleepSec;             // 检测UTE进程是否正常运行的间隔时间, 单位秒;
-    char m_UteName[32];                // UTE进程的系统ID;
-    char m_StrategyKey[16];           // 策略进程的系统ID, 由策略ID+批次号组成;
+    char m_UteName[32];                // UTE进程的系统ID,是字符串形式;
+    char m_StrategyKey[16];            // 策略进程的系统ID, 由策略ID+批次号组成;
+
+    ReqQueueManager m_ReqQueueManager; // 请求队列管理器;
 
     /// 内部运行的参数;
     bool m_bInit;                     // 是否初始化成功;
