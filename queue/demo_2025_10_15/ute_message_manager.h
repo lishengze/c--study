@@ -5,11 +5,12 @@
 #include <string>
 #include "req_queue.h"
 #include "rsp_queue.h"
+#include <functional>
 
 using std::vector;
 
-typedef void (*OnEvent)(int iErrCode, const char* pErrDesc, unsigned long long strStrategyKey);
-typedef void (*OnMessage)(int iMsgID, const char* pMsgBuf, unsigned long long  strStrategyKey);
+
+using CallBackFuncType = std::function<void(int , const char* , unsigned long long)>;
 
 using UINT64 = unsigned long long;
 
@@ -30,11 +31,11 @@ public:
     /// @brief 设置事件回调函数, 告知策略进程, UTE进程是否正常运行;
     /// @param iSleepSec 
     /// @param pfnOnEvent 
-    void SetOnEvent(int iEventSleepSec, OnEvent pfnOnEvent) { m_pfnOnEvent = pfnOnEvent; }
+    void SetOnEvent(int iEventSleepSec, CallBackFuncType pfnOnEvent) { m_pfnOnEvent = pfnOnEvent; }
 
     /// @brief 设置消息回调函数, UTE进程向策略进程发送消息的接口;
     /// @param pfnOnMessage 
-    void SetOnMessage(OnMessage pfnOnMessage) { m_pfnOnMessage = pfnOnMessage; }
+    void SetOnMessage(CallBackFuncType pfnOnMessage) { m_pfnOnMessage = pfnOnMessage; }
 
     /// @brief 初始化消息管理器, 设置策略进程的系统ID和UTE进程的系统ID;
     ///        在Init 会校验, OnMessage,OnEvent 是否设置;
@@ -45,7 +46,7 @@ public:
     /// 入参是否要增加共享队列相关参数？
     bool Init(UINT64 UTESysID);
 
-    RspQueueManager* CreateRspQueueManager(unsigned long long  strStrategyKey);
+    RspQueueManager* CreateRspQueueManager(unsigned long long strStrategyKey);
 
 
     /// @brief 策略进程发送消息给UTE进程;
@@ -59,8 +60,8 @@ public:
 private:
 
     /// 外部设置的参数;
-    OnMessage m_pfnOnMessage;       // 消息回调函数,通知UTE请求相关信息;
-    OnEvent m_pfnOnEvent;           // 事件回调函数,告知UTE进程, 某个策略进程是否正常运行;
+    CallBackFuncType m_pfnOnMessage;       // 消息回调函数,通知UTE请求相关信息;
+    CallBackFuncType m_pfnOnEvent;           // 事件回调函数,告知UTE进程, 某个策略进程是否正常运行;
 
     std::string m_UTESysName;       // UTE进程的系统ID;
 
