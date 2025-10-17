@@ -1,7 +1,7 @@
 #pragma once
 
-class ReqQueueManager {    
+class QueueManager {    
 public:
-    ReqQueueManager() {
+    QueueManager() {
     }
 };

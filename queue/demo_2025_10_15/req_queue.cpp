@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "mpmc_queue.h"
 #include "external_message.h"
+#include "bits.h"
 
 // // 在共享内存中创建队列
 // bool create_shared_queue(const char* name, uint32_t size)
@@ -110,7 +111,22 @@
 // }
 
 
-bool ReqQueueManager::Init(const char* cstrSharedMemName) {
+bool QueueManager::Init(const char* cstrSharedMemName,WorkerType workerType, bool bIsCreateSharedMemory) {
+    workerType_ = workerType;
+    bIsCreateSharedMemory_ = bIsCreateSharedMemory;
+    strSharedMemName_ = cstrSharedMemName;
+
+    if (bIsCreateSharedMemory) {
+        AttachShareMemory(cstrSharedMemName);
+    } else {
+        return CreateShareMemory(cstrSharedMemName);
+    }
+
+    return true;
+}
+
+
+bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
     // 打开已有的共享内存对象
     int shm_fd = shm_open(cstrSharedMemName, O_RDWR, 0);
     if (shm_fd == -1) {
@@ -135,20 +151,55 @@ bool ReqQueueManager::Init(const char* cstrSharedMemName) {
     }
     
     close(shm_fd);
-    pReqQueue_ = static_cast<tech::mpmc_queue<UteMsg>*>(addr);    
+    pMpmcQueue_ = static_cast<tech::mpmc_queue<UteMsg>*>(addr);   
 
     return true;
 }
 
+bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
+    int shm_fd = shm_open(cstrSharedMemName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    if (shm_fd == -1) {
+        perror("shm_open failed");
+        return false;
+    }
+    
+    unsigned int uiDataBlocksSize = (tech::roundup_pow_of_two(uiQueueBlockCount_) + 1) * sizeof(UteMsg) ;
 
-void ReqQueueManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey) {
-    if (!pReqQueue_) {
-        pReqQueue_->push(iMsgID, iMsgLen, ulStrategyKey, pMsgBuf); // 在 enqueue 时会调用 UteMsg 的构造函数
+    // 设置共享内存大小
+    uiMemorySize_ = sizeof(tech::mpmc_queue<UteMsg>) + uiDataBlocksSize + 1024; // 计算完整大小
+    if (ftruncate(shm_fd, uiMemorySize_) == -1) {
+        perror("ftruncate failed");
+        close(shm_fd);
+        return false;
+    }
+    
+    // 映射共享内存
+    void* addr = mmap(NULL, uiMemorySize_, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (addr == MAP_FAILED) {
+        perror("mmap failed");
+        close(shm_fd);
+        return false;
+    }
+    
+    // 在共享内存中构造队列对象
+    pMpmcQueue_ = new (addr) tech::mpmc_queue<UteMsg>();
+    
+    // 使用自定义内存分配器初始化队列
+    pMpmcQueue_->create(uiQueueBlockCount_);
+    
+    close(shm_fd);
+    return true;
+}
+
+
+void QueueManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey) {
+    if (!pMpmcQueue_) {
+        pMpmcQueue_->push(iMsgID, iMsgLen, ulStrategyKey, pMsgBuf); // 在 enqueue 时会调用 UteMsg 的构造函数
     }
 }
 
-void ReqQueueManager::Release() {
-    if (!pReqQueue_) {
+void QueueManager::Release() {
+    if (!pMpmcQueue_) {
         // todo 增加日志输出
         return;
     }
@@ -158,10 +209,14 @@ void ReqQueueManager::Release() {
         return;
     }
 
-    if (munmap(pReqQueue_, uiMemorySize_) == -1) {
+    if (munmap(pMpmcQueue_, uiMemorySize_) == -1) {
         // perror("munmap failed");
         // todo 增加日志输出
         return;
+    }
+
+    if (bIsCreateSharedMemory_) {
+        shm_unlink(strSharedMemName_.c_str());
     }
         
 }

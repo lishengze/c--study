@@ -52,7 +52,7 @@ private:
     char m_UteName[32];                // UTE进程的系统ID,是字符串形式;
     char m_StrategyKey[16];            // 策略进程的系统ID, 由策略ID+批次号组成;
 
-    ReqQueueManager m_ReqQueueManager; // 请求队列管理器;
+    QueueManager m_ReqQueueManager; // 请求队列管理器;
 
     /// 内部运行的参数;
     bool m_bInit;                     // 是否初始化成功;

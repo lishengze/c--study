@@ -3,6 +3,11 @@
 #include "mpmc_queue.h"
 #include "external_message.h"
 
+enum WorkerType {
+    Consumer=0,
+    Producer=1,
+    ConsumerAndProducer=2
+};
 
 /*
 主要负责三个功能：
@@ -10,17 +15,22 @@
 2。 将UTE创建的共享内存映射到无所队列中;
 3。 创建当前策略进程对应的 锁文件，并监听UTE进程的锁文件;
 */
-class ReqQueueManager {    
+class QueueManager {
 public:
-    ReqQueueManager():uiQueueBlockCount_{10000},uiMemorySize_{1024*1024*10}, pReqQueue_{nullptr} {
+    QueueManager():uiQueueBlockCount_{10000},uiMemorySize_{1024*1024*10}, 
+    pMpmcQueue_{nullptr},bIsCreateSharedMemory_{true},workerType_{WorkerType::Consumer} {
     }
 
-    ~ReqQueueManager() {
+    ~QueueManager() {
         Release();
     }
 
 
-    bool Init(const char* cstrSharedMemName);
+    bool Init(const char* cstrSharedMemName, WorkerType workerType, bool bIsCreateSharedMemory = true);
+
+    bool AttachShareMemory(const char* cstrSharedMemName);
+
+    bool CreateShareMemory(const char* cstrSharedMemName);
 
     void SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey);
 
@@ -31,7 +41,11 @@ public:
 
 
 private:
-    tech::mpmc_queue<UteMsg>*    pReqQueue_;         // 策略进程发送请求的无锁队列;
-    unsigned int                 uiMemorySize_;      // 无锁队列占用的共享内存大小;
-    unsigned int                 uiQueueBlockCount_; // 无锁队列的块数;
+    tech::mpmc_queue<UteMsg>*    pMpmcQueue_;         // 策略进程发送请求的无锁队列;
+    unsigned int                 uiMemorySize_;       // 无锁队列占用的共享内存大小;
+    unsigned int                 uiQueueBlockCount_;  // 无锁队列的块数;
+    std::string                  strSharedMemName_;   // 共享内存名称;
+
+    bool                         bIsCreateSharedMemory_; // 是否创建共享内存;
+    WorkerType                   workerType_;                // 锁文件句柄;
 };

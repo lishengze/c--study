@@ -65,7 +65,7 @@ private:
     char m_UteName[32];                // UTE进程的系统ID,是字符串形式;
     unsigned long long m_StrategyKey;              // 策略进程的系统ID, 由策略ID+批次号组成;
 
-    ReqQueueManager m_ReqQueueManager; // 请求队列管理器;
+    QueueManager m_ReqQueueManager; // 请求队列管理器;
 
     RspQueueManager m_RspQueueManager; // 响应队列管理器;
 

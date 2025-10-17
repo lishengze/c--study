@@ -67,7 +67,7 @@ private:
     /// 内部运行的参数;
     bool m_bInit;                   // 是否初始化成功;
 
-    ReqQueueManager* m_pReqQueue;                           // 请求队列管理器;
+    QueueManager* m_pReqQueue;                           // 请求队列管理器;
     std::unordered_map<unsigned long long , RspQueueManager*> m_mapRspQueue;     // 响应队列管理器;
 
     // 策略进程对应lock文件map, 用于存储策略进程的key和心跳文件路径;
