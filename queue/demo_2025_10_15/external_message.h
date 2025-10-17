@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #pragma pack(push, 1)
 
 //msgtype字典
@@ -59,6 +60,11 @@ const char kCounterpartyOptimalOrLimited = '3';   ///< 对手方最优剩余转�
 const char kImmediateOrCancel = '4';  ///< 市价立即成交剩余撤销
 const char kFillOrKill = '5'; ///< 市价全额成交或撤销
 const char kFiveLevelFillOrKill = '6';    ///< 市价最优五档全额成交剩余撤销
+
+// ErrCode
+
+const unsigned int kSuccess = 0; //成功
+const unsigned int kUteFailed = 1; //UTE进程终止;
 
 struct TradeOrderUser
 {
@@ -186,6 +192,21 @@ struct RejectMsg
 
 /// @brief 通用请求消息结构体
 struct UteMsg {
+    UteMsg() : iMsgID(0), iMsgLen(0), StrategyKey(0) {
+        memset(strMsgBuf, 0, sizeof(strMsgBuf));
+    }
+
+    UteMsg(int iMsgID, unsigned int iMsgLen, unsigned long long StrategyKey, const char* pMsgBuf) :
+         iMsgID(iMsgID), iMsgLen(iMsgLen), StrategyKey(StrategyKey) {
+        memset(strMsgBuf, 0, sizeof(strMsgBuf));
+        memcpy(strMsgBuf, pMsgBuf, iMsgLen);
+    }
+
+    UteMsg(const UteMsg&& other) :
+        iMsgID(other.iMsgID), iMsgLen(other.iMsgLen), StrategyKey(other.StrategyKey) {
+        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
+    }
+
     int  iMsgID;            // 消息类型
     unsigned int iMsgLen;  // 拷贝消息缓冲区的真实长度;
     unsigned long long StrategyKey; // 由strategyID 和 bachID 拼接的key;
