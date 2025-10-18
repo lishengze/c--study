@@ -113,7 +113,7 @@
 // }
 
 
-bool QueueManager::Init(const char* cstrSharedMemName, StrategyMessageManager* pStrategyMessageManager, WorkerType workerType, bool bIsCreateSharedMemory) {
+bool QueueManager::Init(StrategyMessageManager* pStrategyMessageManager, WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory) {
     workerType_ = workerType;
     bIsCreateSharedMemory_ = bIsCreateSharedMemory;
     strSharedMemName_ = cstrSharedMemName;
@@ -156,6 +156,32 @@ void QueueManager::StartConsumerThread() {
         shptrConsumerThread_->join();
     }
 }
+
+bool QueueManager::Init(UteMessageManager* pUteMessageManager, WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory) {
+    workerType_ = workerType;
+    bIsCreateSharedMemory_ = bIsCreateSharedMemory;
+    strSharedMemName_ = cstrSharedMemName;
+    pUteMessageManager_ = pUteMessageManager;
+
+    if (!pStrategyMessageManager_) {
+        // todo 增加日志输出
+        return false;
+    }
+
+    if (bIsCreateSharedMemory) {
+        if (!AttachShareMemory(cstrSharedMemName)) return false;
+    } else {
+        if (!CreateShareMemory(cstrSharedMemName)) return false;
+    }
+
+    if (workerType_ == Consumer) {
+        StartConsumerThread();
+    }
+
+
+    return true;
+}
+
 
 
 

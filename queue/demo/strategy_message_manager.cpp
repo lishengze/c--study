@@ -28,17 +28,30 @@ bool StrategyMessageManager::Init(const char* UteName, unsigned int uiStrategySy
     std::string strStrategyKey = std::to_string(m_StrategyKey);
     std::string strUteKey = std::string(UteName);
 
-    if (!m_LockFileManager.Init((strUteKey+".lck").c_str(), (strStrategyKey + ".lck").c_str(), 
-                                m_iEventSleepSec, this)) {
+    if (!m_LockFileManager.Init(UteName, m_StrategyKey, this, m_iEventSleepSec)) {
         // todo 增加日志信息;
         return false;
     }
 
-    // 初始化请求相关的无锁队列 以及 对应的 共享内存;
-    m_ReqQueueManager.Init((strUteKey+".queue").c_str(), this, Consumer, true);
+    // 初始化请求相关的无锁队列 以及 对应的 共享内存 -- 共享内存是UTE进程创建好， 这里只需要attach即可;
+    m_ReqQueueManager.Init(this, Consumer, (strUteKey+".queue").c_str(),  false);
 
-    // 初始化响应相关的无锁队列 以及 对应的 共享内存;
-    m_RspQueueManager.Init((strStrategyKey+".queue").c_str(), this, Producer, false);
+    // 初始化响应相关的无锁队列 以及 对应的 共享内存 -- 共享内存是策略进程创建好， 这里需要创建和attach;
+    m_RspQueueManager.Init(this, Producer, (strStrategyKey+".queue").c_str(), true);
 
     return true;
+}
+
+void StrategyMessageManager::ProcessMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
+
+    // if (kPktLoginAns == iMsgID) {
+    //     LogOnAns* pLogOnAns = (LogOnAns*)pMsgBuf;
+    //     if (kSuccess == pLogOnAns->error_code) {
+    //         // 登录成功, 说明
+    //         m_LockFileManager.SetLoginSuccess();
+    //     } 
+    // }
+
+    // // 处理消息
+    // m_pfnOnMessage(iMsgID, pMsgBuf, iMsgLen);
 }

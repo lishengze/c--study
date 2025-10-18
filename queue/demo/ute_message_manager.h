@@ -5,6 +5,8 @@
 #include <string>
 #include "queue_manager.h"
 #include <functional>
+#include "lock_file_manager.h"
+
 
 using std::vector;
 
@@ -21,10 +23,9 @@ using UINT64 = unsigned long long;
 /// 3. 
 class UteMessageManager {
 public:
-    UteMessageManager() {
+    UteMessageManager() : m_bInit(false), m_pReqQueue(nullptr), m_UTESysName("") {
         m_pfnOnEvent = nullptr;
         m_pfnOnMessage = nullptr;
-        m_UTESysName.clear();
     }
 
     /// @brief 设置事件回调函数, 告知策略进程, UTE进程是否正常运行;
@@ -41,9 +42,9 @@ public:
     ///        如果未设置, 会返回false;
     ///        所以需要在调用 Init 之前调用 SetOnMessage, SetOnEvent;
     /// @param StrategySysID 策略进程的系统ID;
-    /// @param UTESysID UTE进程的系统ID;
+    /// @param cstrUTESysName UTE进程的系统ID;
     /// 入参是否要增加共享队列相关参数？
-    bool Init(UINT64 UTESysID);
+    bool Init(const char* cstrUTESysName);
 
     QueueManager* CreateRspQueueManager(unsigned long long strStrategyKey);
 
@@ -64,19 +65,30 @@ public:
     /// @return false 发送失败 -- 未正确初始化;
     bool WriteMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen);
 
-private:
+
+    /// @brief 收到客户登陆请求后，判断客户所属策略进程的回报共享内存通路时候时候存在，
+    ///        如果不存在则进行初始化--共享内存是策略端创建，UTE端 Attach即可;
+    /// @param strStrategyKey 
+    std::shared_ptr< QueueManager> CreateStrategyRspQueue(unsigned long long strStrategyKey);
 
     /// 外部设置的参数;
     CallBackFuncType m_pfnOnMessage;       // 消息回调函数,通知UTE请求相关信息;
     CallBackFuncType m_pfnOnEvent;           // 事件回调函数,告知UTE进程, 某个策略进程是否正常运行;
+
+private:
+
 
     std::string m_UTESysName;       // UTE进程的系统ID;
 
     /// 内部运行的参数;
     bool m_bInit;                   // 是否初始化成功;
 
-    QueueManager* m_pReqQueue;                           // 请求队列管理器;
-    std::unordered_map<unsigned long long , QueueManager*> m_mapRspQueue;     // 响应队列管理器;
+    LockFileManager m_LockFileManager; // 锁文件管理器;
+
+    QueueManager m_pStrategyReqQueue;                           // 策略请求队列管理器;
+    QueueManager m_pApiQueue;                                   // API请求回报队列管理器;
+
+    std::unordered_map<unsigned long long, std::shared_ptr< QueueManager>> m_mapRspQueue;     // 响应队列管理器;
 
     // 策略进程对应lock文件map, 用于存储策略进程的key和心跳文件路径;
     std::unordered_map<unsigned long long , std::string> m_mapStrategyHeartbeatFile;

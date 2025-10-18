@@ -1,30 +1,57 @@
 #include "lock_file_manager.h"
 #include "strategy_message_manager.h"
+#include "ute_message_manager.h"
 #include <sys/mman.h>
 #include <chrono>
 #include <thread>
 
-bool LockFileManager::Init(const char* cstrUteName, const char* cstrStrategyLockFile, 
-            int iEventSleepSec, StrategyMessageManager* strategy_message_manager) {
-    pStrategyMessageManager_ = strategy_message_manager;
+
+std::string GetStrategyLockFileName(unsigned long long ulStrategyKey) {
+    return std::to_string(ulStrategyKey) + ".lck";
+}
+
+unsigned long long GetStrategyKey(const std::string& strLockFileName) {
+    auto pos = strLockFileName.find_last_of('.');
+    if (pos == std::string::npos) {
+        return 0;
+    }
+
+    return std::stoull(strLockFileName.substr(0, pos));
+}
+
+bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrategyKey, 
+           StrategyMessageManager* pStrategyMessageManager, int iEventSleepSec) {
+    pStrategyMessageManager_ = pStrategyMessageManager;
     iHeartBeatSec_ = iEventSleepSec;
+
+    if (!pStrategyMessageManager_ || !pStrategyMessageManager_->m_pfnOnEvent) {
+        // todo 增加日志信息;
+        return false;
+    }    
     
+    int iUteFd = -1;
+    std::string strUteName = std::string(cstrUteName) + ".lck";
     do {
        bool opposite_alive = false;
-       iOppositeFd_ = shm_open(cstrUteName, O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+       iUteFd = shm_open(strUteName.c_str(), O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
 
-       if (iOppositeFd_ > 0) {
-           opposite_alive = (lockf(iOppositeFd_, F_TEST, 0) != 0);
+       if (iUteFd > 0) {
+           opposite_alive = (lockf(iUteFd, F_TEST, 0) != 0);
            if (opposite_alive) {
+            // todo 增加日志信息;
                 break; // UTE进程已启动
            } else {
                 std::this_thread::sleep_for(std::chrono::seconds(iWaitUteSec_));
            }
        }       
-    } while(iOppositeFd_ < 0);
+    } while(iUteFd < 0);
 
-    iMyFd_ = shm_open(cstrStrategyLockFile, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
-    if (iMyFd_ < 0)
+    mapListenLockFileFd_[strUteName] = iUteFd;
+
+    std::string strStrategyLockFile = std::to_string(ulStrategyKey) + ".lck";
+
+    int iStrategyFd = shm_open(strStrategyLockFile.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+    if (iStrategyFd < 0)
     {
         // #ifdef APP_USE_ADK_LOG
         // ADK_LOG_ERROR_TF(100003, "Init info", "{1} iFile open failed, errinfo [{2}]", name + PRODUCER_LOCK_POSTFIX, strerror(errno));
@@ -33,58 +60,136 @@ bool LockFileManager::Init(const char* cstrUteName, const char* cstrStrategyLock
         // #endif
         // todo 增加日志信息;
         return false;
-    }        
+    } else {
+        // todo 增加日志信息;
+    }
+    mapNonListenLockFileFd_[std::to_string(ulStrategyKey)] = iStrategyFd;
     
     StartHeartbeatThread();
 
     return true;
 }
 
+bool LockFileManager::Init(const char* cstrUteName,  UteMessageManager* pUteMessageManager, int iEventSleepSec) {
+    pUteMessageManager_ = pUteMessageManager;
+
+    if (!pUteMessageManager || !pUteMessageManager->m_pfnOnEvent) {
+        // todo 增加日志信息;
+        return false;
+    }
+
+    iHeartBeatSec_ = iEventSleepSec;
+
+    int iUteFd = shm_open(cstrUteName, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+    if (iUteFd < 0)
+    {
+        // #ifdef APP_USE_ADK_LOG
+        // ADK_LOG_ERROR_TF(100003, "Init info", "{1} iFile open failed, errinfo [{2}]", name + PRODUCER_LOCK_POSTFIX, strerror(errno));
+        // #else
+        // LOG_ERROR("{} iFile open failed, errinfo [{}]", (name + PRODUCER_LOCK_POSTFIX), strerror(errno));
+        // #endif
+        // todo 增加日志信息;
+        return false;
+    } else {
+        // todo 增加日志信息;
+    }
+
+    mapNonListenLockFileFd_[cstrUteName] = iUteFd;
+    
+    StartHeartbeatThread();
+
+    return true;
+}            
+
+
 unsigned int LockFileManager::GetSetStrategyBatchID(unsigned int StrategySysID) {
-    std::string strBatchIDFileName = std::to_string(StrategySysID) + "_heartbeat.lck";
+    std::string strBatchIDFileName = std::to_string(StrategySysID) + ".batchid";
     std::ifstream iFile(strBatchIDFileName);
-    if (!iFile.is_open()) {
-        // todo 增加日志信息;
-        return 0;
-    }
+
+    unsigned int result = 0;
+
     unsigned int batchID = 0;
-    if (!(iFile >> batchID)) {
-        // todo 增加日志信息;
-        return 0;
+
+
+    if (iFile.good()) {
+        // 若是文件存在，读取batchID；
+        if (!iFile.is_open()) {
+            // todo 增加日志信息;
+            return 0;
+        }
+        
+        if (!(iFile >> batchID)) {
+            // todo 增加日志信息;
+            return 0;
+        }
+        iFile.close();
+
+        result = batchID; // 读取到的batchID；
+
+        batchID++; // 加1后写入新的batchID；
     }
-    iFile.close();
 
-
-    batchID++;
+    // 写入新的batchID；    
     std::ofstream oFile(strBatchIDFileName);
     if (!oFile.is_open()) {
         // todo 增加日志信息;
-        return false;
+        return 0;
     }
     oFile << batchID;
     oFile.close();
     
-    return batchID-1;
+    return result;
 }
 
 void LockFileManager::StartHeartbeatThread() {
     shptrHearbeatThread_ = std::make_shared<std::thread>([this]() {
         while (true) {
-            if (!test_lock_file_is_alive(iOppositeFd_)) {
-                // todo 增加日志信息;
-                if (!pStrategyMessageManager_ || !pStrategyMessageManager_->m_pfnOnEvent) {
-                    pStrategyMessageManager_->m_pfnOnEvent(kUteFailed, (strOppositeLockFileName_+" not locked").c_str());
-                } else {
-                    // todo 增加日志信息;
+            {
+                std::lock_guard<std::mutex> lock(mtxHeartbeat_);
+                std::vector<std::string> vecInvalidLockFileNames;
+                vecInvalidLockFileNames.reserve(mapListenLockFileFd_.size());
+                for (auto& iter:mapListenLockFileFd_) {
+                    if (!test_lock_file_is_alive(iter.second)) {
+                        // 这两个指针在 Init 时已经判空过，这里不用再判空；
+                        if (pStrategyMessageManager_) {
+                            pStrategyMessageManager_->m_pfnOnEvent(kUteFailed, iter.first.c_str()); // 检测到 UTE 进程终止;
+                        } else if (pUteMessageManager_) {
+                            pUteMessageManager_->m_pfnOnEvent(kUteFailed, iter.first.c_str(), std::stoull(iter.first)); // 检测到 某个策略进程终止;
+                        }
+                        
+                        vecInvalidLockFileNames.push_back(iter.first);
+                    }
                 }
-                break;
+
+                // 移除无效的锁文件描述符 - 已经终止的策略进程;
+                for (auto& strLockFileName:vecInvalidLockFileNames) {
+                    mapListenLockFileFd_.erase(strLockFileName);
+                }
             }
+
             sleep(iHeartBeatSec_);
         }
     });
 }
 
-int LockFileManager::AddListenLockFile(const char* cstrLockFileName, bool bNeedCreate) {
+bool LockFileManager::AddListenLockFile(const char* cstrLockFileName) {
 
-    return 1;
+    int iFd = shm_open(cstrLockFileName, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+    if (iFd < 0)
+    {
+        // #ifdef APP_USE_ADK_LOG
+        // ADK_LOG_ERROR_TF(100003, "Init info", "{1} iFile open failed, errinfo [{2}]", name + PRODUCER_LOCK_POSTFIX, strerror(errno));
+        // #else
+        // LOG_ERROR("{} iFile open failed, errinfo [{}]", (name + PRODUCER_LOCK_POSTFIX), strerror(errno));
+        // #endif
+        // todo 增加日志信息;
+        return false;
+    } else {
+        // todo 增加日志信息;
+    }
+
+    std::lock_guard<std::mutex> lock(mtxHeartbeat_);
+    mapListenLockFileFd_[cstrLockFileName] = iFd;
+
+    return true;
 }

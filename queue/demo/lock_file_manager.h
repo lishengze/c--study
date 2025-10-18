@@ -8,8 +8,10 @@
 #include <unistd.h>
 #include <map>
 #include <unordered_map>
+#include <mutex>
 
 class StrategyMessageManager;
+class UteMessageManager;
 
 inline bool test_lock_file_is_alive(int file_fd)
 {
@@ -33,22 +35,32 @@ inline bool test_lock_file_is_alive(int file_fd)
 
 class LockFileManager {
 public:
-    LockFileManager():shptrHearbeatThread_{nullptr}, iMyFd_{-1}, iOppositeFd_{-1}, 
+    LockFileManager():shptrHearbeatThread_{nullptr}, pUteMessageManager_{nullptr}, 
         pStrategyMessageManager_{nullptr},iHeartBeatSec_{1},iWaitUteSec_{1} {}
     ~LockFileManager() {
-        iMyFd_ > 0 ? close(iMyFd_) : 0;    
+        // iMyFd_ > 0 ? close(iMyFd_) : 0;    
         // todo 是否需要删除 策略进程对应的锁文件；
     }
 
 
-    /// @brief 判断 cstrUteName 对应的锁文件是否存在并且加锁，若是失败，则循环式的继续判断；
-    ///        若是上面判断成功，创建策略进程对应的锁文件，并且加锁；
-    ///        之后便开启心跳线程，每隔一段时间，检查UTE锁文件是否存在并加锁;
+    /// @brief 策略进程端初始化接口;
+    /// 1、判断 cstrUteName 对应的锁文件是否存在并且加锁，若是失败，则循环式的继续判断；
+    /// 2、若是上面判断成功，创建策略进程对应的锁文件，并且加锁；
+    /// 3、之后便开启心跳线程，每隔一段时间，检查UTE锁文件是否存在并加锁;
     /// @param cstrUteName UTE进程名，也是锁文件名；
     /// @param cstrStrategyLockFile 策略进程名，也是锁文件名；
-    /// @return 
-    bool Init(const char* cstrUteName, const char* cstrStrategyLockFile, 
-              int iEventSleepSec, StrategyMessageManager* strategy_message_manager);
+    /// @param pStrategyMessageManager 策略进程的消息管理器；
+    /// @param iEventSleepSec 事件监听线程的睡眠时间间隔，默认为5秒；
+    /// @return 是否成功初始化
+    bool Init(const char* cstrUteName, unsigned long long ulStrategyKey, 
+              StrategyMessageManager* pStrategyMessageManager, int iEventSleepSec = 5);
+
+    /// @brief UTE进程端初始化接口;
+    /// 1、创建 UTE进程对应的锁文件，并且加锁；
+    /// @param cstrUteName UTE进程名，也是锁文件名；
+    /// @param pUteMessageManager UTE进程的消息管理器；
+    /// @param iEventSleepSec 事件监听线程的睡眠时间间隔，默认为5秒；
+    bool Init(const char* cstrUteName,  UteMessageManager* pUteMessageManager, int iEventSleepSec = 5);              
 
     // 通过本地以策略ID为名的文件，获取对应的上次的BatchID；
     unsigned int GetSetStrategyBatchID(unsigned int StrategySysID);
@@ -59,22 +71,28 @@ public:
     /// @param cstrLockFileName 锁文件名；
     /// @param bNeedCreate 是否需要创建锁文件，默认为false；
     /// @return 成功返回FD， 失败返回-1；
-    int AddListenLockFile(const char* cstrLockFileName, bool bNeedCreate = false);
-
-
-
+    bool AddListenLockFile(const char* cstrLockFileName);
 
 private:
-    int  iMyFd_;                  // 策略进程对应的锁文件;
-    int  iOppositeFd_;            // UTE进程对应的锁文件;
+
+    // int  iMyFd_;                  // 策略进程对应的锁文件;
+    // int  iOppositeFd_;            // UTE进程对应的锁文件;
+    // std::string strMyLockFileName_;  // 策略进程对应的锁文件名;
+    // std::string strOppositeLockFileName_;  // UTE进程对应的锁文件名;
+
 
     std::unordered_map<std::string, int> mapListenLockFileFd_;  // 定时监听的锁文件描述符与对应的锁文件名的映射;
+    std::unordered_map<std::string, int> mapNonListenLockFileFd_;  // 非监听的锁文件描述符与对应的锁文件名的映射;
+
+    
 
     int  iHeartBeatSec_;          // 心跳时间间隔;
-    int  iWaitUteSec_;      // 等待UTE启动时间间隔;
-    std::string strMyLockFileName_;  // 策略进程对应的锁文件名;
-    std::string strOppositeLockFileName_;  // UTE进程对应的锁文件名;
-    std::shared_ptr<std::thread> shptrHearbeatThread_;  // 检验UTE进程是否还在运行的线程;
+
+    std::shared_ptr<std::thread> shptrHearbeatThread_;   // 监听锁文件的心跳线程;
+    std::mutex mtxHeartbeat_;  // 心跳线程的互斥锁，用于保护 mapListenLockFileFd_ ；
 
     StrategyMessageManager*   pStrategyMessageManager_;  // 策略进程的消息管理器,心跳线程需要用到;
+    UteMessageManager*        pUteMessageManager_;       // UTE进程的消息管理器,心跳线程需要用到;
+
+    int  iWaitUteSec_;      // 等待UTE启动时间间隔 - 策略进程专用;    
 };

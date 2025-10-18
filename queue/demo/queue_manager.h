@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lock_file_manager.h"
 #include "mpmc_queue.h"
 #include "external_message.h"
 
@@ -7,6 +8,7 @@
 #include <thread>
 
 class StrategyMessageManager;
+class UteMessageManager;
 
 enum WorkerType {
     Consumer=0,
@@ -30,8 +32,10 @@ public:
         Release();
     }
 
+    bool Init(StrategyMessageManager* pStrategyMessageManager, WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory = true);
 
-    bool Init(const char* cstrSharedMemName, StrategyMessageManager* pStrategyMessageManager, WorkerType workerType, bool bIsCreateSharedMemory = true);
+    bool Init(UteMessageManager* pUteMessageManager, WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory = true);
+
 
     bool AttachShareMemory(const char* cstrSharedMemName);
 
@@ -55,6 +59,7 @@ private:
     WorkerType                   workerType_;            // 锁文件句柄;
 
     StrategyMessageManager       *pStrategyMessageManager_;      // 策略进程对应的策略消息管理器;
+    UteMessageManager             *pUteMessageManager_;            // UTE进程对应的策略消息管理器;
 
     std::shared_ptr<std::thread>    shptrConsumerThread_;           // 策略进程对应的锁文件;
 };
