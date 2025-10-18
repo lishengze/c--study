@@ -1,6 +1,6 @@
 #include "ute_message_manager.h"
 
-RspQueueManager* UteMessageManager::CreateRspQueueManager(const char* strStrategyKey){
+QueueManager* UteMessageManager::CreateRspQueueManager(const char* strStrategyKey){
     return nullptr;
 }
 

@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-#include "req_queue.h"
+#include "queue_manager.h"
 #include "rsp_queue.h"
 
 using std::vector;
@@ -45,7 +45,7 @@ public:
     /// 入参是否要增加共享队列相关参数？
     bool Init(UINT64 UTESysID);
 
-    RspQueueManager* CreateRspQueueManager(const char* strStrategyKey);
+    QueueManager* CreateRspQueueManager(const char* strStrategyKey);
 
 
     /// @brief 策略进程发送消息给UTE进程;
@@ -68,7 +68,7 @@ private:
     bool m_bInit;                   // 是否初始化成功;
 
     QueueManager* m_pReqQueue;                           // 请求队列管理器;
-    std::unordered_map<std::string, RspQueueManager*> m_mapRspQueue;     // 响应队列管理器;
+    std::unordered_map<std::string, QueueManager*> m_mapRspQueue;     // 响应队列管理器;
 
     // 策略进程对应lock文件map, 用于存储策略进程的key和心跳文件路径;
     std::unordered_map<std::string, std::string> m_mapStrategyHeartbeatFile;

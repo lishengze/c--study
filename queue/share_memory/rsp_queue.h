@@ -1,8 +1,8 @@
 #pragma once
 
-class RspQueueManager {    
+class QueueManager {    
 public:
-    RspQueueManager(int size) {
+    QueueManager(int size) {
         // m_size = size;
         // m_buffer = new char[m_size];
     }
