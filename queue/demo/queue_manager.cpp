@@ -169,13 +169,14 @@ bool QueueManager::Init(UteMessageManager* pUteMessageManager, WorkerType worker
     }
 
     if (bIsCreateSharedMemory) {
-        if (!AttachShareMemory(cstrSharedMemName)) return false;
+        // 共享内存名称不为空时，尝试打开已有的共享内存
+        if (strcmp(cstrSharedMemName, "") != 0) {
+            return AttachShareMemory(cstrSharedMemName); // 尝试打开已有的共享内存 -- 对于UTE进程，需要映射对应的策略进程的共享内存；
+        } else {
+            return InitQueueWithoutSharedMemory(); // 创建内存中的无所队列 -- 对于UTE进程，创建转发 API请求回报的无锁队列；
+        }
     } else {
-        if (!CreateShareMemory(cstrSharedMemName)) return false;
-    }
-
-    if (workerType_ == Consumer) {
-        StartConsumerThread();
+        return CreateShareMemory(cstrSharedMemName); // 创建新的共享内存 -- 对于UTE进程，创建接受策略进程发送的请求的无锁队列；
     }
 
 
@@ -183,7 +184,23 @@ bool QueueManager::Init(UteMessageManager* pUteMessageManager, WorkerType worker
 }
 
 
+bool QueueManager::InitQueueWithoutSharedMemory() {
+    bIsAttachSharedMemory_ = false;
+    bIsCreateSharedMemory_ = false;
 
+    pMpmcQueue_ = new tech::mpmc_queue<UteMsg>();
+
+    if (!pMpmcQueue_) {
+        // todo 增加日志输出
+        return false;
+    }
+    if (!pMpmcQueue_->create(uiQueueBlockCount_)) {
+        // todo 增加日志输出
+        return false;
+    }
+
+    return true;
+}
 
 bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
     // 打开已有的共享内存对象
@@ -269,14 +286,21 @@ void QueueManager::Release() {
         return;
     }
 
-    if (munmap(pMpmcQueue_, uiMemorySize_) == -1) {
+    /// 若是映射了共享内存，则需要解除内存映射
+    if (bIsAttachSharedMemory_ && munmap(pMpmcQueue_, uiMemorySize_) == -1) {
         // perror("munmap failed");
         // todo 增加日志输出
         return;
     }
 
+    /// 若是创建了共享内存，则需要删除共享内存对象
     if (bIsCreateSharedMemory_) {
         shm_unlink(strSharedMemName_.c_str());
+    }
+
+    /// 若是未映射共享内存，则需要手动释放内存
+    if (!bIsAttachSharedMemory_) {
+        if (!pMpmcQueue_) delete pMpmcQueue_;
     }
         
 }

@@ -23,7 +23,7 @@ using UINT64 = unsigned long long;
 /// 3. 
 class UteMessageManager {
 public:
-    UteMessageManager() : m_bInit(false), m_pReqQueue(nullptr), m_UTESysName("") {
+    UteMessageManager() : m_bInit(false), m_UTESysName("") {
         m_pfnOnEvent = nullptr;
         m_pfnOnMessage = nullptr;
     }
@@ -88,7 +88,7 @@ private:
     QueueManager m_pStrategyReqQueue;                           // 策略请求队列管理器;
     QueueManager m_pApiQueue;                                   // API请求回报队列管理器;
 
-    std::unordered_map<unsigned long long, std::shared_ptr< QueueManager>> m_mapRspQueue;     // 响应队列管理器;
+    std::unordered_map<unsigned long long, std::shared_ptr< QueueManager>> m_mapRspQueue;     // 策略进程接收回报的共享内存队列管理器;
 
     // 策略进程对应lock文件map, 用于存储策略进程的key和心跳文件路径;
     std::unordered_map<unsigned long long , std::string> m_mapStrategyHeartbeatFile;

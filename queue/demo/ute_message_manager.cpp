@@ -23,6 +23,7 @@ bool UteMessageManager::Init(const char* cstrUTESysName) {
     m_pStrategyReqQueue.Init(this, Consumer, (std::string(cstrUTESysName)+".queue").c_str(),  true);
 
     m_pApiQueue.Init(this, Consumer, "",  false);
+    
     // m_pReqQueue = new QueueManager();
     // if (!m_pReqQueue->Init(cstrUTESysName, QUEUE_TYPE_REQ)) {
     //     // todo 增加日志信息;
