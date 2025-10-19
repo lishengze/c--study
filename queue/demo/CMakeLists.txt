@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -pthread  -flto=8")
 
 include_directories(./)
-include_directories(include)
+include_directories(lib_src/include)
 include_directories(lib_src)
 
 
@@ -21,5 +21,9 @@ AUX_SOURCE_DIRECTORY(./test_src TEST_SRC)
 SET(ALL_SRC ${MAIN_SRC} ${LIB_SRC} ${TEST_SRC})
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${ALL_SRC} )
+
+add_subdirectory(test_strategy_client)
+
+add_subdirectory(test_ute_server)
 
 
