@@ -5,6 +5,7 @@ namespace share_common
 
 bool StrategyMessageManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
     // TODO: Implement the message sending logic here.
+    m_ReqQueueManager.SendMsg(iMsgID, pMsgBuf, iMsgLen, m_StrategyKey);
     return true;
 }
 
@@ -35,26 +36,14 @@ bool StrategyMessageManager::Init(const char* UteName, unsigned int uiStrategySy
     }
 
     // 初始化请求相关的无锁队列 以及 对应的 共享内存 -- 共享内存是UTE进程创建好， 这里只需要attach即可;
-    m_ReqQueueManager.Init(this, Consumer, GetQueueName(UteName).c_str(),  false);
+    m_ReqQueueManager.Init(this, Producer, GetQueueName(UteName).c_str(),  false);
 
     // 初始化响应相关的无锁队列 以及 对应的 共享内存 -- 共享内存是策略进程创建好， 这里需要创建和attach;
-    m_RspQueueManager.Init(this, Producer, GetQueueName(m_StrategyKey).c_str(), true);
+    // 创建好后，便开始监听队列消息;
+    m_RspQueueManager.Init(this, Consumer, GetQueueName(m_StrategyKey).c_str(), true);
 
     return true;
 }
 
-void StrategyMessageManager::ProcessMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
-
-    // if (kPktLoginAns == iMsgID) {
-    //     LogOnAns* pLogOnAns = (LogOnAns*)pMsgBuf;
-    //     if (kSuccess == pLogOnAns->error_code) {
-    //         // 登录成功, 说明
-    //         m_LockFileManager.SetLoginSuccess();
-    //     } 
-    // }
-
-    // // 处理消息
-    // m_pfnOnMessage(iMsgID, pMsgBuf, iMsgLen);
-}
 
 } // namespace share_common 

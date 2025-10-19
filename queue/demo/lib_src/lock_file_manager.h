@@ -42,6 +42,11 @@ public:
     LockFileManager():shptrHearbeatThread_{nullptr}, pUteMessageManager_{nullptr}, 
         pStrategyMessageManager_{nullptr},iHeartBeatSec_{1},iWaitUteSec_{1} {}
     ~LockFileManager() {
+
+        if (shptrHearbeatThread_ && shptrHearbeatThread_->joinable()) {
+            shptrHearbeatThread_->join();
+        }
+        
         // iMyFd_ > 0 ? close(iMyFd_) : 0;    
         // todo 是否需要删除 策略进程对应的锁文件；
     }

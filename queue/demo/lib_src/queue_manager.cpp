@@ -154,10 +154,6 @@ void QueueManager::StartConsumerThread() {
         LOG_ERROR("create consumer thread failed");
         return;
     }
-
-    if (shptrConsumerThread_->joinable()) {
-        shptrConsumerThread_->join();
-    }
 }
 
 bool QueueManager::Init(WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory) {

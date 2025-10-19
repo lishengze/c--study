@@ -13,5 +13,7 @@ int main()
 
     LOG_INFO("UTE Server Test Start");    
 
+    TestUteServer();
+
     return 0;    
 }   

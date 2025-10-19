@@ -32,6 +32,10 @@ public:
     }
 
     ~UteMessageManager() {
+        if (shptrConsumerThread_ && shptrConsumerThread_->joinable()) {
+            shptrConsumerThread_->join();
+        }    
+
         for (auto it : m_mapRspQueue) {
             if (it.second)
                 delete it.second;
@@ -79,6 +83,8 @@ public:
     /// 外部设置的参数;
     CallBackFuncType m_pfnOnMessage;       // 消息回调函数,通知UTE请求相关信息;
     CallBackFuncType m_pfnOnEvent;           // 事件回调函数,告知UTE进程, 某个策略进程是否正常运行;
+
+    std::unordered_map<unsigned long long, QueueManager*>& get_map_rsp_queue() { return m_mapRspQueue; }    // 共
 
 private:
 

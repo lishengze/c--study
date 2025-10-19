@@ -44,8 +44,6 @@ public:
     /// @param pfnOnMessage 
     void SetOnMessage(OnMessage pfnOnMessage) { m_pfnOnMessage = pfnOnMessage; }
 
-    void ProcessMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen);
-
     /// @brief 初始化消息管理器, 设置策略进程的系统ID和UTE进程的系统ID;
     ///        在Init 会校验, OnMessage,OnEvent 是否设置;
     ///        如果未设置, 会返回false;

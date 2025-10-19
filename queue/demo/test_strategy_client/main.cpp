@@ -13,5 +13,7 @@ int main()
 
     LOG_INFO("Strategy Client Test Start");    
 
+    TestStrategyClient();
+
     return 0;    
 }   

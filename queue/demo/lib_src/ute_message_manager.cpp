@@ -19,6 +19,8 @@ bool UteMessageManager::Init(const char* cstrUTESysName,int iApiReqProcessCount,
 
     // 创建内存中的API请求队列， 这里不需要创建和attach共享内存， 直接创建即可;
     m_pApiQueue.Init(Consumer, "",  false); 
+
+    StartListenQueue();
     
     return true;
 }
@@ -82,9 +84,6 @@ void UteMessageManager::StartListenQueue() {
         return;
     }
 
-    if (shptrConsumerThread_->joinable()) {
-        shptrConsumerThread_->join();
-    }    
 }
 
 

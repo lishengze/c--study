@@ -30,12 +30,16 @@ enum WorkerType {
 */
 class QueueManager {
 public:
-    QueueManager():uiQueueBlockCount_{10000},uiMemorySize_{1024*1024*10}, 
+    QueueManager():uiQueueBlockCount_{10000},uiMemorySize_{1024*1024*10}, shptrConsumerThread_{nullptr},
     pMpmcQueue_{nullptr},bIsCreateSharedMemory_{false},bIsAttachSharedMemory_{false},
     workerType_{WorkerType::Consumer} {
     }
 
     ~QueueManager() {
+        if (shptrConsumerThread_ && shptrConsumerThread_->joinable()) {
+            shptrConsumerThread_->join();
+        }
+
         Release();
     }
 
@@ -69,8 +73,12 @@ public:
     bool trypop(UteMsg& msg);
 
 
-
-    void SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey);
+    /// @brief 发送消息到无锁队列中;
+    /// @param iMsgID : 消息ID;
+    /// @param pMsgBuf : 消息内容;
+    /// @param iMsgLen : 消息长度;
+    /// @param ulStrategyKey : 策略进程的唯一标识 - 策略端写入请求时需要填入， UTE端写回报不需要写；
+    void SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey =0);
 
     void StartConsumerThread();
 

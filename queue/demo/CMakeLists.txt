@@ -20,6 +20,8 @@ AUX_SOURCE_DIRECTORY(./test_src TEST_SRC)
 
 SET(ALL_SRC ${MAIN_SRC} ${LIB_SRC} ${TEST_SRC})
 
+
+
 ADD_EXECUTABLE(${PROJECT_NAME} ${ALL_SRC} )
 
 add_subdirectory(test_strategy_client)

@@ -18,6 +18,7 @@ const unsigned int kPktOrderAns = 2003; //委托应答
 const unsigned int kPktCancelOrderAns= 2004; //撤单应答
 const unsigned int kPktOrderMatch = 2005; //委托成交回报
 const unsigned int kPktRejectMsg = 9; //请求拒单
+const unsigned int kPktStrategyEnd = 10; //策略结束
 
 
 //order_staus字典
@@ -193,6 +194,9 @@ struct RejectMsg
     char cancel_flag; //撤单标识
 };
 
+struct StrategyEnd {
+    unsigned long long ulStrategyKey; //策略ID
+};
 
 /// @brief 通用请求消息结构体
 struct UteMsg {
