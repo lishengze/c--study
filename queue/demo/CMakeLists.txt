@@ -7,11 +7,11 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 PROJECT(demo)
 
 set(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -pthread  -flto")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -pthread  -flto=8")
 
 include_directories(./)
 include_directories(include)
-include_directories(src)
+include_directories(lib_src)
 
 
 AUX_SOURCE_DIRECTORY(. MAIN_SRC)

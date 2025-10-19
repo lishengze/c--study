@@ -1,5 +1,6 @@
 #include "test_lock_file.h"
-#include "../lib_src/lock_file_manager.h"
+#include "logger.h"
+#include "lock_file_manager.h"
 #include <iostream>
 
 using namespace std;
@@ -10,7 +11,9 @@ using namespace share_common;
 
 /// @brief 测试获取策略批次号的功能;
 void test_GetSetStrategyBatchID(){
-    cout << "[START]: test_GetSetStrategyBatchID ------------\n" << endl;
+    LOG_INFO("[START]: test_GetSetStrategyBatchID ------------ \n");
+
+    // LOG_TRACE("test_GetSetStrategyBatchID start");
 
     LockFileManager lockFileManager;
 
@@ -21,12 +24,16 @@ void test_GetSetStrategyBatchID(){
     unsigned uiBatchID2 = lockFileManager.GetSetStrategyBatchID(uiStrategySysID);
 
     if (uiBatchID1 != uiBatchID2 - 1) {
-        std::cerr << "[ERROR]: uiBatchID1!= uiBatchID2 - 1,  uiBatchID1: " << uiBatchID1 << ", uiBatchID2: " << uiBatchID2 << std::endl;
+        LOG_ERROR("uiBatchID1!= uiBatchID2 - 1,  uiBatchID1: {}, uiBatchID2: {}", uiBatchID1, uiBatchID2);
+
+        // std::cerr << "[ERROR]: uiBatchID1!= uiBatchID2 - 1,  uiBatchID1: " << uiBatchID1 << ", uiBatchID2: " << uiBatchID2 << std::endl;
     } else {
-        std::cout << "[SUCCESS]: uiBatchID1 == uiBatchID2 - 1, uiBatchID1: " << uiBatchID1 << ", uiBatchID2: " << uiBatchID2 << std::endl;
+        LOG_INFO("uiBatchID1 == uiBatchID2 - 1, uiBatchID1: {}, uiBatchID2: {}", uiBatchID1, uiBatchID2);
+
+        // std::cout << "[SUCCESS]: uiBatchID1 == uiBatchID2 - 1, uiBatchID1: " << uiBatchID1 << ", uiBatchID2: " << uiBatchID2 << std::endl;
     }
 
-    cout << "\n[END]: test_GetSetStrategyBatchID ------------" << endl;
+    LOG_INFO("[END]: test_GetSetStrategyBatchID ------------ \n");
 }
 
 void test_strategy_lock_file() {

@@ -7,6 +7,7 @@
 #include <memory>
 #include <thread>
 #include <string>
+#include "logger.h"
 
 namespace share_common 
 {

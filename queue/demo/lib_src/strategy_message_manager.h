@@ -12,6 +12,8 @@
 
 #include "queue_manager.h"
 #include "lock_file_manager.h"
+#include "logger.h"
+#include "util.h"
 
 namespace share_common 
 {
@@ -27,6 +29,10 @@ public:
         m_pfnOnMessage = nullptr;
         m_iEventSleepSec = 0;
         memset(m_UteName, 0, sizeof(m_UteName));
+
+        std::string loggerName = "startegy_message_manager_"+ SecTimeStr("%Y%m%d") + ".log";
+        share_common::logger::init(loggerName);
+        share_common::logger::set_level(spdlog::level::debug);
     }
 
     /// @brief 设置事件回调函数, 告知策略进程, UTE进程是否正常运行;

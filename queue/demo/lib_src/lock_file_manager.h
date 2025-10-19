@@ -9,6 +9,7 @@
 #include <map>
 #include <unordered_map>
 #include <mutex>
+#include "logger.h"
 
 namespace share_common 
 {

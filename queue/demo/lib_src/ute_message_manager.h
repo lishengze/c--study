@@ -6,6 +6,8 @@
 
 #include "queue_manager.h"
 #include "lock_file_manager.h"
+#include "util.h"
+#include "logger.h"
 
 namespace share_common 
 {
@@ -23,6 +25,10 @@ public:
     UteMessageManager() : m_bInit(false), m_UTESysName(""),shptrConsumerThread_{nullptr} {
         m_pfnOnEvent = nullptr;
         m_pfnOnMessage = nullptr;
+
+        std::string loggerName = "ute_message_manager_"+ SecTimeStr("%Y%m%d") + ".log";
+        share_common::logger::init(loggerName);
+        share_common::logger::set_level(spdlog::level::debug);        
     }
 
     ~UteMessageManager() {

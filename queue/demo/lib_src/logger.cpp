@@ -5,13 +5,20 @@
 
 namespace share_common
 {
-    std::shared_ptr<spdlog::logger> logger::async_logger;
-    int logger::log_level;
+    std::shared_ptr<spdlog::logger> logger::async_logger = nullptr;
+    int logger::log_level = -1;
     
     void logger::init(std::string name)
     {
+        if (nullptr != async_logger) {
+            return; // already init
+        }
         async_logger = spdlog::create_async<spdlog::sinks::rotating_file_sink_mt>(
-            "async_file_logger", name, (std::size_t)1024 * 1024 * 1024 * 3, 1000); 
+            "async_file_logger", 
+            name, 
+            (std::size_t)1024 * 1024 * 1024 * 3, 
+            1000); 
+
         async_logger->set_pattern("[%Y-%m-%d %H:%M:%S.%f] %P %t [%l] %s %! %# | %v");
         async_logger->set_level(spdlog::level::debug);
         async_logger->flush_on(spdlog::level::err);
@@ -20,6 +27,9 @@ namespace share_common
 
     void logger::set_level(int level)
     {
+        if (log_level > 0) {
+            return; // already set
+        }
         log_level = level;
         async_logger->set_level((spdlog::level::level_enum)level);
     }
