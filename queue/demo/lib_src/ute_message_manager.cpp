@@ -10,7 +10,7 @@ bool UteMessageManager::Init(const char* cstrUTESysName,int iApiReqProcessCount,
     ///锁文件相关初始化;
     // 初始化UTE进程的锁文件管理器;
     if (!m_LockFileManager.Init(cstrUTESysName, this, 5)) {
-        // todo 增加日志信息;
+        LOG_ERROR("Init lock file {} manager failed.", cstrUTESysName);
         return false;
     }
 
@@ -34,17 +34,17 @@ QueueManager* UteMessageManager::CreateStrategyRspQueue(unsigned long long ulStr
     if (m_mapRspQueue.find(ulStrategyKey)!= m_mapRspQueue.end()) {
         return m_mapRspQueue[ulStrategyKey];
     }
-        // todo 增加日志输出
+
     QueueManager* pStrategyRspQueue = new QueueManager();
 
     if (!pStrategyRspQueue) {
-        // todo 增加日志输出
+        LOG_ERROR("Create strategy rsp queue {} failed.", ulStrategyKey);
         return nullptr;
     }
 
     // 初始化策略进程接收回报的共享内存队列管理器，这块共享内存是策略进程创建好， 这里只需要创建和attach即可;
     if (!pStrategyRspQueue->Init(Producer, GetQueueName(ulStrategyKey).c_str(), false)) {
-        // todo 增加日志输出
+        LOG_ERROR("Init strategy rsp queue {} failed.", ulStrategyKey);
         return nullptr;
     }
 
@@ -78,7 +78,7 @@ void UteMessageManager::StartListenQueue() {
     });
 
     if (!shptrConsumerThread_) {
-        // todo 增加日志输出
+        LOG_ERROR("Create UTE consumer thread failed.");
         return;
     }
 

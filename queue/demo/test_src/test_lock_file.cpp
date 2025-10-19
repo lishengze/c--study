@@ -26,11 +26,8 @@ void test_GetSetStrategyBatchID(){
     if (uiBatchID1 != uiBatchID2 - 1) {
         LOG_ERROR("uiBatchID1!= uiBatchID2 - 1,  uiBatchID1: {}, uiBatchID2: {}", uiBatchID1, uiBatchID2);
 
-        // std::cerr << "[ERROR]: uiBatchID1!= uiBatchID2 - 1,  uiBatchID1: " << uiBatchID1 << ", uiBatchID2: " << uiBatchID2 << std::endl;
     } else {
         LOG_INFO("uiBatchID1 == uiBatchID2 - 1, uiBatchID1: {}, uiBatchID2: {}", uiBatchID1, uiBatchID2);
-
-        // std::cout << "[SUCCESS]: uiBatchID1 == uiBatchID2 - 1, uiBatchID1: " << uiBatchID1 << ", uiBatchID2: " << uiBatchID2 << std::endl;
     }
 
     LOG_INFO("[END]: test_GetSetStrategyBatchID ------------ \n");

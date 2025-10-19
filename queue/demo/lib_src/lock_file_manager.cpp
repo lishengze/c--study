@@ -16,6 +16,7 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
 
     if (!pStrategyMessageManager_ || !pStrategyMessageManager_->m_pfnOnEvent) {
         // todo 增加日志信息;
+        LOG_ERROR("Init: pStrategyMessageManager_ or pStrategyMessageManager_->m_pfnOnEvent is NULL");
         return false;
     }    
     
@@ -28,7 +29,7 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
        if (iUteFd > 0) {
            opposite_alive = (lockf(iUteFd, F_TEST, 0) != 0);
            if (opposite_alive) {
-            // todo 增加日志信息;
+                LOG_INFO("UTE Lock file {} already exists and locked, opposite process is alive", strUteName);
                 break; // UTE进程已启动
            } else {
                 std::this_thread::sleep_for(std::chrono::seconds(iWaitUteSec_));
@@ -43,15 +44,10 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
     int iStrategyFd = shm_open(strStrategyLockFile.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
     if (iStrategyFd < 0)
     {
-        // #ifdef APP_USE_ADK_LOG
-        // ADK_LOG_ERROR_TF(100003, "Init info", "{1} iFile open failed, errinfo [{2}]", name + PRODUCER_LOCK_POSTFIX, strerror(errno));
-        // #else
-        // LOG_ERROR("{} iFile open failed, errinfo [{}]", (name + PRODUCER_LOCK_POSTFIX), strerror(errno));
-        // #endif
-        // todo 增加日志信息;
+        LOG_ERROR("Create Strategy lock file {} failed, errinfo [{}]", strStrategyLockFile, strerror(errno));
         return false;
     } else {
-        // todo 增加日志信息;
+        LOG_INFO("Create Strategy lock file{} SUCCESS", strStrategyLockFile);
     }
     mapNonListenLockFileFd_[std::to_string(ulStrategyKey)] = iStrategyFd;
     
@@ -64,7 +60,7 @@ bool LockFileManager::Init(const char* cstrUteName,  UteMessageManager* pUteMess
     pUteMessageManager_ = pUteMessageManager;
 
     if (!pUteMessageManager || !pUteMessageManager->m_pfnOnEvent) {
-        // todo 增加日志信息;
+        LOG_ERROR("Init: pUteMessageManager_ or pUteMessageManager->m_pfnOnEvent is NULL");
         return false;
     }
 
@@ -79,9 +75,10 @@ bool LockFileManager::Init(const char* cstrUteName,  UteMessageManager* pUteMess
         // LOG_ERROR("{} iFile open failed, errinfo [{}]", (name + PRODUCER_LOCK_POSTFIX), strerror(errno));
         // #endif
         // todo 增加日志信息;
+        LOG_ERROR("Create UTE lock file {} failed, errinfo [{}]", cstrUteName, strerror(errno));
         return false;
     } else {
-        // todo 增加日志信息;
+        LOG_INFO("Create UTE lock file {} SUCCESS", cstrUteName);
     }
 
     mapNonListenLockFileFd_[cstrUteName] = iUteFd;
@@ -96,24 +93,23 @@ unsigned int LockFileManager::GetSetStrategyBatchID(unsigned int StrategySysID) 
     std::string strBatchIDFileName = std::to_string(StrategySysID) + ".batchid";
     std::ifstream iFile(strBatchIDFileName);
 
-    unsigned int result = 0;
+    unsigned int result = 1;
 
-    unsigned int batchID = 0;
+    unsigned int batchID = 1;
 
 
     if (iFile.good()) {
         // 若是文件存在，读取batchID；
         if (!iFile.is_open()) {
-            // todo 增加日志信息;
-            std::cout << "open file failed:" << StrategySysID<< std::endl;
+            LOG_ERROR("open strategy batchid file failed:{}", strBatchIDFileName);
             return 0;
         }
         
         if (!(iFile >> batchID)) {
-            // todo 增加日志信息;
-            std::cout << "read file failed:" << StrategySysID<< std::endl;
+            LOG_ERROR("read strategy batchid file failed:{}", strBatchIDFileName);
             return 0;
         }
+
         iFile.close();
 
         result = batchID; // 读取到的batchID；
@@ -126,8 +122,7 @@ unsigned int LockFileManager::GetSetStrategyBatchID(unsigned int StrategySysID) 
     // 写入新的batchID；    
     std::ofstream oFile(strBatchIDFileName);
     if (!oFile.is_open()) {
-        // todo 增加日志信息;
-        std::cout << "write file failed:" << StrategySysID<< std::endl;
+        LOG_ERROR("write strategy batchid file failed:{}", strBatchIDFileName);
         return 0;
     }
     oFile << batchID;
@@ -173,15 +168,10 @@ bool LockFileManager::AddListenLockFile(unsigned long long ulFileKey) {
     int iFd = shm_open(GetLockFileName(ulFileKey).c_str(), O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
     if (iFd < 0)
     {
-        // #ifdef APP_USE_ADK_LOG
-        // ADK_LOG_ERROR_TF(100003, "Init info", "{1} iFile open failed, errinfo [{2}]", name + PRODUCER_LOCK_POSTFIX, strerror(errno));
-        // #else
-        // LOG_ERROR("{} iFile open failed, errinfo [{}]", (name + PRODUCER_LOCK_POSTFIX), strerror(errno));
-        // #endif
-        // todo 增加日志信息;
+        LOG_ERROR("AddListenLockFile: {} {} FAILED", ulFileKey, iFd);
         return false;
     } else {
-        // todo 增加日志信息;
+        LOG_INFO("AddListenLockFile: {} {} SUCCESS", ulFileKey, iFd);
     }
 
     std::lock_guard<std::mutex> lock(mtxHeartbeat_);

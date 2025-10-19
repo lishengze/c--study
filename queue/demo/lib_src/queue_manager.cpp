@@ -123,7 +123,7 @@ bool QueueManager::Init(StrategyMessageManager* pStrategyMessageManager, WorkerT
     pStrategyMessageManager_ = pStrategyMessageManager;
 
     if (!pStrategyMessageManager_) {
-        // todo 增加日志输出
+        LOG_ERROR("pStrategyMessageManager_ is null");
         return false;
     }
 
@@ -151,7 +151,7 @@ void QueueManager::StartConsumerThread() {
     });
 
     if (!shptrConsumerThread_) {
-        // todo 增加日志输出
+        LOG_ERROR("create consumer thread failed");
         return;
     }
 
@@ -187,11 +187,11 @@ bool QueueManager::InitQueueWithoutSharedMemory() {
     pMpmcQueue_ = new share_common::mpmc_queue<UteMsg>();
 
     if (!pMpmcQueue_) {
-        // todo 增加日志输出
+        LOG_ERROR("create queue failed");
         return false;
     }
     if (!pMpmcQueue_->create(uiQueueBlockCount_)) {
-        // todo 增加日志输出
+        LOG_ERROR("queue create  failed");
         return false;
     }
 
@@ -203,14 +203,14 @@ bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
     // 打开已有的共享内存对象
     int shm_fd = shm_open(cstrSharedMemName, O_RDWR, 0);
     if (shm_fd == -1) {
-        // perror("shm_open failed");
+        LOG_ERROR("shm_open {} failed ", cstrSharedMemName);
         return false;
     }
     
     // 获取共享内存大小
     struct stat stat_buf;
     if (fstat(shm_fd, &stat_buf) == -1) {
-        // perror("fstat failed"); todo 增加日志输出
+        LOG_ERROR("fstat {} failed ", cstrSharedMemName);
         close(shm_fd);
         return false;
     }
@@ -219,7 +219,7 @@ bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
     uiMemorySize_ = stat_buf.st_size; // 记录共享内存大小
     void* addr = mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (addr == MAP_FAILED) {
-        // perror("mmap failed"); todo 增加日志输出
+        LOG_ERROR("mmap {} failed ", cstrSharedMemName);
         close(shm_fd);
         return false;
     }
@@ -234,7 +234,7 @@ bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
     bIsCreateSharedMemory_ = true;
     int shm_fd = shm_open(cstrSharedMemName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if (shm_fd == -1) {
-        perror("shm_open failed");
+        LOG_ERROR("shm_open {} failed ", cstrSharedMemName);
         return false;
     }
     
@@ -243,7 +243,7 @@ bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
     // 设置共享内存大小
     uiMemorySize_ = sizeof(share_common::mpmc_queue<UteMsg>) + uiDataBlocksSize + 1024; // 计算完整大小
     if (ftruncate(shm_fd, uiMemorySize_) == -1) {
-        perror("ftruncate failed");
+        LOG_ERROR("ftruncate {} failed ", cstrSharedMemName);
         close(shm_fd);
         return false;
     }
@@ -251,7 +251,7 @@ bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
     // 映射共享内存
     void* addr = mmap(NULL, uiMemorySize_, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (addr == MAP_FAILED) {
-        perror("mmap failed");
+        LOG_ERROR("mmap {} failed ", cstrSharedMemName);
         close(shm_fd);
         return false;
     }
@@ -276,14 +276,14 @@ void QueueManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, u
 
 void QueueManager::Release() {
     if (!pMpmcQueue_) {
-        // todo 增加日志输出
+        LOG_ERROR("pMpmcQueue_ is null");
         return;
     }
 
     /// 若是映射了共享内存，则需要解除内存映射
     if (bIsAttachSharedMemory_ && munmap(pMpmcQueue_, uiMemorySize_) == -1) {
-        // perror("munmap failed");
-        // todo 增加日志输出
+
+        LOG_ERROR("munmap {} failed ", strSharedMemName_);
         return;
     }
 

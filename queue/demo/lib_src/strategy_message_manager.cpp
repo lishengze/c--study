@@ -11,25 +11,26 @@ bool StrategyMessageManager::SendMsg(int iMsgID, const char* pMsgBuf, const int 
 bool StrategyMessageManager::Init(const char* UteName, unsigned int uiStrategySysID) {
 
     if (!m_pfnOnMessage) {
-        // todo 增加日志信息;
+        LOG_ERROR("OnMessage callback function is not set.");
         return false;
     }
 
     if (!m_pfnOnEvent) {
-        // todo 增加日志信息;
+        LOG_ERROR("OnEvent callback function is not set.");
         return false;
     }
+
 
     /// 锁文件相关初始化;
     unsigned int uiBatchID = m_LockFileManager.GetSetStrategyBatchID(uiStrategySysID);
     if (uiBatchID == 0) {
-        // todo 增加日志信息;
+        LOG_ERROR("Failed to get or set batch ID.");
         return false;
     }
     unsigned long long m_StrategyKey = (uiStrategySysID << 32) | uiBatchID;
 
     if (!m_LockFileManager.Init(UteName, m_StrategyKey, this, m_iEventSleepSec)) {
-        // todo 增加日志信息;
+        LOG_ERROR("Failed to initialize lock file manager.");
         return false;
     }
 
