@@ -4,18 +4,19 @@ namespace share_common {
 
 bool UteMessageManager::Init(const char* cstrUTESysName,int iApiReqProcessCount, int iStrategyReqProcessCount)
 {
+    LOG_INFO("Init UTE message manager, utesysname:{}, api req process count:{}, strategy req process count:{}", cstrUTESysName, iApiReqProcessCount, iStrategyReqProcessCount);
     m_iApiReqProcessCount = iApiReqProcessCount;
     m_iStrategyReqProcessCount = iStrategyReqProcessCount;
 
     ///锁文件相关初始化;
     // 初始化UTE进程的锁文件管理器;
-    if (!m_LockFileManager.Init(cstrUTESysName, this, 5)) {
+    if (!m_LockFileManager.Init(GetLockFileName(cstrUTESysName).c_str(), this, 5)) {
         LOG_ERROR("Init lock file {} manager failed.", cstrUTESysName);
         return false;
     }
 
     // 初始化请求相关的无锁队列 以及 对应的 共享内存 - 共享内存是UTE进程创建好， 这里只需要创建和attach即可;
-    m_pStrategyReqQueue.Init(Consumer, GetQueueName(cstrUTESysName).c_str(),  false);
+    m_pStrategyReqQueue.Init(Consumer, GetQueueName(cstrUTESysName).c_str(),  true);
 
     // 创建内存中的API请求队列， 这里不需要创建和attach共享内存， 直接创建即可;
     m_pApiQueue.Init(Consumer, "",  false); 
@@ -59,9 +60,11 @@ QueueManager* UteMessageManager::CreateStrategyRspQueue(unsigned long long ulStr
 
 void UteMessageManager::StartListenQueue() {
 
+    LOG_INFO("Start listen API queue And strategy queue!");
+
     shptrConsumerThread_ = std::make_shared<std::thread>([this]() {
         while (true) {
-            /// 先处理 策略请求队列 m_iStrategyReqProcessCount 个请求;
+            /// 先尝试处理 策略请求队列 m_iStrategyReqProcessCount 个请求;
             for (int i = 0; i < m_iStrategyReqProcessCount; i++) {
                 UteMsg uteMsg;
                 if (m_pStrategyReqQueue.trypop(uteMsg)) {
@@ -69,13 +72,15 @@ void UteMessageManager::StartListenQueue() {
                 }
             }
 
-            /// 再处理 API 请求队列 m_iApiReqProcessCount 个请求;
+            /// 再尝试处理 API 请求队列 m_iApiReqProcessCount 个请求;
             for (int i = 0; i < m_iApiReqProcessCount; i++) {
                 UteMsg uteMsg;
                 if (m_pApiQueue.trypop(uteMsg)) {
                     m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iStrategyKey);
                 }
             }
+
+            sleep(1); //todo 测试专用;
         }
     });
 

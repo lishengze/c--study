@@ -5,7 +5,7 @@
 using namespace share_common;
 
 void StrategyOnEvent(int iErrCode, const char* pErrDesc) {
-    LOG_INFO("StrategyOnEvent: iErrCode={}, pErrDesc={}", iErrCode, pErrDesc);
+    LOG_WARN("StrategyOnEvent: iErrCode={}, pErrDesc={}", iErrCode, pErrDesc);
 }
 
 void StrategyOnMessage(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
@@ -15,6 +15,8 @@ void StrategyOnMessage(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
 
 // 举例进行登录请求设置
 void DoLoginReq(StrategyMessageManager& stragegyMsgManager) {
+    LOG_INFO("DoLoginReq");
+
     LogOnReq req = {0};
     req.heart_bt_int = 3;
     req.trade_order_user.agw_seq_id = 10001;
@@ -29,6 +31,7 @@ void DoLoginReq(StrategyMessageManager& stragegyMsgManager) {
 }
 
 void DoTradeOrderReq(StrategyMessageManager& stragegyMsgManager) {
+    LOG_INFO("DoTradeOrderReq");
     TradeOrderReq req = {0};
     strcpy(req.trade_order_user.fund_account_id, "XXXXXX");
     strcpy(req.trade_order_user.branch_id, "XXXXXX");

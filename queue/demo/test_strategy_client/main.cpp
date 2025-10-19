@@ -7,7 +7,7 @@ using namespace share_common;
 
 int main()
 {
-    std::string loggerName = "strategy_client_"+ SecTimeStr("%Y%m%d_%H%M%S") + ".log";
+    std::string loggerName = "strategy_client_"+ SecTimeStr("%Y%m%d") + ".log";
     share_common::logger::init(loggerName);
     share_common::logger::set_level(spdlog::level::debug);
 

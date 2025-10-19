@@ -8,6 +8,8 @@ using namespace share_common;
 UteMessageManager uteMessageManager;
 
 void SendLogAns(QueueManager* pQueueManager) {
+    LOG_INFO("SendLogAns");
+
     LogOutAns stLogOutAns;
 
     strcpy(stLogOutAns.trade_order_user.fund_account_id, "XXXXXX");
@@ -21,6 +23,8 @@ void SendLogAns(QueueManager* pQueueManager) {
 }
 
 void SendOrderRsp(QueueManager* pQueueManager) {
+    LOG_INFO("SendOrderRsp");
+    
     TradeOrderER stTradeOrderERP;
 
     strcpy(stTradeOrderERP.trade_order_user.fund_account_id, "XXXXXX");

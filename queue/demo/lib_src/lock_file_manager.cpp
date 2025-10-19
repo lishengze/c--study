@@ -11,6 +11,7 @@ namespace share_common
 
 bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrategyKey, 
            StrategyMessageManager* pStrategyMessageManager, int iEventSleepSec) {
+
     pStrategyMessageManager_ = pStrategyMessageManager;
     iHeartBeatSec_ = iEventSleepSec;
 
@@ -22,6 +23,9 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
     
     int iUteFd = -1;
     std::string strUteName = GetLockFileName(cstrUteName);
+
+    LOG_INFO("Wait For UTE: {} To Start! ", strUteName);
+
     do {
        bool opposite_alive = false;
        iUteFd = shm_open(strUteName.c_str(), O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
@@ -34,8 +38,12 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
            } else {
                 std::this_thread::sleep_for(std::chrono::seconds(iWaitUteSec_));
            }
-       }       
+       }     
+       
+       sleep(iHeartBeatSec_);
     } while(iUteFd < 0);
+
+    LOG_INFO("Check UTE lock file {} , fd: {} SUCCESS", strUteName, iUteFd);
 
     mapListenLockFileFd_[std::string(cstrUteName)] = iUteFd; // 监听 UTE 进程的锁文件描述符;
 
@@ -44,10 +52,10 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
     int iStrategyFd = shm_open(strStrategyLockFile.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
     if (iStrategyFd < 0)
     {
-        LOG_ERROR("Create Strategy lock file {} failed, errinfo [{}]", strStrategyLockFile, strerror(errno));
+        LOG_ERROR("Create Strategy lock file: {} failed, errinfo [{}]", strStrategyLockFile, strerror(errno));
         return false;
     } else {
-        LOG_INFO("Create Strategy lock file{} SUCCESS", strStrategyLockFile);
+        LOG_INFO("Create Strategy lock file: {} SUCCESS", strStrategyLockFile);
     }
     mapNonListenLockFileFd_[std::to_string(ulStrategyKey)] = iStrategyFd;
     
@@ -57,6 +65,8 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
 }
 
 bool LockFileManager::Init(const char* cstrUteName,  UteMessageManager* pUteMessageManager, int iEventSleepSec) {
+    LOG_INFO("Init UTE lock file {} Starting!", cstrUteName);
+
     pUteMessageManager_ = pUteMessageManager;
 
     if (!pUteMessageManager || !pUteMessageManager->m_pfnOnEvent) {
@@ -132,6 +142,8 @@ unsigned int LockFileManager::GetSetStrategyBatchID(unsigned int StrategySysID) 
 }
 
 void LockFileManager::StartHeartbeatThread() {
+    LOG_INFO("StartHeartbeatThread Starting, mapListenLockFileFd_ size: {}", mapListenLockFileFd_.size());
+
     shptrHearbeatThread_ = std::make_shared<std::thread>([this]() {
         while (true) {
             {
@@ -140,6 +152,8 @@ void LockFileManager::StartHeartbeatThread() {
                 vecInvalidLockFileNames.reserve(mapListenLockFileFd_.size());
                 for (auto& iter:mapListenLockFileFd_) {
                     if (!test_lock_file_is_alive(iter.second)) {
+                        LOG_WARN("Lock file {}, fd: {} is dead, remove it from listen list", iter.first, iter.second);
+                        
                         // 这两个指针在 Init 时已经判空过，这里不用再判空；
                         if (pStrategyMessageManager_) {
                             pStrategyMessageManager_->m_pfnOnEvent(kUteFailed, iter.first.c_str()); // 检测到 UTE 进程终止;

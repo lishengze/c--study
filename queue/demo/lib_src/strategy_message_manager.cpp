@@ -10,6 +10,7 @@ bool StrategyMessageManager::SendMsg(int iMsgID, const char* pMsgBuf, const int 
 }
 
 bool StrategyMessageManager::Init(const char* UteName, unsigned int uiStrategySysID) {
+    LOG_INFO("StrategyMessageManager::Init begin UteName={}, uiStrategySysID={}", UteName, uiStrategySysID);
 
     if (!m_pfnOnMessage) {
         LOG_ERROR("OnMessage callback function is not set.");
@@ -28,7 +29,12 @@ bool StrategyMessageManager::Init(const char* UteName, unsigned int uiStrategySy
         LOG_ERROR("Failed to get or set batch ID.");
         return false;
     }
-    unsigned long long m_StrategyKey = (uiStrategySysID << 32) | uiBatchID;
+    unsigned long long high_part = static_cast<unsigned long long>(uiStrategySysID) << 32;
+    // 2. 低 32 位：将 low 转换为 64 位（自动填充高 32 位为 0）
+    unsigned long long low_part = static_cast<unsigned long long>(uiBatchID);
+    unsigned long long m_StrategyKey = (high_part | low_part);
+
+    LOG_INFO("uiStrategySysID={}, uiBatchID={}, m_StrategyKey={}", uiStrategySysID, uiBatchID, m_StrategyKey);
 
     if (!m_LockFileManager.Init(UteName, m_StrategyKey, this, m_iEventSleepSec)) {
         LOG_ERROR("Failed to initialize lock file manager.");

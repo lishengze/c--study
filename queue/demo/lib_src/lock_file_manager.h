@@ -33,6 +33,7 @@ inline bool test_lock_file_is_alive(int file_fd)
         // LOG_ERROR("Consumer may be exited.");
         // #endif
         // is_running_ = false;
+        LOG_DEBUG("Lock file {} : ret = {}, errno = {}", file_fd, ret, errno);
         return false;
     }
 }

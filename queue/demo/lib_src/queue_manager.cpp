@@ -117,6 +117,7 @@ namespace share_common
 
 
 bool QueueManager::Init(StrategyMessageManager* pStrategyMessageManager, WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory) {
+    LOG_INFO("Init QueueManager, workerType = {}, bIsCreateSharedMemory = {}, cstrSharedMemName = {}", (int)(workerType), bIsCreateSharedMemory, cstrSharedMemName);
     workerType_ = workerType;
     bIsCreateSharedMemory_ = bIsCreateSharedMemory;
     strSharedMemName_ = cstrSharedMemName;
@@ -127,7 +128,7 @@ bool QueueManager::Init(StrategyMessageManager* pStrategyMessageManager, WorkerT
         return false;
     }
 
-    if (bIsCreateSharedMemory) {
+    if (!bIsCreateSharedMemory) {
         if (!AttachShareMemory(cstrSharedMemName)) return false;
     } else {
         if (!CreateShareMemory(cstrSharedMemName)) return false;
@@ -140,6 +141,7 @@ bool QueueManager::Init(StrategyMessageManager* pStrategyMessageManager, WorkerT
     return true;
 }
 void QueueManager::StartConsumerThread() {
+    LOG_INFO("StartConsumerThread: {}", strSharedMemName_);
     shptrConsumerThread_ = std::make_shared<std::thread>([this]() {
         while (true) {
             UteMsg msg;
@@ -147,6 +149,8 @@ void QueueManager::StartConsumerThread() {
                 // 传输消息
                 pStrategyMessageManager_->m_pfnOnMessage(msg.iMsgID, msg.strMsgBuf, msg.iMsgLen); 
             }
+
+            sleep(1); // todo 测试专用;
         }
     });
 
@@ -157,6 +161,8 @@ void QueueManager::StartConsumerThread() {
 }
 
 bool QueueManager::Init(WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory) {
+    LOG_INFO("Init QueueManager, workerType = {}, bIsCreateSharedMemory = {}, cstrSharedMemName = {}", (int)(workerType), bIsCreateSharedMemory, cstrSharedMemName);
+
     workerType_ = workerType;
     bIsCreateSharedMemory_ = bIsCreateSharedMemory;
     strSharedMemName_ = cstrSharedMemName;
@@ -177,6 +183,8 @@ bool QueueManager::Init(WorkerType workerType, const char* cstrSharedMemName,  b
 
 
 bool QueueManager::InitQueueWithoutSharedMemory() {
+    LOG_INFO("InitQueueWithoutSharedMemory Start!");
+
     bIsAttachSharedMemory_ = false;
     bIsCreateSharedMemory_ = false;
 
@@ -195,6 +203,8 @@ bool QueueManager::InitQueueWithoutSharedMemory() {
 }
 
 bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
+    LOG_INFO("AttachShareMemory: {}", cstrSharedMemName);
+
     bIsAttachSharedMemory_ = true;
     // 打开已有的共享内存对象
     int shm_fd = shm_open(cstrSharedMemName, O_RDWR, 0);
@@ -227,6 +237,7 @@ bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
 }
 
 bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
+    LOG_INFO("CreateShareMemory: {}", cstrSharedMemName);
     bIsCreateSharedMemory_ = true;
     int shm_fd = shm_open(cstrSharedMemName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if (shm_fd == -1) {
