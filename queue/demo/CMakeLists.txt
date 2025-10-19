@@ -11,11 +11,15 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -pthread  -flto")
 
 include_directories(./)
 include_directories(include)
+include_directories(src)
 
-######################  统计编译文件数目  ######################
-file(GLOB_RECURSE SRC_FILES "./*.cpp") #添加SRC子目录下全部源代码文件，排除特定文件;
-list(FILTER SRC_FILES EXCLUDE REGEX "./CMakeFiles/.*")
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_FILES} )
+AUX_SOURCE_DIRECTORY(. MAIN_SRC)
+AUX_SOURCE_DIRECTORY(./lib_src LIB_SRC)
+AUX_SOURCE_DIRECTORY(./test_src TEST_SRC)
+
+SET(ALL_SRC ${MAIN_SRC} ${LIB_SRC} ${TEST_SRC})
+
+ADD_EXECUTABLE(${PROJECT_NAME} ${ALL_SRC} )
 
 

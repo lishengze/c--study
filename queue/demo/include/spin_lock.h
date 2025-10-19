@@ -4,7 +4,7 @@
 #include <thread>
 #include "macro.h"
 
-namespace tech
+namespace share_common
 {
 
 template<typename T>

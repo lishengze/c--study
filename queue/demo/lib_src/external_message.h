@@ -1,6 +1,10 @@
 #pragma once
 
 #include <cstring>
+
+namespace share_common 
+{
+
 #pragma pack(push, 1)
 
 //msgtype字典
@@ -223,5 +227,6 @@ struct UteMsg {
     char strMsgBuf[sizeof(LogOnReq)+1]; // 增加编译宏判断;
 };
 
+} // namespace share_common
 
 #pragma pack(pop)

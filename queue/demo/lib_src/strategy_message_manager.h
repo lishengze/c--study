@@ -13,6 +13,10 @@
 #include "queue_manager.h"
 #include "lock_file_manager.h"
 
+namespace share_common 
+{
+
+
 typedef void (*OnEvent)(int iErrCode, const char* pErrDesc);
 typedef void (*OnMessage)(int iMsgID, const char* pMsgBuf, const int iMsgLen);
 
@@ -81,3 +85,5 @@ private:
 
     
 };  
+
+}

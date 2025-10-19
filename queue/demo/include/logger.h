@@ -9,7 +9,7 @@
 #include "spdlog/async_logger.h"
 #endif
 
-namespace tech
+namespace share_common
 {
 
 #ifndef UTE_API_CODE
@@ -35,18 +35,18 @@ public:
 
 
 #define LOG_TRACE(...)      \
-    do { if (tech::logger::log_level <= SPDLOG_LEVEL_TRACE) {SPDLOG_LOGGER_TRACE(tech::logger::async_logger, __VA_ARGS__);}}while(0)
+    do { if (share_common::logger::log_level <= SPDLOG_LEVEL_TRACE) {SPDLOG_LOGGER_TRACE(share_common::logger::async_logger, __VA_ARGS__);}}while(0)
 #define LOG_DEBUG(...)      \
-    do { if (tech::logger::log_level <= SPDLOG_LEVEL_DEBUG) {SPDLOG_LOGGER_DEBUG(tech::logger::async_logger, __VA_ARGS__);}}while(0)
+    do { if (share_common::logger::log_level <= SPDLOG_LEVEL_DEBUG) {SPDLOG_LOGGER_DEBUG(share_common::logger::async_logger, __VA_ARGS__);}}while(0)
 #define LOG_INFO(...)       \
-    do { if (tech::logger::log_level <= SPDLOG_LEVEL_INFO) {SPDLOG_LOGGER_INFO(tech::logger::async_logger, __VA_ARGS__);}}while(0)
+    do { if (share_common::logger::log_level <= SPDLOG_LEVEL_INFO) {SPDLOG_LOGGER_INFO(share_common::logger::async_logger, __VA_ARGS__);}}while(0)
 #define LOG_WARN(...)       \
-    do { if (tech::logger::log_level <= SPDLOG_LEVEL_WARN) {SPDLOG_LOGGER_WARN(tech::logger::async_logger, __VA_ARGS__);}}while(0)
+    do { if (share_common::logger::log_level <= SPDLOG_LEVEL_WARN) {SPDLOG_LOGGER_WARN(share_common::logger::async_logger, __VA_ARGS__);}}while(0)
 #define LOG_ERROR(...)      \
-    do { if (tech::logger::log_level <= SPDLOG_LEVEL_ERROR) {SPDLOG_LOGGER_ERROR(tech::logger::async_logger, __VA_ARGS__);}}while(0)
+    do { if (share_common::logger::log_level <= SPDLOG_LEVEL_ERROR) {SPDLOG_LOGGER_ERROR(share_common::logger::async_logger, __VA_ARGS__);}}while(0)
 #define LOG_CRITICAL(...)   \
-    do { if (tech::logger::log_level <= SPDLOG_LEVEL_CRITICAL) {SPDLOG_LOGGER_CRITICAL(tech::logger::async_logger, __VA_ARGS__);}}while(0)
+    do { if (share_common::logger::log_level <= SPDLOG_LEVEL_CRITICAL) {SPDLOG_LOGGER_CRITICAL(share_common::logger::async_logger, __VA_ARGS__);}}while(0)
 
 #endif
 
-}   // namespace tech
+}   // namespace share_common

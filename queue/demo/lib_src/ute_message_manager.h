@@ -1,19 +1,16 @@
 #pragma once
 
-#include <vector>
 #include <unordered_map>
 #include <string>
-#include "queue_manager.h"
 #include <functional>
+
+#include "queue_manager.h"
 #include "lock_file_manager.h"
 
-
-using std::vector;
-
+namespace share_common 
+{
 
 using CallBackFuncType = std::function<void(int , const char* , unsigned long long)>;
-
-using UINT64 = unsigned long long;
 
 
 /// @brief 用于管理策略进程和UTE进程之间的消息通信;
@@ -29,7 +26,10 @@ public:
     }
 
     ~UteMessageManager() {
-    
+        for (auto it : m_mapRspQueue) {
+            if (it.second)
+                delete it.second;
+        }
     }
 
     /// @brief 设置事件回调函数, 告知策略进程, UTE进程是否正常运行;
@@ -51,19 +51,6 @@ public:
     /// 入参是否要增加共享队列相关参数？
     bool Init(const char* cstrUTESysName, int iApiReqProcessCount, int iStrategyReqProcessCount);
 
-    /// @brief 
-    /// @param strStrategyKey 
-    /// @return 
-    QueueManager* CreateRspQueueManager(unsigned long long strStrategyKey);
-
-
-    /// @brief 策略进程发送消息给UTE进程;
-    /// @param iMsgID 消息ID;
-    /// @param pMsgBuf 消息缓冲区;
-    /// @param iMsgLen 消息长度;
-    /// @return true 发送成功;
-    /// @return false 发送失败 -- 未正确初始化;
-    bool SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen);
 
     /// @brief UTE业务处理线程,转发到相关请求到共享内存请求处理线程，进行统一调度处理的接口;
     /// @param iMsgID 消息ID;
@@ -71,7 +58,7 @@ public:
     /// @param iMsgLen 消息长度;
     /// @return true 发送成功;
     /// @return false 发送失败 -- 未正确初始化;
-    bool WriteMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey = 0) ;
+    bool WriteMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen) ;
 
 
     /// @brief 收到客户登陆请求后，判断客户所属策略进程的回报共享内存通路时候时候存在，
@@ -106,3 +93,5 @@ private:
 
     std::shared_ptr<std::thread>    shptrConsumerThread_;           // 策略进程对应的锁文件;
 };  
+
+} // namespace share_common

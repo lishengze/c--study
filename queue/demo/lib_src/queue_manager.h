@@ -8,6 +8,10 @@
 #include <thread>
 #include <string>
 
+namespace share_common 
+{
+
+
 class StrategyMessageManager;
 class UteMessageManager;
 
@@ -26,7 +30,7 @@ enum WorkerType {
 class QueueManager {
 public:
     QueueManager():uiQueueBlockCount_{10000},uiMemorySize_{1024*1024*10}, 
-    pMpmcQueue_{nullptr},bIsCreateSharedMemory_{true},bIsAttachSharedMemory_{true},
+    pMpmcQueue_{nullptr},bIsCreateSharedMemory_{false},bIsAttachSharedMemory_{false},
     workerType_{WorkerType::Consumer} {
     }
 
@@ -41,7 +45,7 @@ public:
     /// @param cstrSharedMemName 
     /// @param bIsCreateSharedMemory 
     /// @return ute 有两个消费者队列，需要统一的进行调度监听，所以不直接在 QueueManager 进行事件监听;
-    bool Init(UteMessageManager* pUteMessageManager, WorkerType workerType, const char* cstrSharedMemName="",  bool bIsCreateSharedMemory = true);
+    bool Init(WorkerType workerType, const char* cstrSharedMemName="",  bool bIsCreateSharedMemory = true);
 
 
     /// @brief 直接初始化无锁队列，不映射到共享内存;
@@ -74,7 +78,7 @@ public:
 
 
 private:
-    tech::mpmc_queue<UteMsg>*    pMpmcQueue_;         // 策略进程发送请求的无锁队列;
+    share_common::mpmc_queue<UteMsg>*    pMpmcQueue_;         // 策略进程发送请求的无锁队列;
 
     unsigned int                 uiMemorySize_;       // 无锁队列占用的共享内存大小;
     unsigned int                 uiQueueBlockCount_;  // 无锁队列的块数;
@@ -97,3 +101,5 @@ inline std::string GetQueueName(unsigned long long ulFileKey) {
 inline std::string GetQueueName(const char* cstrFileKey) {
     return std::string(cstrFileKey) + ".queue";
 }
+
+} // namespace share_common 

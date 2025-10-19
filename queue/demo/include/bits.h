@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "macro.h"
 
-namespace tech
+namespace share_common
 {
 
 static __always_inline uint32_t roundup_pow_of_two(uint32_t v)
@@ -29,4 +29,4 @@ static __always_inline uint64_t roundup_pow_of_two(uint64_t v)
     return ++v;
 }
 
-}   // namespace tech
+}   // namespace share_common

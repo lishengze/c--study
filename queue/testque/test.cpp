@@ -329,8 +329,8 @@ int test_mpmc(MetaData& metaData) {
 
     // TEST_LOG_DETAIL("MPMC QUEUE SIZE: " + std::to_string(uiQueueSize));
 
-    tech::mpmc_queue<DataBlockFixed> dataBlockFixedQueue;
-    tech::mpmc_queue<unsigned long long> ulQueue;
+    share_common::mpmc_queue<DataBlockFixed> dataBlockFixedQueue;
+    share_common::mpmc_queue<unsigned long long> ulQueue;
 
     std::mutex LogMutex;
 

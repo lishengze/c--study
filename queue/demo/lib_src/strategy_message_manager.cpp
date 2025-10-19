@@ -1,5 +1,8 @@
 #include "strategy_message_manager.h"
 
+namespace share_common 
+{
+
 bool StrategyMessageManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
     // TODO: Implement the message sending logic here.
     return true;
@@ -52,3 +55,5 @@ void StrategyMessageManager::ProcessMsg(int iMsgID, const char* pMsgBuf, const i
     // // 处理消息
     // m_pfnOnMessage(iMsgID, pMsgBuf, iMsgLen);
 }
+
+} // namespace share_common 

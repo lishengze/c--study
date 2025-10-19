@@ -10,6 +10,9 @@
 #include <unordered_map>
 #include <mutex>
 
+namespace share_common 
+{
+
 class StrategyMessageManager;
 class UteMessageManager;
 
@@ -74,17 +77,10 @@ public:
 
 private:
 
-    // int  iMyFd_;                  // 策略进程对应的锁文件;
-    // int  iOppositeFd_;            // UTE进程对应的锁文件;
-    // std::string strMyLockFileName_;  // 策略进程对应的锁文件名;
-    // std::string strOppositeLockFileName_;  // UTE进程对应的锁文件名;
-
-
     std::unordered_map<std::string, int> mapListenLockFileFd_;  // 定时监听的锁文件描述符与对应的锁文件名的映射;
     std::unordered_map<std::string, int> mapNonListenLockFileFd_;  // 非监听的锁文件描述符与对应的锁文件名的映射;
 
     
-
     int  iHeartBeatSec_;          // 心跳时间间隔;
 
     std::shared_ptr<std::thread> shptrHearbeatThread_;   // 监听锁文件的心跳线程;
@@ -103,3 +99,6 @@ inline std::string GetLockFileName(unsigned long long ulFileKey) {
 inline std::string GetLockFileName(const char* cstrFileKey) {
     return std::string(cstrFileKey) + ".lck";
 }
+
+
+} // namespace share_common

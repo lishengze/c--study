@@ -10,6 +10,9 @@
 
 #include "strategy_message_manager.h"
 
+namespace share_common 
+{
+
 // // 在共享内存中创建队列
 // bool create_shared_queue(const char* name, uint32_t size)
 // {
@@ -157,18 +160,12 @@ void QueueManager::StartConsumerThread() {
     }
 }
 
-bool QueueManager::Init(UteMessageManager* pUteMessageManager, WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory) {
+bool QueueManager::Init(WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory) {
     workerType_ = workerType;
     bIsCreateSharedMemory_ = bIsCreateSharedMemory;
     strSharedMemName_ = cstrSharedMemName;
-    pUteMessageManager_ = pUteMessageManager;
 
-    if (!pStrategyMessageManager_) {
-        // todo 增加日志输出
-        return false;
-    }
-
-    if (bIsCreateSharedMemory) {
+    if (!bIsCreateSharedMemory) {
         // 共享内存名称不为空时，尝试打开已有的共享内存
         if (strcmp(cstrSharedMemName, "") != 0) {
             return AttachShareMemory(cstrSharedMemName); // 尝试打开已有的共享内存 -- 对于UTE进程，需要映射对应的策略进程的共享内存；
@@ -179,7 +176,6 @@ bool QueueManager::Init(UteMessageManager* pUteMessageManager, WorkerType worker
         return CreateShareMemory(cstrSharedMemName); // 创建新的共享内存 -- 对于UTE进程，创建接受策略进程发送的请求的无锁队列；
     }
 
-
     return true;
 }
 
@@ -188,7 +184,7 @@ bool QueueManager::InitQueueWithoutSharedMemory() {
     bIsAttachSharedMemory_ = false;
     bIsCreateSharedMemory_ = false;
 
-    pMpmcQueue_ = new tech::mpmc_queue<UteMsg>();
+    pMpmcQueue_ = new share_common::mpmc_queue<UteMsg>();
 
     if (!pMpmcQueue_) {
         // todo 增加日志输出
@@ -203,6 +199,7 @@ bool QueueManager::InitQueueWithoutSharedMemory() {
 }
 
 bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
+    bIsAttachSharedMemory_ = true;
     // 打开已有的共享内存对象
     int shm_fd = shm_open(cstrSharedMemName, O_RDWR, 0);
     if (shm_fd == -1) {
@@ -228,22 +225,23 @@ bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
     }
     
     close(shm_fd);
-    pMpmcQueue_ = static_cast<tech::mpmc_queue<UteMsg>*>(addr);   
+    pMpmcQueue_ = static_cast<share_common::mpmc_queue<UteMsg>*>(addr);   
 
     return true;
 }
 
 bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
+    bIsCreateSharedMemory_ = true;
     int shm_fd = shm_open(cstrSharedMemName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if (shm_fd == -1) {
         perror("shm_open failed");
         return false;
     }
     
-    unsigned int uiDataBlocksSize = (tech::roundup_pow_of_two(uiQueueBlockCount_) + 1) * sizeof(UteMsg) ;
+    unsigned int uiDataBlocksSize = (share_common::roundup_pow_of_two(uiQueueBlockCount_) + 1) * sizeof(UteMsg) ;
 
     // 设置共享内存大小
-    uiMemorySize_ = sizeof(tech::mpmc_queue<UteMsg>) + uiDataBlocksSize + 1024; // 计算完整大小
+    uiMemorySize_ = sizeof(share_common::mpmc_queue<UteMsg>) + uiDataBlocksSize + 1024; // 计算完整大小
     if (ftruncate(shm_fd, uiMemorySize_) == -1) {
         perror("ftruncate failed");
         close(shm_fd);
@@ -259,7 +257,7 @@ bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
     }
     
     // 在共享内存中构造队列对象
-    pMpmcQueue_ = new (addr) tech::mpmc_queue<UteMsg>();
+    pMpmcQueue_ = new (addr) share_common::mpmc_queue<UteMsg>();
     
     // 使用自定义内存分配器初始化队列
     pMpmcQueue_->create(uiQueueBlockCount_);
@@ -305,3 +303,5 @@ bool QueueManager::trypop(UteMsg& msg) {
 
     return pMpmcQueue_->trypop(msg);
 }
+
+} // namespace share_common

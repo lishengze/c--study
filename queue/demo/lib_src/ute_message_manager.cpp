@@ -1,13 +1,6 @@
 #include "ute_message_manager.h"
 
-QueueManager* UteMessageManager::CreateRspQueueManager(unsigned long long  strStrategyKey){
-    return nullptr;
-}
-
-bool UteMessageManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
-
-    return true;
-}
+namespace share_common {
 
 bool UteMessageManager::Init(const char* cstrUTESysName,int iApiReqProcessCount, int iStrategyReqProcessCount)
 {
@@ -21,18 +14,17 @@ bool UteMessageManager::Init(const char* cstrUTESysName,int iApiReqProcessCount,
         return false;
     }
 
-    // m_pStrategyReqQueue.Init(this， ,cstrUTESysName,  QUEUE_TYPE_REQ);   
-
     // 初始化请求相关的无锁队列 以及 对应的 共享内存 - 共享内存是UTE进程创建好， 这里只需要创建和attach即可;
-    m_pStrategyReqQueue.Init(this, Consumer, GetQueueName(cstrUTESysName).c_str(),  true);
+    m_pStrategyReqQueue.Init(Consumer, GetQueueName(cstrUTESysName).c_str(),  false);
 
-    m_pApiQueue.Init(this, Consumer, "",  false); 
+    // 创建内存中的API请求队列， 这里不需要创建和attach共享内存， 直接创建即可;
+    m_pApiQueue.Init(Consumer, "",  false); 
     
     return true;
 }
 
-bool UteMessageManager::WriteMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey) {
-    m_pApiQueue.SendMsg(iMsgID, pMsgBuf, iMsgLen, ulStrategyKey);
+bool UteMessageManager::WriteMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
+    m_pApiQueue.SendMsg(iMsgID, pMsgBuf, iMsgLen, 0); //API 转发的请求和回报， 策略ID为0;
     return true;
 }
 
@@ -51,7 +43,7 @@ QueueManager* UteMessageManager::CreateStrategyRspQueue(unsigned long long ulStr
     }
 
     // 初始化策略进程接收回报的共享内存队列管理器，这块共享内存是策略进程创建好， 这里只需要创建和attach即可;
-    if (!pStrategyRspQueue->Init(this, Producer, GetQueueName(ulStrategyKey).c_str(), false)) {
+    if (!pStrategyRspQueue->Init(Producer, GetQueueName(ulStrategyKey).c_str(), false)) {
         // todo 增加日志输出
         return nullptr;
     }
@@ -94,3 +86,6 @@ void UteMessageManager::StartListenQueue() {
         shptrConsumerThread_->join();
     }    
 }
+
+
+} // namespace share_common

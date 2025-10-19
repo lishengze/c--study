@@ -4,15 +4,10 @@
 #include <sys/mman.h>
 #include <chrono>
 #include <thread>
+#include <iostream>
 
-unsigned long long GetStrategyKey(const std::string& strLockFileName) {
-    auto pos = strLockFileName.find_last_of('.');
-    if (pos == std::string::npos) {
-        return 0;
-    }
-
-    return std::stoull(strLockFileName.substr(0, pos));
-}
+namespace share_common 
+{
 
 bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrategyKey, 
            StrategyMessageManager* pStrategyMessageManager, int iEventSleepSec) {
@@ -110,24 +105,29 @@ unsigned int LockFileManager::GetSetStrategyBatchID(unsigned int StrategySysID) 
         // 若是文件存在，读取batchID；
         if (!iFile.is_open()) {
             // todo 增加日志信息;
+            std::cout << "open file failed:" << StrategySysID<< std::endl;
             return 0;
         }
         
         if (!(iFile >> batchID)) {
             // todo 增加日志信息;
+            std::cout << "read file failed:" << StrategySysID<< std::endl;
             return 0;
         }
         iFile.close();
 
         result = batchID; // 读取到的batchID；
 
-        batchID++; // 加1后写入新的batchID；
+        
     }
+
+    batchID++; // 加1后写入新的batchID；
 
     // 写入新的batchID；    
     std::ofstream oFile(strBatchIDFileName);
     if (!oFile.is_open()) {
         // todo 增加日志信息;
+        std::cout << "write file failed:" << StrategySysID<< std::endl;
         return 0;
     }
     oFile << batchID;
@@ -188,4 +188,6 @@ bool LockFileManager::AddListenLockFile(unsigned long long ulFileKey) {
     mapListenLockFileFd_[std::to_string(ulFileKey)] = iFd;
 
     return true;
+}
+
 }

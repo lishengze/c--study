@@ -43,7 +43,7 @@ bool IsFteReadEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& u
 
 
 template <>
-void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_common::mpmc_queue<DataBlockFixed>& queue, 
                                             std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount,
                                             TestOutput& testOutput, int iCpuID, 
                                             std::mutex& LogMutex, MetaData& metaData) {
@@ -118,7 +118,7 @@ void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mp
 
 
 template <>
-void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_common::mpmc_queue<DataBlockFixed>& queue, 
                                             std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
                                             TestOutput& testOutput, int iCpuID, 
                                             std::mutex& LogMutex,  MetaData& metaData) {
@@ -192,7 +192,7 @@ void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpm
 }
 
 template <>
-void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech::mpmc_queue<unsigned long long>& queue, 
+void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, share_common::mpmc_queue<unsigned long long>& queue, 
                                                 std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoWriteCount, 
                                                 TestOutput& testOutput,int iCpuID,  
                                                 std::mutex& LogMutex, MetaData& metaData) {
@@ -257,7 +257,7 @@ void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech
 
 
 template <>
-void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech::mpmc_queue<unsigned long long>& queue, 
+void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, share_common::mpmc_queue<unsigned long long>& queue, 
                                                 std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
                                                 TestOutput& testOutput,int iCpuID, 
                                                 std::mutex& LogMutex, MetaData& metaData) {
