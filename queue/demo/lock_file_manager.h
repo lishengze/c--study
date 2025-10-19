@@ -69,9 +69,8 @@ public:
 
     /// @brief 添加需要监听的锁文件，当锁文件不存在或者加锁失败时，会触发事件；
     /// @param cstrLockFileName 锁文件名；
-    /// @param bNeedCreate 是否需要创建锁文件，默认为false；
-    /// @return 成功返回FD， 失败返回-1；
-    bool AddListenLockFile(const char* cstrLockFileName);
+    /// @return 成功返回true，失败返回false；
+    bool AddListenLockFile(unsigned long long ulFileKey);
 
 private:
 
@@ -96,3 +95,11 @@ private:
 
     int  iWaitUteSec_;      // 等待UTE启动时间间隔 - 策略进程专用;    
 };
+
+inline std::string GetLockFileName(unsigned long long ulFileKey) {
+    return std::to_string(ulFileKey) + ".lck";
+}
+
+inline std::string GetLockFileName(const char* cstrFileKey) {
+    return std::string(cstrFileKey) + ".lck";
+}

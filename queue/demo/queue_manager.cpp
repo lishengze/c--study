@@ -142,7 +142,7 @@ void QueueManager::StartConsumerThread() {
             UteMsg msg;
             if (pMpmcQueue_->pop(msg)) {
                 // 传输消息
-                pStrategyMessageManager_->m_pfnOnMessage(msg.iMsgID, msg.strMsgBuf, msg.iMsgLen);
+                pStrategyMessageManager_->m_pfnOnMessage(msg.iMsgID, msg.strMsgBuf, msg.iMsgLen); 
             }
         }
     });
@@ -219,6 +219,7 @@ bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
     }
     
     // 映射共享内存
+    uiMemorySize_ = stat_buf.st_size; // 记录共享内存大小
     void* addr = mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (addr == MAP_FAILED) {
         // perror("mmap failed"); todo 增加日志输出
@@ -281,11 +282,6 @@ void QueueManager::Release() {
         return;
     }
 
-    if (!uiMemorySize_) {
-        // todo 增加日志输出
-        return;
-    }
-
     /// 若是映射了共享内存，则需要解除内存映射
     if (bIsAttachSharedMemory_ && munmap(pMpmcQueue_, uiMemorySize_) == -1) {
         // perror("munmap failed");
@@ -303,4 +299,9 @@ void QueueManager::Release() {
         if (!pMpmcQueue_) delete pMpmcQueue_;
     }
         
+}
+
+bool QueueManager::trypop(UteMsg& msg) {
+
+    return pMpmcQueue_->trypop(msg);
 }

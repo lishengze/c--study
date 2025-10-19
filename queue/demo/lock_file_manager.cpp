@@ -5,11 +5,6 @@
 #include <chrono>
 #include <thread>
 
-
-std::string GetStrategyLockFileName(unsigned long long ulStrategyKey) {
-    return std::to_string(ulStrategyKey) + ".lck";
-}
-
 unsigned long long GetStrategyKey(const std::string& strLockFileName) {
     auto pos = strLockFileName.find_last_of('.');
     if (pos == std::string::npos) {
@@ -30,7 +25,7 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
     }    
     
     int iUteFd = -1;
-    std::string strUteName = std::string(cstrUteName) + ".lck";
+    std::string strUteName = GetLockFileName(cstrUteName);
     do {
        bool opposite_alive = false;
        iUteFd = shm_open(strUteName.c_str(), O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
@@ -46,9 +41,9 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
        }       
     } while(iUteFd < 0);
 
-    mapListenLockFileFd_[strUteName] = iUteFd;
+    mapListenLockFileFd_[std::string(cstrUteName)] = iUteFd; // 监听 UTE 进程的锁文件描述符;
 
-    std::string strStrategyLockFile = std::to_string(ulStrategyKey) + ".lck";
+    std::string strStrategyLockFile = GetLockFileName(ulStrategyKey);
 
     int iStrategyFd = shm_open(strStrategyLockFile.c_str(), O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
     if (iStrategyFd < 0)
@@ -172,9 +167,10 @@ void LockFileManager::StartHeartbeatThread() {
     });
 }
 
-bool LockFileManager::AddListenLockFile(const char* cstrLockFileName) {
+bool LockFileManager::AddListenLockFile(unsigned long long ulFileKey) {
 
-    int iFd = shm_open(cstrLockFileName, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+    // 策略进程的锁文件描述符，由策略进程创建，并由 UTE 进程监听；
+    int iFd = shm_open(GetLockFileName(ulFileKey).c_str(), O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
     if (iFd < 0)
     {
         // #ifdef APP_USE_ADK_LOG
@@ -189,7 +185,7 @@ bool LockFileManager::AddListenLockFile(const char* cstrLockFileName) {
     }
 
     std::lock_guard<std::mutex> lock(mtxHeartbeat_);
-    mapListenLockFileFd_[cstrLockFileName] = iFd;
+    mapListenLockFileFd_[std::to_string(ulFileKey)] = iFd;
 
     return true;
 }

@@ -9,9 +9,13 @@ bool UteMessageManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgL
     return true;
 }
 
-bool UteMessageManager::Init(const char* cstrUTESysName) {
+bool UteMessageManager::Init(const char* cstrUTESysName,int iApiReqProcessCount, int iStrategyReqProcessCount)
+{
+    m_iApiReqProcessCount = iApiReqProcessCount;
+    m_iStrategyReqProcessCount = iStrategyReqProcessCount;
 
     ///锁文件相关初始化;
+    // 初始化UTE进程的锁文件管理器;
     if (!m_LockFileManager.Init(cstrUTESysName, this, 5)) {
         // todo 增加日志信息;
         return false;
@@ -20,24 +24,73 @@ bool UteMessageManager::Init(const char* cstrUTESysName) {
     // m_pStrategyReqQueue.Init(this， ,cstrUTESysName,  QUEUE_TYPE_REQ);   
 
     // 初始化请求相关的无锁队列 以及 对应的 共享内存 - 共享内存是UTE进程创建好， 这里只需要创建和attach即可;
-    m_pStrategyReqQueue.Init(this, Consumer, (std::string(cstrUTESysName)+".queue").c_str(),  true);
+    m_pStrategyReqQueue.Init(this, Consumer, GetQueueName(cstrUTESysName).c_str(),  true);
 
-    m_pApiQueue.Init(this, Consumer, "",  false);
+    m_pApiQueue.Init(this, Consumer, "",  false); 
     
-    // m_pReqQueue = new QueueManager();
-    // if (!m_pReqQueue->Init(cstrUTESysName, QUEUE_TYPE_REQ)) {
-    //     // todo 增加日志信息;
-    //     return false;
-    // }
     return true;
 }
 
-bool UteMessageManager::WriteMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
+bool UteMessageManager::WriteMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey) {
+    m_pApiQueue.SendMsg(iMsgID, pMsgBuf, iMsgLen, ulStrategyKey);
     return true;
 }
 
 //
-std::shared_ptr<QueueManager> UteMessageManager::CreateStrategyRspQueue(unsigned long long strStrategyKey) {
+QueueManager* UteMessageManager::CreateStrategyRspQueue(unsigned long long ulStrategyKey) {
 
-    return nullptr;
+    if (m_mapRspQueue.find(ulStrategyKey)!= m_mapRspQueue.end()) {
+        return m_mapRspQueue[ulStrategyKey];
+    }
+        // todo 增加日志输出
+    QueueManager* pStrategyRspQueue = new QueueManager();
+
+    if (!pStrategyRspQueue) {
+        // todo 增加日志输出
+        return nullptr;
+    }
+
+    // 初始化策略进程接收回报的共享内存队列管理器，这块共享内存是策略进程创建好， 这里只需要创建和attach即可;
+    if (!pStrategyRspQueue->Init(this, Producer, GetQueueName(ulStrategyKey).c_str(), false)) {
+        // todo 增加日志输出
+        return nullptr;
+    }
+
+    m_mapRspQueue[ulStrategyKey] = pStrategyRspQueue;
+
+    m_LockFileManager.AddListenLockFile(ulStrategyKey); // 监听策略进程的锁文件;
+
+    return pStrategyRspQueue;
+}
+
+void UteMessageManager::StartListenQueue() {
+
+    shptrConsumerThread_ = std::make_shared<std::thread>([this]() {
+        while (true) {
+            /// 先处理 策略请求队列 m_iStrategyReqProcessCount 个请求;
+            for (int i = 0; i < m_iStrategyReqProcessCount; i++) {
+                UteMsg uteMsg;
+                if (m_pStrategyReqQueue.trypop(uteMsg)) {
+                    m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iStrategyKey);
+                }
+            }
+
+            /// 再处理 API 请求队列 m_iApiReqProcessCount 个请求;
+            for (int i = 0; i < m_iApiReqProcessCount; i++) {
+                UteMsg uteMsg;
+                if (m_pApiQueue.trypop(uteMsg)) {
+                    m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iStrategyKey);
+                }
+            }
+        }
+    });
+
+    if (!shptrConsumerThread_) {
+        // todo 增加日志输出
+        return;
+    }
+
+    if (shptrConsumerThread_->joinable()) {
+        shptrConsumerThread_->join();
+    }    
 }

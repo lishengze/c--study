@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <thread>
+#include <string>
 
 class StrategyMessageManager;
 class UteMessageManager;
@@ -57,7 +58,10 @@ public:
     /// @return 创建是否成功;
     bool CreateShareMemory(const char* cstrSharedMemName);
 
-    bool try_pop(UteMsg& msg);
+    /// @brief  外部监听消息队列的接口;
+    /// @param msg 
+    /// @return 
+    bool trypop(UteMsg& msg);
 
 
 
@@ -81,7 +85,15 @@ private:
     WorkerType                   workerType_;            // 锁文件句柄;
 
     StrategyMessageManager       *pStrategyMessageManager_;      // 策略进程对应的策略消息管理器;
-    UteMessageManager             *pUteMessageManager_;            // UTE进程对应的策略消息管理器;
+    UteMessageManager            *pUteMessageManager_;           // UTE进程对应的策略消息管理器;
 
     std::shared_ptr<std::thread>    shptrConsumerThread_;           // 策略进程对应的锁文件;
 };
+
+inline std::string GetQueueName(unsigned long long ulFileKey) {
+    return std::to_string(ulFileKey) + ".queue";
+}
+
+inline std::string GetQueueName(const char* cstrFileKey) {
+    return std::string(cstrFileKey) + ".queue";
+}

@@ -25,19 +25,16 @@ bool StrategyMessageManager::Init(const char* UteName, unsigned int uiStrategySy
     }
     unsigned long long m_StrategyKey = (uiStrategySysID << 32) | uiBatchID;
 
-    std::string strStrategyKey = std::to_string(m_StrategyKey);
-    std::string strUteKey = std::string(UteName);
-
     if (!m_LockFileManager.Init(UteName, m_StrategyKey, this, m_iEventSleepSec)) {
         // todo 增加日志信息;
         return false;
     }
 
     // 初始化请求相关的无锁队列 以及 对应的 共享内存 -- 共享内存是UTE进程创建好， 这里只需要attach即可;
-    m_ReqQueueManager.Init(this, Consumer, (strUteKey+".queue").c_str(),  false);
+    m_ReqQueueManager.Init(this, Consumer, GetQueueName(UteName).c_str(),  false);
 
     // 初始化响应相关的无锁队列 以及 对应的 共享内存 -- 共享内存是策略进程创建好， 这里需要创建和attach;
-    m_RspQueueManager.Init(this, Producer, (strStrategyKey+".queue").c_str(), true);
+    m_RspQueueManager.Init(this, Producer, GetQueueName(m_StrategyKey).c_str(), true);
 
     return true;
 }
