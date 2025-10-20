@@ -229,9 +229,23 @@ bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
         close(shm_fd);
         return false;
     }
+
+    LOG_DEBUG("pMpmcQueue_ attach uiMemorySize_: {}", uiMemorySize_);
     
     close(shm_fd);
     pMpmcQueue_ = static_cast<share_common::mpmc_queue<UteMsg>*>(addr);   
+
+    if (!pMpmcQueue_) {
+        LOG_ERROR("pMpmcQueue_ is null");
+        return false;
+    }
+
+    pMpmcQueue_->slot_attach(addr + sizeof(share_common::mpmc_queue<UteMsg>) + 128); // 手动将slot 映射到外部的内存地址中 -- 共享内存版本；
+
+    // LOG_DEBUG("pMpmcQueue_->size = {}", pMpmcQueue_->mask_ + 1);
+
+    // LOG_DEBUG("pMpmcQueue_->size = {},slot_address: {}", pMpmcQueue_->mask_ + 1, (void*)(pMpmcQueue_->slots_));
+
 
     return true;
 }
@@ -245,10 +259,10 @@ bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
         return false;
     }
     
-    unsigned int uiDataBlocksSize = (share_common::roundup_pow_of_two(uiQueueBlockCount_) + 1) * sizeof(UteMsg) ;
+    unsigned int uiElementSlotBlocksSize = (share_common::roundup_pow_of_two(uiQueueBlockCount_) + 2) * sizeof( element_slot<UteMsg, false>) ;
 
     // 设置共享内存大小
-    uiMemorySize_ = sizeof(share_common::mpmc_queue<UteMsg>) + uiDataBlocksSize + 1024; // 计算完整大小
+    uiMemorySize_ = sizeof(share_common::mpmc_queue<UteMsg>) + uiElementSlotBlocksSize + 1024; // 给共享内存留足够的空间;
     if (ftruncate(shm_fd, uiMemorySize_) == -1) {
         LOG_ERROR("ftruncate {} failed ", cstrSharedMemName);
         close(shm_fd);
@@ -262,12 +276,21 @@ bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
         close(shm_fd);
         return false;
     }
+
+    LOG_DEBUG("pMpmcQueue_ create uiMemorySize_: {}", uiMemorySize_);
     
     // 在共享内存中构造队列对象
     pMpmcQueue_ = new (addr) share_common::mpmc_queue<UteMsg>();
     
     // 使用自定义内存分配器初始化队列
-    pMpmcQueue_->create(uiQueueBlockCount_);
+    // pMpmcQueue_->create(uiQueueBlockCount_);
+
+    if (!pMpmcQueue_->create_shared(uiQueueBlockCount_, addr + sizeof(share_common::mpmc_queue<UteMsg>) + 128)) { // 手动将slot 映射到外部的内存地址中 -- 共享内存版本；
+        LOG_ERROR("queue create_shared  failed");
+        return false;
+    }
+
+    // LOG_DEBUG("pMpmcQueue_->size = {},slot_address: {}", pMpmcQueue_->mask_ + 1, (void*)(pMpmcQueue_->slots_));
     
     close(shm_fd);
     return true;
@@ -275,8 +298,11 @@ bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
 
 
 void QueueManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey) {
-    if (!pMpmcQueue_) {
+    if (pMpmcQueue_) {
+        LOG_DEBUG("iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", iMsgID, iMsgLen, ulStrategyKey);
         pMpmcQueue_->push(iMsgID, iMsgLen, ulStrategyKey, pMsgBuf); // 在 enqueue 时会调用 UteMsg 的构造函数
+    } else {
+        LOG_ERROR("pMpmcQueue_ is null");
     }
 }
 

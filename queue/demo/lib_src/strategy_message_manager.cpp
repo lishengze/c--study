@@ -32,21 +32,27 @@ bool StrategyMessageManager::Init(const char* UteName, unsigned int uiStrategySy
     unsigned long long high_part = static_cast<unsigned long long>(uiStrategySysID) << 32;
     // 2. 低 32 位：将 low 转换为 64 位（自动填充高 32 位为 0）
     unsigned long long low_part = static_cast<unsigned long long>(uiBatchID);
-    unsigned long long m_StrategyKey = (high_part | low_part);
+    m_StrategyKey = (high_part | low_part);
 
     LOG_INFO("uiStrategySysID={}, uiBatchID={}, m_StrategyKey={}", uiStrategySysID, uiBatchID, m_StrategyKey);
 
-    if (!m_LockFileManager.Init(UteName, m_StrategyKey, this, m_iEventSleepSec)) {
+    if (!m_LockFileManager.Init(UteName, m_StrategyKey, this, m_iEventSleepSec)) { 
         LOG_ERROR("Failed to initialize lock file manager.");
         return false;
     }
 
     // 初始化请求相关的无锁队列 以及 对应的 共享内存 -- 共享内存是UTE进程创建好， 这里只需要attach即可;
-    m_ReqQueueManager.Init(this, Producer, GetQueueName(UteName).c_str(),  false);
+    if (!m_ReqQueueManager.Init(this, Producer, GetQueueName(UteName).c_str(),  false)){
+        LOG_ERROR("Failed to initialize request queue manager.");
+        return false;
+    }
 
     // 初始化响应相关的无锁队列 以及 对应的 共享内存 -- 共享内存是策略进程创建好， 这里需要创建和attach;
     // 创建好后，便开始监听队列消息;
-    m_RspQueueManager.Init(this, Consumer, GetQueueName(m_StrategyKey).c_str(), true);
+    if (!m_RspQueueManager.Init(this, Consumer, GetQueueName(m_StrategyKey).c_str(), true)) {
+        LOG_ERROR("Failed to initialize response queue manager.");
+        return false;
+    }
 
     return true;
 }

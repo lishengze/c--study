@@ -76,7 +76,7 @@ void UteMessageManager::StartListenQueue() {
             for (int i = 0; i < m_iApiReqProcessCount; i++) {
                 UteMsg uteMsg;
                 if (m_pApiQueue.trypop(uteMsg)) {
-                    m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iStrategyKey);
+                    m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, 0); // api 请求过来的消息，策略进程key为0;
                 }
             }
 

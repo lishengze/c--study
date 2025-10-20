@@ -44,17 +44,17 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf,  unsigned long long ulStrateg
 
 
 
-    if (iMsgID == kPktLoginReq) {
-        QueueManager* pQueueManager = uteMessageManager.CreateStrategyRspQueue(ulStrategyKey);
+    // if (iMsgID == kPktLoginReq) {
+    //     QueueManager* pQueueManager = uteMessageManager.CreateStrategyRspQueue(ulStrategyKey);
 
-        if (pQueueManager) {
-            SendLogAns(pQueueManager);
+    //     if (pQueueManager) {
+    //         SendLogAns(pQueueManager);
 
-            sleep(3);
+    //         sleep(3);
 
-            SendOrderRsp(pQueueManager);
-        }
-    }
+    //         SendOrderRsp(pQueueManager);
+    //     }
+    // }
 }
 
 

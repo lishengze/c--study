@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <string>
+
 #include "bits.h"
 #include "logger.h"
 #include "spin_lock.h"
@@ -113,10 +115,56 @@ public:
         }
         #endif
         
-        // LOG_INFO("queue init successed, capacity is {}.", mask_ + 1);
+        LOG_INFO("queue init successed, capacity is {}", mask_ + 1);
         return true;
     }
     
+
+    /// @brief 将slot 映射到外部的内存地址中 -- 共享内存版本；
+    /// @param size 
+    /// @param buffer 
+    /// @return 
+    bool create_shared(uint32_t size, void* buffer)
+    {
+        size = size ? size : 1;
+        size = roundup_pow_of_two(size + 1);
+        
+        // 直接使用传入的共享内存地址作为slots_
+        slots_ = static_cast<slot_type*>(buffer);
+        
+        // 初始化所有元素槽（如果需要）
+        for (uint32_t i = 0; i < size; ++i) {
+            new (&slots_[i]) slot_type();
+        }
+        
+        mask_ = size - 1;
+        bit_mask_ = __builtin_ctz((uint64_t)size);
+        stride_ = 1;
+        push_ticket_ = 0;
+        pop_ticket_ = 0;
+        
+        // MPMC_OVERFLOW宏定义时启用溢出模式
+        #ifdef MPMC_OVERFLOW
+        push_ticket_ = (uint64_t(UINT32_MAX - 1)) * size / 2;
+        pop_ticket_ = (uint64_t(UINT32_MAX - 1)) * size / 2;
+        for (uint32_t i = 0; i < size; ++i)
+        {
+            slots_[i].init(UINT32_MAX - 1); // 初始化所有槽的turn值
+        }
+        #endif
+        
+        LOG_INFO("queue init successed, capacity is {}", mask_ + 1);
+        
+        return true;
+    }
+
+
+    bool slot_attach(void* buffer) {
+        slots_ = static_cast<slot_type*>(buffer);
+        return true;
+    }
+
+
     /**
      * @brief 根据ticket计算元素槽索引
      * @param ticket 当前操作的ticket值
@@ -182,6 +230,7 @@ public:
         auto cur_turn = turn(ticket);
         // printf("-------- mpmc_queue push ticket: %ld, index: %ld, cur_turn: %d\n", ticket, index, cur_turn);
         // 执行入队操作，可能阻塞
+        LOG_DEBUG("cur_turn: {}, index: {}, push_ticket: {}", cur_turn, index, push_ticket_);
         slots_[index].enqueue(cur_turn, std::forward<Args>(args)...);
         return index;
     }
@@ -228,7 +277,7 @@ public:
     }
 
 
-private:
+public: // 用于测试;
     // 缓存行填充，避免伪共享
     L2CACHE_PADDING(pad0_);
     // 位掩码，用于计算turn值
@@ -247,6 +296,7 @@ private:
 
     // 缓存行填充
     L2CACHE_PADDING(pad1_);
+
 };
 
 

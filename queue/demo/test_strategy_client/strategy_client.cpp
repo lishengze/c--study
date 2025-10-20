@@ -61,9 +61,9 @@ void TestStrategyClient() {
 
     DoLoginReq(stStrategyMessageManager);
 
-    sleep(5);
+    // sleep(5);
 
-    DoTradeOrderReq(stStrategyMessageManager);
+    // DoTradeOrderReq(stStrategyMessageManager);
 
     // stStrategyMessageManager.Init();
 }
