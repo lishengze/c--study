@@ -160,12 +160,13 @@ void QueueManager::StartConsumerThread() {
     }
 }
 
-bool QueueManager::Init(WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory) {
+bool QueueManager::Init(WorkerType workerType, const char* cstrSharedMemName,  bool bIsCreateSharedMemory, unsigned long long ulFileKey ) {
     LOG_INFO("Init QueueManager, workerType = {}, bIsCreateSharedMemory = {}, cstrSharedMemName = {}", (int)(workerType), bIsCreateSharedMemory, cstrSharedMemName);
 
     workerType_ = workerType;
     bIsCreateSharedMemory_ = bIsCreateSharedMemory;
     strSharedMemName_ = cstrSharedMemName;
+    ulFileKey_ = ulFileKey;
 
     if (!bIsCreateSharedMemory) {
         // 共享内存名称不为空时，尝试打开已有的共享内存

@@ -50,7 +50,7 @@ public:
     /// @param cstrSharedMemName 
     /// @param bIsCreateSharedMemory 
     /// @return ute 有两个消费者队列，需要统一的进行调度监听，所以不直接在 QueueManager 进行事件监听;
-    bool Init(WorkerType workerType, const char* cstrSharedMemName="",  bool bIsCreateSharedMemory = true);
+    bool Init(WorkerType workerType, const char* cstrSharedMemName="",  bool bIsCreateSharedMemory = true, unsigned long long ulFileKey = 0);
 
 
     /// @brief 直接初始化无锁队列，不映射到共享内存;
@@ -95,7 +95,7 @@ public:
 
 
 private:
-    share_common::mpmc_queue<UteMsg>*    pMpmcQueue_;         // 策略进程发送请求的无锁队列;
+    share_common::mpmc_queue<UteMsg>*    pMpmcQueue_;         // 无锁队列;
 
     unsigned int                 uiMemorySize_;       // 无锁队列占用的共享内存大小;
     unsigned int                 uiQueueBlockCount_;  // 无锁队列的块数;
@@ -103,12 +103,14 @@ private:
 
     bool                         bIsCreateSharedMemory_; // 是否创建共享内存;
     bool                         bIsAttachSharedMemory_; // 是否映射共享内存到无锁队列中;
-    WorkerType                   workerType_;            // 锁文件句柄;
+    WorkerType                   workerType_;            // queue 的工作类型;
 
     StrategyMessageManager       *pStrategyMessageManager_;      // 策略进程对应的策略消息管理器;
     UteMessageManager            *pUteMessageManager_;           // UTE进程对应的策略消息管理器;
 
-    std::shared_ptr<std::thread>    shptrConsumerThread_;           // 策略进程对应的锁文件;
+    std::shared_ptr<std::thread>    shptrConsumerThread_;           // 消费者线程;
+
+    unsigned long long           ulFileKey_;                    // 策略进程对应的锁文件名称;
 };
 
 inline std::string GetQueueName(unsigned long long ulFileKey) {

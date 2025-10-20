@@ -62,7 +62,7 @@ QueueManager* UteMessageManager::CreateStrategyRspQueue(unsigned long long ulStr
     }
 
     // 初始化策略进程接收回报的共享内存队列管理器，这块共享内存是策略进程创建好， 这里只需要创建和attach即可;
-    if (!pStrategyRspQueue->Init(Producer, GetQueueName(ulStrategyKey).c_str(), false)) {
+    if (!pStrategyRspQueue->Init(Producer, GetQueueName(ulStrategyKey).c_str(), false, ulStrategyKey)) {
         LOG_ERROR("Init strategy rsp queue {} failed.", ulStrategyKey);
         return nullptr;
     }
@@ -84,15 +84,17 @@ void UteMessageManager::StartListenQueue() {
             for (int i = 0; i < m_iStrategyReqProcessCount; i++) {
                 UteMsg uteMsg;
                 if (m_pStrategyReqQueue.trypop(uteMsg)) {
+                    LOG_DEBUG("Get strategy req msg, msgid:{}, strategykey:{}", uteMsg.iMsgID, uteMsg.iStrategyKey);
                     m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iStrategyKey);
                 }
             }
 
-            /// 再尝试处理 API 请求队列 m_iApiReqProcessCount 个请求;
+            /// 再尝试处理 API 和交易所回报 请求队列 m_iApiReqProcessCount 个请求;
             for (int i = 0; i < m_iApiReqProcessCount; i++) {
                 UteMsg uteMsg;
                 if (m_pApiQueue.trypop(uteMsg)) {
-                    m_pfnOnInnerMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iMsgSrcType, uteMsg.pMsgHander); // api 请求过来的消息，策略进程key为0;
+                    LOG_DEBUG("Get api req msg, msgid:{}, src type:{},", uteMsg.iMsgID, uteMsg.iMsgSrcType);
+                    m_pfnOnInnerMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iMsgSrcType, uteMsg.pMsgHander); // api 请求和交易所回报 过来的消息；
                 }
             }
 
@@ -104,7 +106,6 @@ void UteMessageManager::StartListenQueue() {
         LOG_ERROR("Create UTE consumer thread failed.");
         return;
     }
-
 }
 
 
