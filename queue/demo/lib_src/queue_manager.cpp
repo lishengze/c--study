@@ -306,6 +306,15 @@ void QueueManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, u
     }
 }
 
+void QueueManager::SendMsg(int iMsgID, const char* pMsgBuf, unsigned int  iMsgLen, int iMsgSrcType, void* pMsgHandler) {
+    if (pMpmcQueue_) {
+        LOG_DEBUG("iMsgID = {}, iMsgLen = {}, iMsgSrcType = {}", iMsgID, iMsgLen, iMsgSrcType);
+        pMpmcQueue_->push(iMsgID, iMsgLen, iMsgSrcType, pMsgHandler, pMsgBuf); // 在 enqueue 时会调用 UteMsg 的构造函数
+    } else {
+        LOG_ERROR("pMpmcQueue_ is null");
+    }
+}
+
 
 void QueueManager::Release() {
     if (!pMpmcQueue_) {

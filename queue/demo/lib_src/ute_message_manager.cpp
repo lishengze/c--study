@@ -5,6 +5,22 @@ namespace share_common {
 bool UteMessageManager::Init(const char* cstrUTESysName,int iApiReqProcessCount, int iStrategyReqProcessCount)
 {
     LOG_INFO("Init UTE message manager, utesysname:{}, api req process count:{}, strategy req process count:{}", cstrUTESysName, iApiReqProcessCount, iStrategyReqProcessCount);
+
+    if (!m_pfnOnInnerMessage) {
+        LOG_ERROR("OnInnerMessage callback function is not set.");
+        return false;
+    }
+
+    if (!m_pfnOnEvent) {
+        LOG_ERROR("OnEvent callback function is not set.");
+        return false;
+    }
+
+    if (!m_pfnOnMessage) {
+        LOG_ERROR("OnMessage callback function is not set.");
+        return false;
+    }
+
     m_iApiReqProcessCount = iApiReqProcessCount;
     m_iStrategyReqProcessCount = iStrategyReqProcessCount;
 
@@ -26,8 +42,8 @@ bool UteMessageManager::Init(const char* cstrUTESysName,int iApiReqProcessCount,
     return true;
 }
 
-bool UteMessageManager::WriteMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
-    m_pApiQueue.SendMsg(iMsgID, pMsgBuf, iMsgLen, 0); //API 转发的请求和回报， 策略ID为0;
+bool UteMessageManager::WriteMsg(int iMsgID, const char* pMsgBuf, unsigned int iMsgLen, int iMsgSrcType, void* pMsgHandler) {
+    m_pApiQueue.SendMsg(iMsgID, pMsgBuf, iMsgLen, iMsgSrcType, pMsgHandler); //API 转发的请求和回报， 策略ID为0;
     return true;
 }
 
@@ -76,7 +92,7 @@ void UteMessageManager::StartListenQueue() {
             for (int i = 0; i < m_iApiReqProcessCount; i++) {
                 UteMsg uteMsg;
                 if (m_pApiQueue.trypop(uteMsg)) {
-                    m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, 0); // api 请求过来的消息，策略进程key为0;
+                    m_pfnOnInnerMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iMsgSrcType, uteMsg.pMsgHander); // api 请求过来的消息，策略进程key为0;
                 }
             }
 

@@ -80,6 +80,14 @@ public:
     /// @param ulStrategyKey : 策略进程的唯一标识 - 策略端写入请求时需要填入， UTE端写回报不需要写；
     void SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey =0);
 
+    /// @brief  转发 API和交易所回报消息到队列中
+    /// @param iMsgID 
+    /// @param pMsgBuf 
+    /// @param iMsgLen 
+    /// @param iMsgSrcType 
+    /// @param pMsgHandler 
+    void SendMsg(int iMsgID, const char* pMsgBuf, unsigned int  iMsgLen, int iMsgSrcType, void* pMsgHandler) ;
+
     void StartConsumerThread();
 
     /// @brief 解除内存映射;

@@ -39,10 +39,8 @@ void UteOnEvent(int iMsgID, const char* pMsgBuf,  unsigned long long ulStrategyK
     LOG_INFO("UteOnEvent: iMsgID={}, ulStrategyKey={}", iMsgID, ulStrategyKey);
 }
 
-void UteOnMessage(int iMsgID, const char* pMsgBuf,  unsigned long long ulStrategyKey) {
-    LOG_INFO("UteOnMessage: iMsgID={},  ulStrategyKey={}", iMsgID, ulStrategyKey);
-
-
+void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategyKey)  {
+    LOG_DEBUG("iMsgID = {}, ulStrategyKey = {}", iMsgID, ulStrategyKey);
 
     // if (iMsgID == kPktLoginReq) {
     //     QueueManager* pQueueManager = uteMessageManager.CreateStrategyRspQueue(ulStrategyKey);
@@ -58,6 +56,10 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf,  unsigned long long ulStrateg
 }
 
 
+void UteOnInnerMessage(int iMsgID, const char* pMsgBuf, int iMsgSrcType, void* pMsgHandler)  {
+    LOG_DEBUG("iMsgID = {},  iMsgSrcType = {}", iMsgID, iMsgSrcType);
+}
+
 
 void TestUteServer() {
     
@@ -67,6 +69,7 @@ void TestUteServer() {
 
     uteMessageManager.SetOnEvent(iEventSleepSec, UteOnEvent);
     uteMessageManager.SetOnMessage(UteOnMessage);
+    uteMessageManager.SetOnInnerMessage(UteOnInnerMessage);
 
     uteMessageManager.Init(strUteName.c_str(), 5, 1);
 
