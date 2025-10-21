@@ -58,4 +58,8 @@ bool StrategyMessageManager::Init(const char* UteName, unsigned int uiStrategySy
 }
 
 
+bool StrategyMessageManager::TryPopMsg(UteMsg& msg) {
+    return m_ReqQueueManager.trypop(msg);
+}
+
 } // namespace share_common 

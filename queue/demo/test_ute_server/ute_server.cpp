@@ -65,12 +65,12 @@ void TestUteServer() {
     
     std::string strUteName = "test_ute";
 
-    int iEventSleepSec = 3;
+    int iEventSleepSec = 5;
 
     uteMessageManager.SetOnEvent(iEventSleepSec, UteOnEvent);
     uteMessageManager.SetOnMessage(UteOnMessage);
     uteMessageManager.SetOnInnerMessage(UteOnInnerMessage);
 
-    uteMessageManager.Init(strUteName.c_str(), 5, 1);
+    uteMessageManager.Init(strUteName.c_str(), 1, 1);
 
 }

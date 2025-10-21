@@ -61,7 +61,12 @@ void TestStrategyClient() {
 
     DoLoginReq(stStrategyMessageManager);
 
-    // sleep(5);
+    // sleep(1);
+
+    // UteMsg msg;
+    // while (stStrategyMessageManager.TryPopMsg(msg)) {
+    //     LOG_INFO("TryPopMsg: iMsgID={}, iMsgLen={}", msg.iMsgID, msg.iMsgLen);
+    // }
 
     // DoTradeOrderReq(stStrategyMessageManager);
 

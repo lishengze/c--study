@@ -247,6 +247,7 @@ public:
         uint64_t ticket = pop_ticket_.load(std::memory_order_acquire);
         auto index = idx(ticket);
         auto cur_turn = turn(ticket);
+        LOG_DEBUG("cur_turn: {}, index: {}, pop_ticket: {}", cur_turn, index, pop_ticket_);
         // 检查元素槽是否可出队
         if (slots_[index].may_dequeue(cur_turn))
         {

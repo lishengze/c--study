@@ -200,25 +200,35 @@ struct StrategyEnd {
 
 /// @brief 通用请求消息结构体
 struct UteMsg {
-    UteMsg() : iMsgID(0), iMsgLen(0), iStrategyKey(0), iMsgSrcType(0), pMsgHander(nullptr) {
+    UteMsg() : iMsgID(0), iMsgLen(0), ulStrategyKey(0), iMsgSrcType(0), pMsgHander(nullptr) {
         memset(strMsgBuf, 0, sizeof(strMsgBuf));
     }
 
-    UteMsg(int iMsgID, unsigned int iMsgLen, unsigned long long iStrategyKey, const char* pMsgBuf) :
-         iMsgID(iMsgID), iMsgLen(iMsgLen), iStrategyKey(iStrategyKey), iMsgSrcType(0), pMsgHander(nullptr) {
+    UteMsg(int iMsgID, unsigned int iMsgLen, unsigned long long ulStrategyKey, const char* pMsgBuf) :
+         iMsgID(iMsgID), iMsgLen(iMsgLen), ulStrategyKey(ulStrategyKey), iMsgSrcType(0), pMsgHander(nullptr) {
         memset(strMsgBuf, 0, sizeof(strMsgBuf));
-        memcpy(strMsgBuf, pMsgBuf, iMsgLen);
+
+        if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
+            memcpy(strMsgBuf, pMsgBuf, iMsgLen);            
+        }
+
     }
 
     UteMsg(int iMsgID, unsigned int iMsgLen, int iMsgSrcType, void* pMsgHander, const char* pMsgBuf) :
-         iMsgID(iMsgID), iMsgLen(iMsgLen), iStrategyKey(0), iMsgSrcType(iMsgSrcType), pMsgHander(pMsgHander) {
+         iMsgID(iMsgID), iMsgLen(iMsgLen), ulStrategyKey(0), iMsgSrcType(iMsgSrcType), pMsgHander(pMsgHander) {
         memset(strMsgBuf, 0, sizeof(strMsgBuf));
-        memcpy(strMsgBuf, pMsgBuf, iMsgLen);
+        if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
+            memcpy(strMsgBuf, pMsgBuf, iMsgLen);            
+        }
     }    
 
     UteMsg(const UteMsg&& other) :
-        iMsgID(other.iMsgID), iMsgLen(other.iMsgLen), iStrategyKey(other.iStrategyKey), iMsgSrcType(other.iMsgSrcType), pMsgHander(other.pMsgHander) {
-        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
+        iMsgID(other.iMsgID), iMsgLen(other.iMsgLen), ulStrategyKey(other.ulStrategyKey), iMsgSrcType(other.iMsgSrcType), pMsgHander(other.pMsgHander) {
+        // memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
+
+        if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
+            memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);           
+        }        
     }
 
     UteMsg& operator=(const UteMsg&& other)
@@ -226,18 +236,30 @@ struct UteMsg {
         if (this == &other ) return *this;
         iMsgID = other.iMsgID;
         iMsgLen = other.iMsgLen;
-        iStrategyKey = other.iStrategyKey;
+        ulStrategyKey = other.ulStrategyKey;
         iMsgSrcType = other.iMsgSrcType;
         pMsgHander = other.pMsgHander;
         memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
         return *this;
     }
 
+     UteMsg(const UteMsg& other)
+    {
+        if (this == &other ) return;
+        iMsgID = other.iMsgID;
+        iMsgLen = other.iMsgLen;
+        ulStrategyKey = other.ulStrategyKey;
+        iMsgSrcType = other.iMsgSrcType;
+        pMsgHander = other.pMsgHander;
+        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
+        return;
+    }    
+
     int  iMsgID;            // 消息类型
     int  iMsgSrcType;       // 消息来源类型
     void* pMsgHander;       // 消息处理句柄
     unsigned int iMsgLen;  // 拷贝消息缓冲区的真实长度;
-    unsigned long long iStrategyKey; // 由strategyID 和 bachID 拼接的key;
+    unsigned long long ulStrategyKey; // 由strategyID 和 bachID 拼接的key;
     char strMsgBuf[sizeof(LogOnReq)+1]; // 增加编译宏判断;
 };
 

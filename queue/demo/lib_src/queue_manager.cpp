@@ -247,6 +247,21 @@ bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
 
     // LOG_DEBUG("pMpmcQueue_->size = {},slot_address: {}", pMpmcQueue_->mask_ + 1, (void*)(pMpmcQueue_->slots_));
 
+    //     //测试专用 - 写入测试数据;
+    // UteMsg testPushMsg(kPktStrategyEnd, 0, 8888, "");
+    // if (pMpmcQueue_->trypush(testPushMsg) ){
+    //     LOG_DEBUG("[SUCCESS] trypush msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPushMsg.iMsgID, testPushMsg.iMsgLen, testPushMsg.ulStrategyKey);
+    // } else {
+    //     LOG_ERROR("[FAILED] trypush msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPushMsg.iMsgID, testPushMsg.iMsgLen, testPushMsg.ulStrategyKey);
+    // }
+
+    // UteMsg testPopMsg;
+    // if (pMpmcQueue_->trypop(testPopMsg)) {
+    //     LOG_DEBUG("[SUCCESS] trypop msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPopMsg.iMsgID, testPopMsg.iMsgLen, testPopMsg.ulStrategyKey);
+    // } else {
+    //     LOG_ERROR("[FAILED] trypop msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPopMsg.iMsgID, testPopMsg.iMsgLen, testPopMsg.ulStrategyKey);
+    // }
+
 
     return true;
 }
@@ -291,9 +306,26 @@ bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
         return false;
     }
 
-    // LOG_DEBUG("pMpmcQueue_->size = {},slot_address: {}", pMpmcQueue_->mask_ + 1, (void*)(pMpmcQueue_->slots_));
+    // 测试专用 - 写入测试数据;
+    UteMsg testPushMsg(kPktStrategyEnd, 0, 8888, "");
+    if (pMpmcQueue_->trypush(testPushMsg) ){
+        LOG_DEBUG("[SUCCESS] trypush msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPushMsg.iMsgID, testPushMsg.iMsgLen, testPushMsg.ulStrategyKey);
+    } else {
+        LOG_ERROR("[FAILED] trypush msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPushMsg.iMsgID, testPushMsg.iMsgLen, testPushMsg.ulStrategyKey);
+    }
+
+
+    // // LOG_DEBUG("pMpmcQueue_->size = {},slot_address: {}", pMpmcQueue_->mask_ + 1, (void*)(pMpmcQueue_->slots_));
     
     close(shm_fd);
+
+    // UteMsg testPopMsg;
+    // if (pMpmcQueue_->trypop(testPopMsg)) {
+    //     LOG_DEBUG("[SUCCESS] trypop msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPopMsg.iMsgID, testPopMsg.iMsgLen, testPopMsg.ulStrategyKey);
+    // } else {
+    //     LOG_ERROR("[FAILED] trypop msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPopMsg.iMsgID, testPopMsg.iMsgLen, testPopMsg.ulStrategyKey);
+    // }
+
     return true;
 }
 
@@ -337,7 +369,7 @@ void QueueManager::Release() {
 
     /// 若是未映射共享内存，则需要手动释放内存
     if (!bIsAttachSharedMemory_) {
-        if (!pMpmcQueue_) delete pMpmcQueue_;
+        if (pMpmcQueue_) delete pMpmcQueue_;
     }
         
 }

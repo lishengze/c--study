@@ -63,6 +63,10 @@ public:
     /// @return false 发送失败 -- 未正确初始化;
     bool SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen);
 
+    /// @brief 策略进程接收消息;
+    /// @param iMsgID 消息ID;
+    bool TryPopMsg(UteMsg& msg);
+
     OnMessage m_pfnOnMessage;       // 消息回调函数,策略进程向UTE进程发送消息的接口;
     OnEvent   m_pfnOnEvent;           // 事件回调函数,告知策略进程, UTE进程是否正常运行;    
     

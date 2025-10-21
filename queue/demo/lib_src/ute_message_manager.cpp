@@ -37,7 +37,7 @@ bool UteMessageManager::Init(const char* cstrUTESysName,int iApiReqProcessCount,
     // 创建内存中的API请求队列， 这里不需要创建和attach共享内存， 直接创建即可;
     m_pApiQueue.Init(Consumer, "",  false); 
 
-    StartListenQueue();
+    StartListenQueue(); // todo 启动监听队列线程;
     
     return true;
 }
@@ -80,25 +80,26 @@ void UteMessageManager::StartListenQueue() {
 
     shptrConsumerThread_ = std::make_shared<std::thread>([this]() {
         while (true) {
+
             /// 先尝试处理 策略请求队列 m_iStrategyReqProcessCount 个请求;
             for (int i = 0; i < m_iStrategyReqProcessCount; i++) {
                 UteMsg uteMsg;
                 if (m_pStrategyReqQueue.trypop(uteMsg)) {
-                    LOG_DEBUG("Get strategy req msg, msgid:{}, strategykey:{}", uteMsg.iMsgID, uteMsg.iStrategyKey);
-                    m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iStrategyKey);
+                    LOG_DEBUG("Get strategy req msg, msgid:{}, strategykey:{}", uteMsg.iMsgID, uteMsg.ulStrategyKey);
+                    // m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.ulStrategyKey);
                 }
             }
 
-            /// 再尝试处理 API 和交易所回报 请求队列 m_iApiReqProcessCount 个请求;
-            for (int i = 0; i < m_iApiReqProcessCount; i++) {
-                UteMsg uteMsg;
-                if (m_pApiQueue.trypop(uteMsg)) {
-                    LOG_DEBUG("Get api req msg, msgid:{}, src type:{},", uteMsg.iMsgID, uteMsg.iMsgSrcType);
-                    m_pfnOnInnerMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iMsgSrcType, uteMsg.pMsgHander); // api 请求和交易所回报 过来的消息；
-                }
-            }
+            // /// 再尝试处理 API 和交易所回报 请求队列 m_iApiReqProcessCount 个请求;
+            // for (int i = 0; i < m_iApiReqProcessCount; i++) {
+            //     UteMsg uteMsg;
+            //     if (m_pApiQueue.trypop(uteMsg)) {
+            //         LOG_DEBUG("Get api req msg, msgid:{}, src type:{},", uteMsg.iMsgID, uteMsg.iMsgSrcType);
+            //         // m_pfnOnInnerMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iMsgSrcType, uteMsg.pMsgHander); // api 请求和交易所回报 过来的消息；
+            //     }
+            // }
 
-            sleep(1); //todo 测试专用;
+            sleep(10); //todo 测试专用;
         }
     });
 

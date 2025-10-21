@@ -108,7 +108,7 @@ private:
     StrategyMessageManager       *pStrategyMessageManager_;      // 策略进程对应的策略消息管理器;
     UteMessageManager            *pUteMessageManager_;           // UTE进程对应的策略消息管理器;
 
-    std::shared_ptr<std::thread>    shptrConsumerThread_;           // 消费者线程;
+    std::shared_ptr<std::thread>  shptrConsumerThread_;           // 消费者线程;
 
     unsigned long long           ulFileKey_;                    // 策略进程对应的锁文件名称;
 };
