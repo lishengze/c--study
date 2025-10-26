@@ -2,6 +2,9 @@
 #include <cstddef>   // 用于size_t等标准类型
 #include <memory>    // 用于std::unique_ptr智能指针
 #include <stdexcept> // 用于标准异常处理
+#include <thread>
+#include <chrono>
+#include <iostream>
 
 /*
 ## 实现原理解析
@@ -137,3 +140,39 @@ private:
     std::atomic<size_t> head_;       // 消费者读取位置（出队索引），原子变量确保多线程可见性
     std::atomic<size_t> tail_;       // 生产者写入位置（入队索引），原子变量确保多线程可见性
 };
+
+int test_spsc_1() {
+    SPSCQueue<int> queue(100);  // 创建容量为100的SPSC队列
+    
+    // 生产者线程
+    std::thread producer([&queue]() {
+        for (int i = 0; i < 1000; ++i) {
+            // 等待队列有空间
+            while (!queue.enqueue(i)) {
+                std::this_thread::yield();
+            }
+            if (i % 100 == 0) {
+                std::cout << "Produced: " << i << std::endl;
+            }
+        }
+    });
+    
+    // 消费者线程
+    std::thread consumer([&queue]() {
+        int value;
+        for (int i = 0; i < 1000; ++i) {
+            // 等待队列有数据
+            while (!queue.dequeue(value)) {
+                std::this_thread::yield();
+            }
+            if (i % 100 == 0) {
+                std::cout << "Consumed: " << value << std::endl;
+            }
+        }
+    });
+    
+    producer.join();
+    consumer.join();
+    
+    return 0;
+}

@@ -1,6 +1,9 @@
-#include "test.h"
+#include "spsc_1.h"
+#include "spsc_2.h"
+#include "mpmc_1.h"
 
 int main() {
-    test_spsc_1();
+    // TestSpscQueue_2();
+    TestMpmc_2();
     return 0;
 }
