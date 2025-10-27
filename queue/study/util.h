@@ -9,6 +9,7 @@
 #include <chrono>
 #include <string>
 #include <iostream>
+using namespace std;
 
 #define MILLI_PER_SECOND 1000
 #define MICRO_PER_MILLI 1000
@@ -32,12 +33,36 @@ inline std::string GetSimpleTimeData(std::vector<unsigned long long>& vecTime) {
     unsigned long long ul75 = vecTime[std::floor(vecTime.size()*75/100)];
     unsigned long long ul90 = vecTime[std::floor(vecTime.size()*9/10)];
 
-    std::string sDelayTimeInfo = ",dataCount: " + std::to_string(vecTime.size()) 
+    std::string sDelayTimeInfo = "dataCount: " + std::to_string(vecTime.size()) 
                         +  ", min=" + std::to_string(ulMin) + ", max=" + std::to_string(ulMax)
                         + ", 25%=" + std::to_string(ul25) + ", 50%=" + std::to_string(ul50) 
                         + ", 75%=" + std::to_string(ul75) + ", 90%=" + std::to_string(ul90)
                         + "\n";
     return sDelayTimeInfo;
+}
+
+inline long NanoTime() {
+    std::chrono::high_resolution_clock::time_point curtime = std::chrono::high_resolution_clock().now();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(curtime.time_since_epoch()).count();
+}
+
+inline string ToSecondStr(long nano, string time_format="%Y-%m-%d %H:%M:%S") {
+    if (nano <=0) {
+        return "NULL";
+    }
+
+    nano /= NANO_PER_SECOND;
+    struct  tm* dt ={0};
+    char buffer[30] = {0};
+    dt = gmtime(&nano);
+    strftime(buffer, sizeof(buffer), time_format.c_str(), dt);
+
+    return std::string(buffer);
+}
+
+inline std::string SecTimeStr(std::string time_format="%Y-%m-%d %H:%M:%S") {
+    long nano_time = NanoTime();
+    return ToSecondStr(nano_time, time_format);
 }
 
 inline std::string NanoToMicroString(unsigned long long ulNanosecs) {
