@@ -377,13 +377,4 @@ public:
 
     std::string m_strSrcJsonFileName;
     njson m_jsonData;
-
-    LogOnReq m_stLogOnReq;
-    LogOnAns m_stLogOnAns;
-    LogOutReq m_stLogOutReq;
-    LogOutAns m_stLogOutAns;
-    TradeOrderReq m_stTradeOrderReq;
-    CancelOrderReq m_stCancelOrderReq;
-    TradeOrderER m_stTradeOrderER;
-    RejectMsg m_stRejectMsg;
 };
