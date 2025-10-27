@@ -43,16 +43,21 @@ class MPMCQueue {
             unsigned int uiCurrentWriteIndex = atouiWriteIndex_.load(std::memory_order_relaxed);
             unsigned int uiNextWriteIndex;
             
-            // 等待获取写入位置（使用更强的内存序）
+            // // 等待获取写入位置
+            // do {
+            //     uiNextWriteIndex = (uiCurrentWriteIndex + 1) % uiCapacity_;
+            // } while (!atouiWriteIndex_.compare_exchange_weak(uiCurrentWriteIndex, uiNextWriteIndex,
+            //                                             std::memory_order_relaxed, std::memory_order_relaxed));
+
+            // 等待获取写入位置
             do {
                 uiNextWriteIndex = (uiCurrentWriteIndex + 1) % uiCapacity_;
-            } while (!atouiWriteIndex_.compare_exchange_weak(uiCurrentWriteIndex, uiNextWriteIndex,
-                                                        std::memory_order_acq_rel, std::memory_order_relaxed));
+            } while (!atouiWriteIndex_.compare_exchange_strong(uiCurrentWriteIndex, uiNextWriteIndex));                                                        
 
             // 写入数据到缓冲区
             pBuffer_[uiCurrentWriteIndex] = tValue;
             
-            // 使用内存屏障确保数据写入对其他线程可见
+            // 使用内存屏障确保数据写入对其他线程可见，并且在索引更新之后
             std::atomic_thread_fence(std::memory_order_release);
 
             return true;
@@ -72,13 +77,19 @@ class MPMCQueue {
             unsigned int uiCurrentReadIndex = atouiReadIndex_.load(std::memory_order_relaxed);
             unsigned int uiNextReadIndex;
             
-            // 等待获取读取位置（使用更强的内存序）
+            // // 等待获取读取位置
+            // do {
+            //     uiNextReadIndex = (uiCurrentReadIndex + 1) % uiCapacity_;
+            // } while (!atouiReadIndex_.compare_exchange_weak(uiCurrentReadIndex, uiNextReadIndex,
+            //                                             std::memory_order_relaxed, std::memory_order_relaxed));
+
+            // 等待获取读取位置
             do {
                 uiNextReadIndex = (uiCurrentReadIndex + 1) % uiCapacity_;
-            } while (!atouiReadIndex_.compare_exchange_weak(uiCurrentReadIndex, uiNextReadIndex,
-                                                        std::memory_order_acq_rel, std::memory_order_relaxed));
+            } while (!atouiReadIndex_.compare_exchange_strong(uiCurrentReadIndex, uiNextReadIndex));
 
-            // 使用内存屏障确保读取到最新的数据
+
+            // 使用内存屏障确保读取到最新的数据，并且在索引更新之后
             std::atomic_thread_fence(std::memory_order_acquire);
             
             tValue = pBuffer_[uiCurrentReadIndex];
