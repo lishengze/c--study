@@ -25,6 +25,14 @@ inline std::string GetSimpleTimeData(std::vector<unsigned long long>& vecTime) {
 
     std::sort(vecTime.begin(), vecTime.end());
 
+    double dSum = 0;
+    for (auto& time : vecTime) {
+        dSum += time;
+    }
+    double dAve = dSum / vecTime.size();
+    
+
+
     unsigned long long ulMin = vecTime[0];
     unsigned long long ulMax = vecTime[vecTime.size()-1];
 
@@ -37,6 +45,7 @@ inline std::string GetSimpleTimeData(std::vector<unsigned long long>& vecTime) {
                         +  ", min=" + std::to_string(ulMin) + ", max=" + std::to_string(ulMax)
                         + ", 25%=" + std::to_string(ul25) + ", 50%=" + std::to_string(ul50) 
                         + ", 75%=" + std::to_string(ul75) + ", 90%=" + std::to_string(ul90)
+                        + ", ave=" + std::to_string(dAve)
                         + "\n";
     return sDelayTimeInfo;
 }

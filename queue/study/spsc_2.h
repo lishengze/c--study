@@ -6,6 +6,7 @@
 
 #include "util.h"
 #include "struct.h"
+#include "logger.h"
 
 using namespace std;
 
@@ -66,6 +67,8 @@ class SPSCQueue_2 {
 std::vector<unsigned long long> gVecTime;
 
 void TestSpscQueue_2() {
+    LOG_INFO("---------- TEST SPSCQueue_2 START ---------");
+    
     SPSCQueue_2<Block1> queue(10000);
 
     
@@ -104,8 +107,7 @@ void TestSpscQueue_2() {
     consumer.join();
     producer.join();
 
-    std::cout << GetSimpleTimeData(gVecTime) << std::endl;
-
+    LOG_INFO("{}", GetSimpleTimeData(gVecTime) );
 }
 
 

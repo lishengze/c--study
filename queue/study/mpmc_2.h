@@ -23,7 +23,7 @@ struct Element {
     T value_;
     std::atomic<bool> bIsWriteen;     // 这个slot是否写入值了。
 
-    void Enqueue(T& value) {
+    void Enqueue(const T& value) {
 
         while(bIsWriteen.load(std::memory_order_acquire));  // 等待这个位置被空出来;当前是写的状态，代表已经满了。
 
@@ -93,10 +93,11 @@ class MPMCQueue_2 {
 std::vector<unsigned long long> gMpmc2VecTime;
 
 void TestMpmc_2() {
+    LOG_INFO("---------- TEST MPMCQueue_2 START ---------");
     MPMCQueue_2<Block1> queue(10000);
 
     
-    int iTestCount = 1000;
+    int iTestCount = 10000;
     gMpmc2VecTime.resize(iTestCount, 0);
     for (int i = 0; i < iTestCount; ++i) {
         gMpmc2VecTime[i] = 0;

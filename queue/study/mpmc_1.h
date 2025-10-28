@@ -109,7 +109,7 @@ class MPMCQueue {
 
 std::vector<unsigned long long> gMpmc1VecTime;
 
-void TestMpmc_2() {
+void TestMpmc_1() {
     MPMCQueue<Block1> queue(10000);
 
     
