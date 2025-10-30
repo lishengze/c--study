@@ -147,7 +147,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "security_id:" << std::setw(16) << obj.security_id <<"\n";
+        ssObj << "\nsecurity_id:" << std::setw(16) << obj.security_id <<"\n";
         ssObj << std::setw(30) << "market_id:" << std::setw(16) << obj.market_id <<"\n"; 
         ssObj << std::setw(30) << "side:" << std::setw(16) << obj.side <<"\n";
         ssObj << std::setw(30) << "order_type:" << std::setw(16) << obj.order_type <<"\n"; 
@@ -181,7 +181,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "orig_client_seq_id:" << std::setw(16) << obj.orig_client_seq_id <<"\n";
+        ssObj << "\norig_client_seq_id:" << std::setw(16) << obj.orig_client_seq_id <<"\n";
         ssObj << std::setw(30) << "orig_clordno:" << std::setw(16) << obj.orig_clordno <<"\n"; 
         return ssObj.str();
     }    
@@ -264,7 +264,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "order_id:" << std::setw(16) << obj.order_id <<"\n";
+        ssObj << std::setw(30) << "\norder_id:" << std::setw(16) << obj.order_id <<"\n";
         ssObj << std::setw(30) << "clordid:" << std::setw(16) << obj.clordid <<"\n"; 
 
         ssObj << std::setw(30) << "security_id:" << std::setw(16) << obj.security_id <<"\n"; 
@@ -518,7 +518,7 @@ public:
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
         ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
-        ssObj << std::setw(30) << "\nTradeOrderInfo:\n" << TradeOrderInfoStr(obj.trade_order_info) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderInfo:" << TradeOrderInfoStr(obj.trade_order_info) <<"\n";
 
         return ssObj.str();
     }    
@@ -559,7 +559,7 @@ public:
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
         ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
-        ssObj << std::setw(30) << "\nCancelOrderInfo:\n" << CancelOrderInfoStr(obj.cancel_order_info) <<"\n";
+        ssObj << std::setw(30) << "\nCancelOrderInfo:" << CancelOrderInfoStr(obj.cancel_order_info) <<"\n";
 
         return ssObj.str();
     }    
@@ -571,16 +571,16 @@ public:
     //     TradeOrderUser trade_order_user; //客户信息
     //     OrdERInfo order_er_info; //订单信息
     // };
-    bool ParseTradeOrderER(TradeOrderER& stTradeOrderER, std::string sFileName) {
+    bool ParseTradeOrderER(TradeOrderER& stTradeOrderER, std::string sFileName, std::string sPropName="TradeOrderER") {
         njson jsData;
         if (!GetJsonFromFile(jsData, sFileName)) {
             LOG_ERROR("JsonStructHelper::ParseTradeOrderER, ParseJsonFile:{} failed", sFileName);
             return false;
         }
 
-        if (jsData.contains("TradeOrderER")) {
+        if (jsData.contains(sPropName)) {
             std::string sErrMsg;
-            njson jsTradeOrderER = jsData["TradeOrderER"];
+            njson jsTradeOrderER = jsData[sPropName];
 
             ParseTraderOrderUser(jsTradeOrderER, stTradeOrderER.trade_order_user);
             ParseOrdERInfo(jsTradeOrderER, stTradeOrderER.order_er_info);
@@ -600,7 +600,7 @@ public:
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
         ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
-        ssObj << std::setw(30) << "\nOrdERInfo:\n" << OrdERInfoStr(obj.order_er_info) <<"\n";
+        ssObj << std::setw(30) << "\nOrdERInfo:" << OrdERInfoStr(obj.order_er_info) <<"\n";
 
         return ssObj.str();
     }    

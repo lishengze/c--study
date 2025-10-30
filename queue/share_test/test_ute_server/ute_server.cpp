@@ -137,7 +137,7 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     TradeOrderER rsp;
-                    JSON_HELPER->ParseTradeOrderER(rsp, gStrSrcJsonFileName);
+                    JSON_HELPER->ParseTradeOrderER(rsp, gStrSrcJsonFileName, "OrderReqRsp");
                     pQueueManager->SendMsg(kPktOrderAns, (char*)(&rsp), sizeof(TradeOrderER), ulStrategyKey);
                 }
                                 
@@ -152,7 +152,7 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     TradeOrderER rsp;
-                    JSON_HELPER->ParseTradeOrderER(rsp, gStrSrcJsonFileName);
+                    JSON_HELPER->ParseTradeOrderER(rsp, gStrSrcJsonFileName, "CancelOrderReqRsp");
                     pQueueManager->SendMsg(kPktCancelOrderAns, (char*)(&rsp), sizeof(TradeOrderER), ulStrategyKey);
                 }
                                 

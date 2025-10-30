@@ -21,7 +21,151 @@
             "client_seq_id":0,
             "agw_seq_id":8
         },
-        "session_status": "OK!",
-        "error_code":"0"
-    }    
+        "session_status": 8,
+        "error_code":0
+    },
+    "LogOutReq":{
+        "TradeOrderUser":{
+            "fund_account_id": "test_fund",
+            "branch_id":"001",
+            "account_id":"logout",
+            "cust_id":"test_logout",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "password": "999"
+    },  
+    "LogOutAns":{
+        "TradeOrderUser":{
+            "fund_account_id": "LogoutAns",
+            "branch_id":"001",
+            "account_id":"LogoutAns",
+            "cust_id":"test_LogoutAns",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "session_status": 9,
+        "error_code":2
+    },  
+    "CancelOrderReq":{
+        "TradeOrderUser":{
+            "fund_account_id": "CancelOrder",
+            "branch_id":"001",
+            "account_id":"CancelOrder",
+            "cust_id":"test_CancelOrder",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "CancelOrderInfo":{
+            "orig_client_seq_id":8, 
+            "orig_clordno":0 
+        }
+    },      
+    "TradeOrderReq":{
+        "TradeOrderUser":{
+            "fund_account_id": "OrderReq",
+            "branch_id":"001",
+            "account_id":"OrderReq",
+            "cust_id":"test_OrderReq",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "TradeOrderInfo":{
+            "security_id":"123456", 
+            "market_id":1, 
+            "side":"1",
+            "ord_type":"2", 
+            "order_price":88, 
+            "stop_px":77,
+            "order_qty":10000
+        }
+    },
+    "OrderReqRsp":{
+        "TradeOrderUser":{
+            "fund_account_id": "ReqOrderRsp",
+            "branch_id":"001",
+            "account_id":"ReqOrderRsp",
+            "cust_id":"test_ReqOrderRsp",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "OrdERInfo":{
+        "order_id":"1234567890123456", 
+        "clordid":"1234567890123456", 
+        "security_id":"123456", 
+        "market_id":1, 
+        "exec_type":"2", 
+        "ord_status":"4", 
+        "price":100.0000,
+        "order_qty":10000, 
+        "leaves_qty":10000, 
+        "cum_qty":0, 
+        "side":"1", 
+        "transact_time":1694560000000, 
+        "user_info":"test_user_info", 
+        "exec_id":"1234567890123456", 
+        "orig_clordid":"1234567890123456", 
+        "ord_type":"2", 
+        "ord_rej_reason":"0000",
+        "time_in_force":"0", 
+        "last_px":100.0000, 
+        "last_qty":10000,
+        "cash_margin":"1", 
+        "cancel_flag":"0", 
+        "clordno":"1234567890123456", 
+        "orig_clordno":"1234567890123456" ,
+        "session_status": 9,
+        "error_code":2,
+        "index":8, 
+        "code":0, 
+        "frozen_trade_value":0.0000,
+        "frozen_fee":0.0000, 
+        "fee":0.0000, 
+        "total_value_traded":0.0000 
+        }
+    },
+    "CancelOrderReqRsp":{
+        "TradeOrderUser":{
+            "fund_account_id": "CancelOrderRsp",
+            "branch_id":"001",
+            "account_id":"CancelOrder",
+            "cust_id":"test_CancelOrderRsp",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "OrdERInfo":{
+        "order_id":"1234567890123456", 
+        "clordid":"1234567890123456", 
+        "security_id":"123456", 
+        "market_id":1, 
+        "exec_type":"2", 
+        "ord_status":"4", 
+        "price":100.0000,
+        "order_qty":10000, 
+        "leaves_qty":10000, 
+        "cum_qty":0, 
+        "side":"1", 
+        "transact_time":1694560000000, 
+        "user_info":"test_user_info", 
+        "exec_id":"1234567890123456", 
+        "orig_clordid":"1234567890123456", 
+        "ord_type":"2", 
+        "ord_rej_reason":"0000",
+        "time_in_force":"0", 
+        "last_px":100.0000, 
+        "last_qty":10000,
+        "cash_margin":"1", 
+        "cancel_flag":"0", 
+        "clordno":"1234567890123456", 
+        "orig_clordno":"1234567890123456" ,
+        "session_status": 9,
+        "error_code":2,
+        "index":8, 
+        "code":0, 
+        "frozen_trade_value":0.0000,
+        "frozen_fee":0.0000, 
+        "fee":0.0000, 
+        "total_value_traded":0.0000 
+        }
+    }           
 }
