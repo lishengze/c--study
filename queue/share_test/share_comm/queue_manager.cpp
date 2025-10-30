@@ -397,6 +397,7 @@ void QueueManager::Release() {
 /// @param iMsgLen 
 /// @param ulStrategyKey 
 void QueueManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey) {
+    LOG_DEBUG("iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}, bIsInShareMemory_ = {}", iMsgID, iMsgLen, ulStrategyKey, bIsInShareMemory_);
     if (bIsInShareMemory_) {
         pUteMsgMpmcQueue_->push_share(pUteMsgMpmcShareSlots_, iMsgID, iMsgLen, ulStrategyKey, pMsgBuf); // 在 enqueue 时会调用 UteMsg 的构造函数
     } else {

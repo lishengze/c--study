@@ -200,7 +200,7 @@ void LockFileManager::StartHeartbeatThread() {
                         
                         vecInvalidLockFileNames.push_back(iter.first);
                     } else {
-                        LOG_DEBUG("LockFile [{}], fd: [{}] is still alive!", iter.first, iter.second);
+                        // LOG_DEBUG("LockFile [{}], fd: [{}] is still alive!", iter.first, iter.second);
                     }
                 }
 

@@ -238,8 +238,6 @@ void TestUteServer() {
     for (int i = 0; i<gTestCount; ++i) {
         gTestTimeVec.push_back(0);
     }
-    
-    std::string strUteName = "test_ute";
 
     int iEventSleepSec = 5;
 
@@ -247,7 +245,8 @@ void TestUteServer() {
     gUteMessageManager.SetOnMessage(UteOnMessage);
     gUteMessageManager.SetOnInnerMessage(UteOnInnerMessage);
 
-    gUteMessageManager.Init(strUteName.c_str(), 1, 1, 4000, 4000, 4000);
+    gUteMessageManager.Init(gJsonMeta.strUteName_.c_str(), gJsonMeta.uiApiProcessCount_, gJsonMeta.uiStrategyProcessCount_, 
+                            gJsonMeta.uiReqQueueNum_, gJsonMeta.uiRspQueueNum_,gJsonMeta.uiApiQueueNum_);
 
 
     // sleep(5);
