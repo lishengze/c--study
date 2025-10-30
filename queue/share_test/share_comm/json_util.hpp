@@ -54,7 +54,7 @@ public:
     }
 };
 
-inline Error GetJsonFromFile(njson& dstJsonData, string sFullFileName) {
+inline Error GetJsonFromFileFull(njson& dstJsonData, string sFullFileName) {
     Error error;
     try
     {
@@ -71,6 +71,24 @@ inline Error GetJsonFromFile(njson& dstJsonData, string sFullFileName) {
         // std::cerr << sErrMsg << '\n';
     }
     return error;    
+}
+
+inline bool GetJsonFromFile(njson& dstJsonData, string sFullFileName) {
+    try
+    {
+        std::fstream file(sFullFileName.c_str());
+        std::ifstream in_config(sFullFileName);
+        std::string sOriContents((std::istreambuf_iterator<char>(in_config)), std::istreambuf_iterator<char>());
+        string sUtf8Contents = GetUtf8String(sOriContents);
+        dstJsonData = njson::parse(sUtf8Contents);
+        return true;
+    }
+    catch(const std::exception& e)
+    {
+
+        std::cerr << sFullFileName << " parse exception: " << e.what() << '\n';
+    }
+    return false;    
 }
 
 /// -------------- char;

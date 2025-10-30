@@ -31,7 +31,7 @@ using namespace share_common;
 int gTestCount = 10000;
 
 StrategyMessageManager gStStrategyMessageManager;
-
+std::string gStrSrcJsonFileName = "test_data.json";
 JsonStructHelper gJsonStructHelper;
 JsonMeta gJsonMeta;
 
@@ -47,39 +47,39 @@ void StrategyOnMessage(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
         case kPktLoginAns:
         {
             LogOnAns* pStData = (LogOnAns*)(pMsgBuf);
-            LOG_INFO("LogOnAns: {}", gJsonStructHelper.LogOnAnsStr(*pStData));
+            LOG_INFO("LogOnAns: {}", gJsonStructHelper.LogOnAnsStr(*pStData), gStrSrcJsonFileName);
             break;
         }
 
         case kPktLogoutAns:
         {
             LogOutAns* pStData = (LogOutAns*)(pMsgBuf);
-            LOG_INFO("LogOnAns: {}", gJsonStructHelper.LogOutAnsStr(*pStData));
+            LOG_INFO("LogOnAns: {}", gJsonStructHelper.LogOutAnsStr(*pStData), gStrSrcJsonFileName);
             break;
         }
 
         case kPktOrderAns:
         {
             TradeOrderER* pStData = (TradeOrderER*)(pMsgBuf);
-            LOG_INFO("TradeOrderER: {}", gJsonStructHelper.TradeOrderERStr(*pStData));
+            LOG_INFO("TradeOrderER: {}", gJsonStructHelper.TradeOrderERStr(*pStData), gStrSrcJsonFileName);
             break;
         }
         case kPktCancelOrderAns:
         {
             TradeOrderER* pStData = (TradeOrderER*)(pMsgBuf);
-            LOG_INFO("TradeOrderER: {}", gJsonStructHelper.TradeOrderERStr(*pStData));
+            LOG_INFO("TradeOrderER: {}", gJsonStructHelper.TradeOrderERStr(*pStData), gStrSrcJsonFileName);
             break;
         }
         case kPktOrderMatch:
         {
             TradeOrderER* pStData = (TradeOrderER*)(pMsgBuf);
-            LOG_INFO("TradeOrderER: {}", gJsonStructHelper.TradeOrderERStr(*pStData));
+            LOG_INFO("TradeOrderER: {}", gJsonStructHelper.TradeOrderERStr(*pStData), gStrSrcJsonFileName);
             break;
         }
         case kPktRejectMsg:
         {
             RejectMsg* pStData = (RejectMsg*)(pMsgBuf);
-            LOG_INFO("LogOnAns: {}", gJsonStructHelper.RejectMsgStr(*pStData));
+            LOG_INFO("LogOnAns: {}", gJsonStructHelper.RejectMsgStr(*pStData), gStrSrcJsonFileName);
             break;
         }
         default:
@@ -243,9 +243,9 @@ void JsonDoLoginReq(StrategyMessageManager& stragegyMsgManager) {
 
     LogOnReq req = {0};
 
-    gJsonStructHelper.ParseLogOnReq(req);
+    gJsonStructHelper.ParseLogOnReq(req, gStrSrcJsonFileName);
 
-    LOG_INFO("LogOnReq: {}",  gJsonStructHelper.LogOnReqStr(req)); 
+    LOG_INFO("LogOnReq: {}",  gJsonStructHelper.LogOnReqStr(req), gStrSrcJsonFileName); 
 
     stragegyMsgManager.SendMsg(kPktLoginReq, (char*)&req, sizeof(req));
 }
@@ -254,9 +254,9 @@ void JsonDoLoginReq(StrategyMessageManager& stragegyMsgManager) {
 void JsonDoLogoutReq(StrategyMessageManager& stragegyMsgManager) {
     LOG_INFO("DoLogoutReq");
     LogOutReq req = {0};
-    gJsonStructHelper.ParseLogOutReq(req); 
+    gJsonStructHelper.ParseLogOutReq(req, gStrSrcJsonFileName); 
 
-    LOG_INFO("LogOutReq: {}" , gJsonStructHelper.LogOutReqStr(req)); 
+    LOG_INFO("LogOutReq: {}" , gJsonStructHelper.LogOutReqStr(req), gStrSrcJsonFileName); 
 
     stragegyMsgManager.SendMsg(kPktLogoutReq, (char*)&req, sizeof(req));
 }
@@ -265,9 +265,9 @@ void JsonDoLogoutReq(StrategyMessageManager& stragegyMsgManager) {
 void JsonDoTradeOrderReq(StrategyMessageManager& stragegyMsgManager) {
     LOG_INFO("DoTradeOrderReq");
     TradeOrderReq req;
-    gJsonStructHelper.ParseTradeOrderReq(req);
+    gJsonStructHelper.ParseTradeOrderReq(req, gStrSrcJsonFileName);
 
-    LOG_INFO("DoTradeOrderReq: {}" , gJsonStructHelper.TradeOrderReqStr(req)); 
+    LOG_INFO("DoTradeOrderReq: {}" , gJsonStructHelper.TradeOrderReqStr(req), gStrSrcJsonFileName); 
   
     stragegyMsgManager.SendMsg(kPktOrderReq, (char*)&req, sizeof(req));
 }
@@ -276,9 +276,9 @@ void JsonDoTradeOrderReq(StrategyMessageManager& stragegyMsgManager) {
 void JsonDoCancelOrder(StrategyMessageManager& stragegyMsgManager) {
     LOG_INFO("DoCancelOrder");
     CancelOrderReq req = {0};
-    gJsonStructHelper.ParseCancelOrderReq(req);  
+    gJsonStructHelper.ParseCancelOrderReq(req, gStrSrcJsonFileName);  
 
-    LOG_INFO("DoCancelOrder: {}" , gJsonStructHelper.CancelOrderReqStr(req)); 
+    LOG_INFO("DoCancelOrder: {}" , gJsonStructHelper.CancelOrderReqStr(req), gStrSrcJsonFileName); 
 
     stragegyMsgManager.SendMsg(kPktCancelOrderReq, (char*)&req, sizeof(req));
 }

@@ -20,30 +20,30 @@ using namespace share_common;
 class JsonStructHelper {
 public:
     bool Init(std::string strSrcJsonFileName) {
-        m_strSrcJsonFileName = strSrcJsonFileName;
+        // m_strSrcJsonFileName = strSrcJsonFileName;
 
-        Error error;
-        if ((error = GetJsonFromFile(m_jsonData, m_strSrcJsonFileName)).IsFailed()) {
-            LOG_ERROR("JsonStructHelper::Init, ParseJsonFile:{} failed, error: {}", m_strSrcJsonFileName, error.Str());
-            return false;
-        } else {
-            LOG_INFO("Get Data From {} SUCESS!", m_strSrcJsonFileName);
-        }
+        // Error error;
+        // if (!GetJsonFromFile(m_jsonData, strSrcJsonFileName)) {
+        //     LOG_ERROR("JsonStructHelper::Init, ParseJsonFile:{} failed", strSrcJsonFileName);
+        //     return false;
+        // } else {
+        //     LOG_INFO("Get Data From {} SUCESS!", strSrcJsonFileName);
+        // }
 
         /*        
         测试使用
         */
 
-       CheckProperties();
+    //    CheckProperties();
 
         return true;
     }  
 
-    void CheckProperties() {
+    void CheckProperties(njson& jsData) {
        std::vector<std::string> structVec= {"LogOnReq", "LogOnAns"};
 
        for (auto& key:structVec) {
-            if (m_jsonData.contains(key)) {
+            if (jsData.contains(key)) {
                 LOG_DEBUG("Test Data Contain {}", key);
             } else {
                 LOG_DEBUG("Test Data Does Not Contain {}", key);
@@ -53,7 +53,7 @@ public:
 
     bool ResetData() {
         Error error;
-        cout << "m_strSrcJsonFileName: " << m_strSrcJsonFileName << endl;
+        // cout << "strSrcJsonFileName: " << strSrcJsonFileName << endl;
 
         // if ((error = GetJsonFromFile(m_jsonData, m_strSrcJsonFileName)).IsFailed()) {
         //     LOG_ERROR("ParseJsonFile:{} failed, error: {}", m_strSrcJsonFileName, error.Str());
@@ -80,7 +80,7 @@ public:
     // };
     bool ParseTraderOrderUser(njson& reqJsonData, TradeOrderUser& stTraderOrderUser) {
         
-        if (ResetData() && reqJsonData.contains("TradeOrderUser")) {
+        if (reqJsonData.contains("TradeOrderUser")) {
             std::string sErrMsg;
             njson jsTradeOrderUser = reqJsonData["TradeOrderUser"];
             GetJsonCharStringField(jsTradeOrderUser, "fund_account_id", stTraderOrderUser.fund_account_id, sizeof(stTraderOrderUser.fund_account_id), sErrMsg);  
@@ -101,6 +101,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
+        ssObj << "\n";
         ssObj << std::setw(30) << "fund_account_id:" << std::setw(16) << obj.fund_account_id <<"\n";
         ssObj << std::setw(30) << "branch_id:" << std::setw(16) << obj.branch_id <<"\n"; 
         ssObj << std::setw(30) << "account_id:" << std::setw(16) << obj.account_id <<"\n";
@@ -123,7 +124,7 @@ public:
     //     long long stop_px; ///< 止损价, N13(4)
     // };
     bool ParseTradeOrderInfo(njson& reqJsonData, TradeOrderInfo& stTradeOrderInfo) {
-        if (ResetData() && reqJsonData.contains("TradeOrderInfo")) {
+        if (reqJsonData.contains("TradeOrderInfo")) {
             std::string sErrMsg;
             njson jsTradeOrderInfo = reqJsonData["TradeOrderInfo"];
             GetJsonCharStringField(jsTradeOrderInfo, "security_id", stTradeOrderInfo.security_id, sizeof(stTradeOrderInfo.security_id), sErrMsg);  
@@ -164,7 +165,7 @@ public:
     //     long long  orig_clordno; //原客户订单编号
     // };
     bool ParseCancelOrderInfo(njson& reqJsonData, CancelOrderInfo& stCancelOrderInfo) {
-        if (ResetData() && reqJsonData.contains("CancelOrderInfo")) {
+        if (reqJsonData.contains("CancelOrderInfo")) {
             std::string sErrMsg;
             njson jsCancelOrderInfo = reqJsonData["CancelOrderInfo"];
             GetJsonLongLongField(jsCancelOrderInfo, "orig_client_seq_id", stCancelOrderInfo.orig_client_seq_id, sErrMsg);  
@@ -219,7 +220,7 @@ public:
     //     long long total_value_traded;//成交金额
     // };	    
     bool ParseOrdERInfo(njson& reqJsonData, OrdERInfo& stOrdERInfo) {
-        if (ResetData() && reqJsonData.contains("OrdERInfo")) {
+        if (reqJsonData.contains("OrdERInfo")) {
             std::string sErrMsg;
             njson jsOrdERInfo = reqJsonData["OrdERInfo"];
             GetJsonCharStringField(jsOrdERInfo, "order_id", stOrdERInfo.order_id, sizeof(stOrdERInfo.order_id), sErrMsg);  
@@ -307,10 +308,16 @@ public:
     // 	char password[101]; ///< 密码
     // 	char client_feature_code[1025]; //客户端特征码
     // };
-    bool ParseLogOnReq(LogOnReq& stLogOnReq) {
-        if (ResetData() && m_jsonData.contains("LogOnReq")) {
+    bool ParseLogOnReq(LogOnReq& stLogOnReq, std::string sFileName) {
+        njson jsData;
+        if (!GetJsonFromFile(jsData, sFileName)) {
+            LOG_ERROR("JsonStructHelper::ParseLogOnReq, ParseJsonFile:{} failed", sFileName);
+            return false;
+        }
+
+        if (jsData.contains("LogOnReq")) {
             std::string sErrMsg;
-            njson jsLogOnReq = m_jsonData["LogOnReq"];
+            njson jsLogOnReq = jsData["LogOnReq"];
             ParseTraderOrderUser(jsLogOnReq, stLogOnReq.trade_order_user);
 
             GetJsonCharStringField(jsLogOnReq, "password", stLogOnReq.password, sizeof(stLogOnReq.password), sErrMsg);  
@@ -335,7 +342,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
 
         ssObj << std::setw(30) << "password:" << std::setw(16) << obj.password <<"\n"; 
 
@@ -353,17 +360,23 @@ public:
     //     int session_status; ///< 会话状态
     //     unsigned int error_code; //错误码
     // };
-    bool ParseLogOnAns(LogOnAns& stLogOnAns) {
+    bool ParseLogOnAns(LogOnAns& stLogOnAns, std::string sFileName) {
+        njson jsData;
+        if (!GetJsonFromFile(jsData, sFileName)) {
+            LOG_ERROR("JsonStructHelper::ParseLogOnAns, ParseJsonFile:{} failed", sFileName);
+            return false;
+        }
 
-        // LOG_DEBUG("SrcFileName: {}", m_strSrcJsonFileName);
-        CheckProperties();
-
-        if (ResetData() && m_jsonData.contains("LogOnAns")) {
+        if (jsData.contains("LogOnAns")) {
             std::string sErrMsg;
-            njson jsLogOnAns = m_jsonData["LogOnAns"];
+            njson jsLogOnAns = jsData["LogOnAns"];
             ParseTraderOrderUser(jsLogOnAns, stLogOnAns.trade_order_user);
+
             GetJsonIntField(jsLogOnAns, "session_status", stLogOnAns.session_status, sErrMsg);  
             GetJsonUnsignedIntField(jsLogOnAns, "error_code", stLogOnAns.error_code, sErrMsg); 
+
+            // cout << "stLogOnAns.session_status:  " << stLogOnAns.session_status << endl;
+            // cout << "stLogOnAns.error_code:  " << stLogOnAns.error_code << endl;
         } else {
             // 赋值默认参数;
             strcpy(stLogOnAns.trade_order_user.fund_account_id, "XXXXXX");
@@ -380,7 +393,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
 
         ssObj << std::setw(30) << "session_status:" << std::setw(16) << obj.session_status <<"\n"; 
 
@@ -395,10 +408,16 @@ public:
     // 	TradeOrderUser trade_order_user; //客户信息
     //     char password[101]; ///< 密码
     // };
-    bool ParseLogOutReq(LogOutReq& stLogOutReq) {
-        if (ResetData() && m_jsonData.contains("LogOutReq")) {
+    bool ParseLogOutReq(LogOutReq& stLogOutReq, std::string sFileName) {
+        njson jsData;
+        if (!GetJsonFromFile(jsData, sFileName)) {
+            LOG_ERROR("JsonStructHelper::ParseLogOutReq, ParseJsonFile:{} failed", sFileName);
+            return false;
+        }
+
+        if (jsData.contains("LogOutReq")) {
             std::string sErrMsg;
-            njson jsLogOutReq = m_jsonData["LogOutReq"];
+            njson jsLogOutReq = jsData["LogOutReq"];
             ParseTraderOrderUser(jsLogOutReq, stLogOutReq.trade_order_user);
 
             GetJsonCharStringField(jsLogOutReq, "password", stLogOutReq.password, sizeof(stLogOutReq.password), sErrMsg);  
@@ -413,7 +432,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
 
         ssObj << std::setw(30) << "password:" << std::setw(16) << obj.password <<"\n";
         return ssObj.str();
@@ -427,10 +446,16 @@ public:
     //     int session_status; ///< 会话状态
     //     unsigned int error_code; ///< 错误码
     // };
-    bool ParseLogOutAns(LogOutAns& stLogOutAns) {
-        if (ResetData() && m_jsonData.contains("LogOutAns")) {
+    bool ParseLogOutAns(LogOutAns& stLogOutAns, std::string sFileName) {
+        njson jsData;
+        if (!GetJsonFromFile(jsData, sFileName)) {
+            LOG_ERROR("JsonStructHelper::ParseLogOutAns, ParseJsonFile:{} failed", sFileName);
+            return false;
+        }
+
+        if (jsData.contains("LogOutAns")) {
             std::string sErrMsg;
-            njson jsLogOutAns = m_jsonData["LogOutAns"];
+            njson jsLogOutAns = jsData["LogOutAns"];
             ParseTraderOrderUser(jsLogOutAns, stLogOutAns.trade_order_user);
             GetJsonIntField(jsLogOutAns, "session_status", stLogOutAns.session_status, sErrMsg);  
             GetJsonUnsignedIntField(jsLogOutAns, "error_code", stLogOutAns.error_code, sErrMsg); 
@@ -445,7 +470,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
 
         ssObj << std::setw(30) << "session_status:" << std::setw(16) << obj.session_status <<"\n";
         ssObj << std::setw(30) << "error_code:" << std::setw(16) << obj.error_code <<"\n";
@@ -459,10 +484,16 @@ public:
     //     TradeOrderUser trade_order_user; //客户信息
     //     TradeOrderInfo trade_order_info; //委托信息
     // };    
-    bool ParseTradeOrderReq(TradeOrderReq& stTradeOrderReq) {
-        if (ResetData() && m_jsonData.contains("TradeOrderReq")) {
+    bool ParseTradeOrderReq(TradeOrderReq& stTradeOrderReq, std::string sFileName) {
+        njson jsData;
+        if (!GetJsonFromFile(jsData, sFileName)) {
+            LOG_ERROR("JsonStructHelper::ParseTradeOrderReq, ParseJsonFile:{} failed", sFileName);
+            return false;
+        }
+
+        if (jsData.contains("TradeOrderReq")) {
             std::string sErrMsg;
-            njson jsTradeOrderReq = m_jsonData["TradeOrderReq"];
+            njson jsTradeOrderReq = jsData["TradeOrderReq"];
 
             ParseTraderOrderUser(jsTradeOrderReq, stTradeOrderReq.trade_order_user);
             ParseTradeOrderInfo(jsTradeOrderReq, stTradeOrderReq.trade_order_info);
@@ -486,7 +517,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
         ssObj << std::setw(30) << "\nTradeOrderInfo:\n" << TradeOrderInfoStr(obj.trade_order_info) <<"\n";
 
         return ssObj.str();
@@ -499,10 +530,16 @@ public:
     //     TradeOrderUser   trade_order_user; //客户信息
     //     CancelOrderInfo  cancel_order_info; //撤单信息
     // };
-    bool ParseCancelOrderReq(CancelOrderReq& stCancelOrderReq) {
-        if (ResetData() && m_jsonData.contains("CancelOrderReq")) {
+    bool ParseCancelOrderReq(CancelOrderReq& stCancelOrderReq, std::string sFileName) {
+        njson jsData;
+        if (!GetJsonFromFile(jsData, sFileName)) {
+            LOG_ERROR("JsonStructHelper::ParseCancelOrderReq, ParseJsonFile:{} failed", sFileName);
+            return false;
+        }
+
+        if (jsData.contains("CancelOrderReq")) {
             std::string sErrMsg;
-            njson jsCancelOrderReq = m_jsonData["CancelOrderReq"];
+            njson jsCancelOrderReq = jsData["CancelOrderReq"];
 
             ParseTraderOrderUser(jsCancelOrderReq, stCancelOrderReq.trade_order_user);
             ParseCancelOrderInfo(jsCancelOrderReq, stCancelOrderReq.cancel_order_info);
@@ -521,7 +558,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
         ssObj << std::setw(30) << "\nCancelOrderInfo:\n" << CancelOrderInfoStr(obj.cancel_order_info) <<"\n";
 
         return ssObj.str();
@@ -534,10 +571,16 @@ public:
     //     TradeOrderUser trade_order_user; //客户信息
     //     OrdERInfo order_er_info; //订单信息
     // };
-    bool ParseTradeOrderER(TradeOrderER& stTradeOrderER) {
-        if (ResetData() && m_jsonData.contains("TradeOrderER")) {
+    bool ParseTradeOrderER(TradeOrderER& stTradeOrderER, std::string sFileName) {
+        njson jsData;
+        if (!GetJsonFromFile(jsData, sFileName)) {
+            LOG_ERROR("JsonStructHelper::ParseTradeOrderER, ParseJsonFile:{} failed", sFileName);
+            return false;
+        }
+
+        if (jsData.contains("TradeOrderER")) {
             std::string sErrMsg;
-            njson jsTradeOrderER = m_jsonData["TradeOrderER"];
+            njson jsTradeOrderER = jsData["TradeOrderER"];
 
             ParseTraderOrderUser(jsTradeOrderER, stTradeOrderER.trade_order_user);
             ParseOrdERInfo(jsTradeOrderER, stTradeOrderER.order_er_info);
@@ -556,7 +599,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
         ssObj << std::setw(30) << "\nOrdERInfo:\n" << OrdERInfoStr(obj.order_er_info) <<"\n";
 
         return ssObj.str();
@@ -570,10 +613,16 @@ public:
     //     unsigned short reject_reason_code; /// 错误编码
     //     char cancel_flag; //撤单标识
     // };
-    bool ParseRejectMsg(RejectMsg& stRejectMsg) {
-        if (ResetData() && m_jsonData.contains("RejectMsg")) {
+    bool ParseRejectMsg(RejectMsg& stRejectMsg, std::string sFileName) {
+        njson jsData;
+        if (!GetJsonFromFile(jsData, sFileName)) {
+            LOG_ERROR("JsonStructHelper::ParseRejectMsg, ParseJsonFile:{} failed", sFileName);
+            return false;
+        }
+
+        if (jsData.contains("RejectMsg")) {
             std::string sErrMsg;
-            njson jsRejectMsg = m_jsonData["RejectMsg"];
+            njson jsRejectMsg = jsData["RejectMsg"];
 
             ParseTraderOrderUser(jsRejectMsg, stRejectMsg.trade_order_user);
             GetJsonUnsignedShortField(jsRejectMsg, "reject_reason_code", stRejectMsg.reject_reason_code, sErrMsg);  
@@ -589,7 +638,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
         ssObj << std::setw(30) << "reject_reason_code:\n" << obj.reject_reason_code <<"\n";
         ssObj << std::setw(30) << "cancel_flag:\n" << obj.cancel_flag <<"\n";
 
@@ -598,7 +647,7 @@ public:
 
 
 public:
-    std::string m_strSrcJsonFileName;
+    // std::string m_strSrcJsonFileName;
     njson       m_jsonData;
 };
 
@@ -607,9 +656,9 @@ public:
     string Init(std::string strSrcJsonFileName) {
         Error error;
         njson reqJsonData;
-        if ((error = GetJsonFromFile(reqJsonData, strSrcJsonFileName)).IsFailed()) {
-            LOG_ERROR("JsonStructHelper::Init, ParseJsonFile:{} failed, error: {}", strSrcJsonFileName, error.Str());
-            return false;
+        if (!GetJsonFromFile(reqJsonData, strSrcJsonFileName)) {
+            LOG_ERROR("JsonStructHelper::Init, ParseJsonFile:{} failed", strSrcJsonFileName);
+            return "";
         }
         
         strUteName_ = "test_ute";

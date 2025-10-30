@@ -22,7 +22,8 @@ int gTestMode = 0; // 0-正常测试；1-压力性能测试;
 std::vector<unsigned long long> gTestTimeVec;
 
 UteMessageManager gUteMessageManager;
-JsonStructHelper  JSON_HELPER;
+// JsonStructHelper  JSON_HELPER;
+std::string gStrSrcJsonFileName = "test_data.json";
 JsonMeta          gJsonMeta;
 
 void SendLogAns(QueueManager* pQueueManager) {
@@ -103,7 +104,8 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     LogOnAns rsp;
-                    JSON_HELPER->ParseLogOnAns(rsp);
+                    JSON_HELPER->ParseLogOnAns(rsp, gStrSrcJsonFileName);
+                    LOG_INFO("LogOnAns: {}", JSON_HELPER->LogOnAnsStr(rsp));
                     pQueueManager->SendMsg(kPktLoginAns, (char*)(&rsp), sizeof(LogOnAns), ulStrategyKey);
                 }
 
@@ -119,7 +121,7 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     LogOutAns rsp;
-                    JSON_HELPER->ParseLogOutAns(rsp);
+                    JSON_HELPER->ParseLogOutAns(rsp, gStrSrcJsonFileName);
                     pQueueManager->SendMsg(kPktLogoutAns, (char*)(&rsp), sizeof(LogOutAns), ulStrategyKey);
                 }
                                 
@@ -135,7 +137,7 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     TradeOrderER rsp;
-                    JSON_HELPER->ParseTradeOrderER(rsp);
+                    JSON_HELPER->ParseTradeOrderER(rsp, gStrSrcJsonFileName);
                     pQueueManager->SendMsg(kPktOrderAns, (char*)(&rsp), sizeof(TradeOrderER), ulStrategyKey);
                 }
                                 
@@ -150,7 +152,7 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     TradeOrderER rsp;
-                    JSON_HELPER->ParseTradeOrderER(rsp);
+                    JSON_HELPER->ParseTradeOrderER(rsp, gStrSrcJsonFileName);
                     pQueueManager->SendMsg(kPktCancelOrderAns, (char*)(&rsp), sizeof(TradeOrderER), ulStrategyKey);
                 }
                                 
@@ -176,7 +178,7 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
 
                 // SendOrderRsp(pQueueManager);
             }
-        } else if (iMsgID = kPktOrderReq ) {
+        } else if (iMsgID == kPktOrderReq ) {
 
             if (gTestIndex < gTestCount) {
                 TradeOrderReq* pOrderReq = (TradeOrderReq*)pMsgBuf;
