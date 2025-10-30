@@ -1,0 +1,27 @@
+{
+    "LogOnReq":{
+        "TradeOrderUser":{
+            "fund_account_id": "test_fund",
+            "branch_id":"001",
+            "account_id":"test_count",
+            "cust_id":"test_logon",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "password": "88888",
+        "client_feature_code":"test_feature",
+        "heart_bt_int":3
+    },
+    "LogOnAns":{
+        "TradeOrderUser":{
+            "fund_account_id": "test_fund",
+            "branch_id":"001",
+            "account_id":"test_count",
+            "cust_id":"test_logon",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "session_status": "OK!",
+        "error_code":"0"
+    }    
+}

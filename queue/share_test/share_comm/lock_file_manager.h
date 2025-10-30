@@ -13,11 +13,10 @@
 
 using namespace tech;
 
+#include "share_comm_external_message.h"
+
 namespace share_common 
 {
-
-class StrategyMessageManager;
-class UteMessageManager;
 
 inline bool test_lock_file_is_alive(int file_fd)
 {
@@ -43,13 +42,25 @@ inline bool test_lock_file_is_alive(int file_fd)
 class LockFileManager {
 public:
     LockFileManager():iHeartBeatSec_{1}, shptrHearbeatThread_{nullptr}, 
-        pStrategyMessageManager_{nullptr},pUteMessageManager_{nullptr}, 
-        iWaitUteSec_{1} {}
-    ~LockFileManager() {
+        UteOnEventFunc_{nullptr}, StrategyOnEventFunc_{nullptr},
+        iWaitUteSec_{1},shptrWaitUteLockFileThread_{nullptr},bIsRunning_{true} {}
 
-        if (shptrHearbeatThread_ && shptrHearbeatThread_->joinable()) {
-            shptrHearbeatThread_->join();
-        }
+        ~LockFileManager() {
+
+            if (shptrHearbeatThread_ && shptrHearbeatThread_->joinable()) {
+                shptrHearbeatThread_->join();
+            }
+            if (shptrWaitUteLockFileThread_ && shptrWaitUteLockFileThread_->joinable()) {
+                shptrWaitUteLockFileThread_->join();
+            }
+
+            for (auto iter:mapListenLockFileFd_) {
+                close(iter.second);
+            }
+
+            for (auto iter:mapNonListenLockFileFd_) {
+                close(iter.second);
+            }            
         
         // iMyFd_ > 0 ? close(iMyFd_) : 0;    
         // todo 是否需要删除 策略进程对应的锁文件；
@@ -66,14 +77,15 @@ public:
     /// @param iEventSleepSec 事件监听线程的睡眠时间间隔，默认为5秒；
     /// @return 是否成功初始化
     bool Init(const char* cstrUteName, unsigned long long ulStrategyKey, 
-              StrategyMessageManager* pStrategyMessageManager, int iEventSleepSec = 5);
+              StrategyGetRspCallbackEventFuncType StrategyOnEventFunc,
+              long lStartSec,  int iEventSleepSec = 3, int iWaitUteSec = 10);
 
     /// @brief UTE进程端初始化接口;
     /// 1、创建 UTE进程对应的锁文件，并且加锁；
     /// @param cstrUteName UTE进程名，也是锁文件名；
     /// @param pUteMessageManager UTE进程的消息管理器；
     /// @param iEventSleepSec 事件监听线程的睡眠时间间隔，默认为5秒；
-    bool Init(const char* cstrUteName,  UteMessageManager* pUteMessageManager, int iEventSleepSec = 5);              
+    bool Init(const char* cstrUteName,  UteGetStrategyReqCallBackFuncType UteOnEventFunc, int iEventSleepSec = 5);              
 
     // 通过本地以策略ID为名的文件，获取对应的上次的BatchID；
     unsigned int GetSetStrategyBatchID(unsigned int StrategySysID);
@@ -84,6 +96,10 @@ public:
     /// @param cstrLockFileName 锁文件名；
     /// @return 成功返回true，失败返回false；
     bool AddListenLockFile(unsigned long long ulFileKey);
+
+    void Stop() {
+        bIsRunning_ = false;
+    }
 
 private:
 
@@ -96,10 +112,16 @@ private:
     std::shared_ptr<std::thread> shptrHearbeatThread_;   // 监听锁文件的心跳线程;
     std::mutex mtxHeartbeat_;  // 心跳线程的互斥锁，用于保护 mapListenLockFileFd_ ；
 
-    StrategyMessageManager*   pStrategyMessageManager_;  // 策略进程的消息管理器,心跳线程需要用到;
-    UteMessageManager*        pUteMessageManager_;       // UTE进程的消息管理器,心跳线程需要用到;
+    UteGetStrategyReqCallBackFuncType UteOnEventFunc_;  // UTE进程 OnEvent 的回调接口, 用于通知UTE 某个 策略进程终止的消息;
+    StrategyGetRspCallbackEventFuncType StrategyOnEventFunc_; // Strategy进程 OnEvent 的回调接口, 用于通知策略进程 UTE终止的消息;
+
 
     int  iWaitUteSec_;      // 等待UTE启动时间间隔 - 策略进程专用;    
+
+    std::shared_ptr<std::thread> shptrWaitUteLockFileThread_;
+
+    bool bIsRunning_;
+
 };
 
 inline std::string GetLockFileName(unsigned long long ulFileKey) {

@@ -27,7 +27,7 @@ namespace common
         kFTEGRCBizParamManager,
         kFTECreditStkScaleManager,
         kFTECreditPledgeStkSumQtyManager,
-        kFTEShareMessageManager,
+        kUTEShareMessageManager,
         kNum
     };
     enum ObjPoolType

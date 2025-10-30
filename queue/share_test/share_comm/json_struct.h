@@ -1,7 +1,18 @@
+#pragma once
+
 #include "share_comm_external_message.h"
 #include "json_util.hpp"
+#include "thread_safe_singleton.h"
 
 #include <iostream>
+#include <sstream> 
+#include <iomanip>
+#include <iostream>
+#include <vector>
+using std::ios;
+using namespace std;
+
+
 #include "logger.h"
 
 using namespace share_common;
@@ -13,14 +24,44 @@ public:
 
         Error error;
         if ((error = GetJsonFromFile(m_jsonData, m_strSrcJsonFileName)).IsFailed()) {
-            LOG_ERROR("JsonStructHelper::Init, ParseJsonFile:{} failed, error: {}", strSrcJsonFileName, error.Str());
+            LOG_ERROR("JsonStructHelper::Init, ParseJsonFile:{} failed, error: {}", m_strSrcJsonFileName, error.Str());
             return false;
+        } else {
+            LOG_INFO("Get Data From {} SUCESS!", m_strSrcJsonFileName);
         }
+
+        /*        
+        æµ‹è¯•ä½¿ç”¨
+        */
+
+       CheckProperties();
+
         return true;
     }  
 
+    void CheckProperties() {
+       std::vector<std::string> structVec= {"LogOnReq", "LogOnAns"};
+
+       for (auto& key:structVec) {
+            if (m_jsonData.contains(key)) {
+                LOG_DEBUG("Test Data Contain {}", key);
+            } else {
+                LOG_DEBUG("Test Data Does Not Contain {}", key);
+            }
+       }
+    }
+
     bool ResetData() {
-        return Init(m_strSrcJsonFileName);
+        Error error;
+        cout << "m_strSrcJsonFileName: " << m_strSrcJsonFileName << endl;
+
+        // if ((error = GetJsonFromFile(m_jsonData, m_strSrcJsonFileName)).IsFailed()) {
+        //     LOG_ERROR("ParseJsonFile:{} failed, error: {}", m_strSrcJsonFileName, error.Str());
+        //     return false;
+        // } else {
+        //     LOG_INFO("Get Data From {} SUCESS!", m_strSrcJsonFileName);
+        // }
+        return false;
     }
 
     bool ReInit(std::string strSrcJsonFileName) {
@@ -30,16 +71,16 @@ public:
 
     // struct TradeOrderUser
     // {
-    // 	char fund_account_id[17]; //×Ê½ðÕËºÅ
-    // 	char branch_id[11]; //ÓªÒµ²¿´úÂë
-    // 	char account_id[13]; //Ö¤È¯ÕË»§
-    // 	char cust_id[17]; //¿Í»§ºÅ
-    // 	unsigned long long client_seq_id; //ÓÃ»§ÏµÍ³ÏûÏ¢±àºÅ
-    // 	unsigned long long agw_seq_id; //ÄÚ²¿¶©µ¥±àºÅ
+    // 	char fund_account_id[17]; //èµ„é‡‘è´¦å·
+    // 	char branch_id[11]; //è¥ä¸šéƒ¨ä»£ç 
+    // 	char account_id[13]; //è¯åˆ¸è´¦æˆ·
+    // 	char cust_id[17]; //å®¢æˆ·å·
+    // 	unsigned long long client_seq_id; //ç”¨æˆ·ç³»ç»Ÿæ¶ˆæ¯ç¼–å·
+    // 	unsigned long long agw_seq_id; //å†…éƒ¨è®¢å•ç¼–å·
     // };
     bool ParseTraderOrderUser(njson& reqJsonData, TradeOrderUser& stTraderOrderUser) {
         
-        if (ResetData() || !reqJsonData.contains("TradeOrderUser")) {
+        if (ResetData() && reqJsonData.contains("TradeOrderUser")) {
             std::string sErrMsg;
             njson jsTradeOrderUser = reqJsonData["TradeOrderUser"];
             GetJsonCharStringField(jsTradeOrderUser, "fund_account_id", stTraderOrderUser.fund_account_id, sizeof(stTraderOrderUser.fund_account_id), sErrMsg);  
@@ -50,24 +91,39 @@ public:
             GetJsonUnsignedLongLongField(jsTradeOrderUser, "client_seq_id", stTraderOrderUser.client_seq_id, sErrMsg);  
             GetJsonUnsignedLongLongField(jsTradeOrderUser, "agw_seq_id", stTraderOrderUser.agw_seq_id, sErrMsg);  
         } else {
-            // ¸³ÖµÄ¬ÈÏ²ÎÊý;
+            // èµ‹å€¼é»˜è®¤å‚æ•°;
         }
 
         return true;
     }
 
+    std::string TraderOrderUserStr(TradeOrderUser& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "fund_account_id:" << std::setw(16) << obj.fund_account_id <<"\n";
+        ssObj << std::setw(30) << "branch_id:" << std::setw(16) << obj.branch_id <<"\n"; 
+        ssObj << std::setw(30) << "account_id:" << std::setw(16) << obj.account_id <<"\n";
+        ssObj << std::setw(30) << "cust_id:" << std::setw(16) << obj.cust_id <<"\n"; 
+
+        ssObj << std::setw(30) << "client_seq_id:" << std::setw(16) << obj.client_seq_id <<"\n";
+        ssObj << std::setw(30) << "agw_seq_id:" << std::setw(16) << obj.agw_seq_id <<"\n";                 
+
+        return ssObj.str();
+    }
+
     //     struct TradeOrderInfo
     // {
-    //     char security_id[9]; //Ö¤È¯´úÂë
-    //     unsigned short market_id; //ÊÐ³¡
-    //     char side; ///< ÂòÂô·½Ïò, 1=Âò; 2=Âô; G=½èÈë; F=½è³ö; D=Éê¹º; E=Êê»Ø
-    //     char order_type; ///< ¶©µ¥ÀàÐÍ, 1=ÊÐ¼Û; 2=ÏÞ¼Û; U=±¾·½×îÓÅ
-    //     long long order_qty; ///< Î¯ÍÐÊýÁ¿, N15(2)
-    //     long long order_price; ///< Î¯ÍÐ¼Û¸ñ, N13(4)
-    //     long long stop_px; ///< Ö¹Ëð¼Û, N13(4)
+    //     char security_id[9]; //è¯åˆ¸ä»£ç 
+    //     unsigned short market_id; //å¸‚åœº
+    //     char side; ///< ä¹°å–æ–¹å‘, 1=ä¹°; 2=å–; G=å€Ÿå…¥; F=å€Ÿå‡º; D=ç”³è´­; E=èµŽå›ž
+    //     char order_type; ///< è®¢å•ç±»åž‹, 1=å¸‚ä»·; 2=é™ä»·; U=æœ¬æ–¹æœ€ä¼˜
+    //     long long order_qty; ///< å§”æ‰˜æ•°é‡, N15(2)
+    //     long long order_price; ///< å§”æ‰˜ä»·æ ¼, N13(4)
+    //     long long stop_px; ///< æ­¢æŸä»·, N13(4)
     // };
     bool ParseTradeOrderInfo(njson& reqJsonData, TradeOrderInfo& stTradeOrderInfo) {
-        if (ResetData() || !reqJsonData.contains("TradeOrderInfo")) {
+        if (ResetData() && reqJsonData.contains("TradeOrderInfo")) {
             std::string sErrMsg;
             njson jsTradeOrderInfo = reqJsonData["TradeOrderInfo"];
             GetJsonCharStringField(jsTradeOrderInfo, "security_id", stTradeOrderInfo.security_id, sizeof(stTradeOrderInfo.security_id), sErrMsg);  
@@ -81,64 +137,89 @@ public:
             GetJsonLongLongField(jsTradeOrderInfo, "order_price", stTradeOrderInfo.order_price, sErrMsg);  
             GetJsonLongLongField(jsTradeOrderInfo, "stop_px", stTradeOrderInfo.stop_px, sErrMsg);  
         } else {
-            // ¸³ÖµÄ¬ÈÏ²ÎÊý;
+            // èµ‹å€¼é»˜è®¤å‚æ•°;
         }
         return true;
     }
 
+    std::string TradeOrderInfoStr(TradeOrderInfo& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "security_id:" << std::setw(16) << obj.security_id <<"\n";
+        ssObj << std::setw(30) << "market_id:" << std::setw(16) << obj.market_id <<"\n"; 
+        ssObj << std::setw(30) << "side:" << std::setw(16) << obj.side <<"\n";
+        ssObj << std::setw(30) << "order_type:" << std::setw(16) << obj.order_type <<"\n"; 
+
+        ssObj << std::setw(30) << "order_qty:" << std::setw(16) << obj.order_qty <<"\n";
+        ssObj << std::setw(30) << "order_price:" << std::setw(16) << obj.order_price <<"\n";      
+        ssObj << std::setw(30) << "stop_px:" << std::setw(16) << obj.stop_px <<"\n";                   
+
+        return ssObj.str();
+    }
+
     // struct CancelOrderInfo
     // {
-    //     long long   orig_client_seq_id; //Ô­ÓÃ»§ÏµÍ³ÏûÏ¢ÐòºÅ
-    //     long long  orig_clordno; //Ô­¿Í»§¶©µ¥±àºÅ
+    //     long long   orig_client_seq_id; //åŽŸç”¨æˆ·ç³»ç»Ÿæ¶ˆæ¯åºå·
+    //     long long  orig_clordno; //åŽŸå®¢æˆ·è®¢å•ç¼–å·
     // };
     bool ParseCancelOrderInfo(njson& reqJsonData, CancelOrderInfo& stCancelOrderInfo) {
-        if (ResetData() || !reqJsonData.contains("CancelOrderInfo")) {
+        if (ResetData() && reqJsonData.contains("CancelOrderInfo")) {
             std::string sErrMsg;
             njson jsCancelOrderInfo = reqJsonData["CancelOrderInfo"];
             GetJsonLongLongField(jsCancelOrderInfo, "orig_client_seq_id", stCancelOrderInfo.orig_client_seq_id, sErrMsg);  
             GetJsonLongLongField(jsCancelOrderInfo, "orig_clordno", stCancelOrderInfo.orig_clordno, sErrMsg);  
  
         } else {
-            // ¸³ÖµÄ¬ÈÏ²ÎÊý;
+            // èµ‹å€¼é»˜è®¤å‚æ•°;
         }
         return true;
     }
 
+    std::string CancelOrderInfoStr(CancelOrderInfo& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "orig_client_seq_id:" << std::setw(16) << obj.orig_client_seq_id <<"\n";
+        ssObj << std::setw(30) << "orig_clordno:" << std::setw(16) << obj.orig_clordno <<"\n"; 
+        return ssObj.str();
+    }    
+
     // struct OrdERInfo
     // {
-    //     char order_id[17]; ///< ½»Ò×Ëù¸³ÓèµÄ¶©µ¥±àºÅ, ¿ç½»Ò×ÈÕ²»ÖØ¸´
-    //     char clordid[11]; ///< Éê±¨ºÏÍ¬ºÅ
-    //     char security_id[9]; ///< Ö¤È¯´úÂë
-    //     unsigned short market_id; ///< ÊÐ³¡´úÂë
-    //     char exec_type; ///< Ö´ÐÐ±¨¸æÀàÐÍ, 0=New, ±íÊ¾ÐÂ¶©µ¥; 4=Cancelled, ±íÊ¾ÒÑ³·Ïú; 8=Reject, ±íÊ¾ÒÑ¾Ü¾ø; F=Trade, ±íÊ¾ÒÑ³É½»
-    //     unsigned char ord_status; //ÄÚ²¿¶©µ¥×´Ì¬
-    //     long long price; ///< ¼Û¸ñ, N13(4)
-    //     long long order_qty; ///< Î¯ÍÐÊýÁ¿, N15(2)
-    //     long long leaves_qty; ///< ¶©µ¥Ê£ÓàÊýÁ¿, N15(2)
-    //     long long cum_qty; ///< ÀÛ¼ÆÖ´ÐÐÊýÁ¿, N15(2)
-    //     char side; ///< ÂòÂô·½Ïò, 1=Âò; 2=Âô; G=½èÈë; F=½è³ö; D=Éê¹º; E=Êê»Ø
-    //     long long transact_time; //Ê±¼ä´Á
-    //     char user_info[65]; ///< ÓÃ»§Ë½ÓÐÐÅÏ¢, ¾¡¿É°üº¬ASCII¿ÉÏÔÊ¾×Ö·û
-    //     char exec_id[17]; ///< ½»Ò×Ëù¸³ÓèµÄÖ´ÐÐ±àºÅ, µ¥¸ö½»Ò×ÈÕÄÚ²»ÖØ¸´
-    //     char orig_clordid[11]; //Ô­Éê±¨ºÏÍ¬ºÅ
-    //     char ord_type; ///< ¶©µ¥ÀàÐÍ, 1=ÊÐ¼Û; 2=ÏÞ¼Û; U=±¾·½×îÓÅ
-    //     unsigned short ord_rej_reason;//½»Ò×Ëù´íÎóÂë
-    //     char time_in_force; ///< ¶©µ¥ÓÐÐ§Ê±ÆÚÀàÐÍ, 0=µ±ÈÕÓÐÐ§, Day(¸Û¹ÉÍ¨ÔöÇ¿ÏÞ¼ÛÅÌ); 3=¼´Ê±³É½»»òÈ¡Ïû(IOC); 9=At Crossing(¸Û¹ÉÍ¨¾º¼ÛÏÞ¼ÛÅÌ)
-    //     long long last_px; ///< ³É½»¼Û¸ñ, N13(4)
-    //     long long last_qty; ///< ³É½»ÊýÁ¿, N15(2)
-    //     char cash_margin; ///< ÈÚ×ÊÈÚÈ¯ÐÅÓÃ±êÊ¶, 1=Cash, ÆÕÍ¨½»Ò×; 2=Open, ÈÚ×ÊÈÚÈ¯¿ª²Ö; 3=Close, ÈÚ×ÊÈÚÈ¯Æ½²Ö
-    //     char cancel_flag; //³·µ¥±êÖ¾
-    //     long long clordno; ///< ¿Í»§¶©µ¥±àºÅ
-    //     long long orig_clordno; ///< Ô­Ê¼¿Í»§¶©µ¥±àºÅ
-    //     long long index; //·¢ËÍÖÁ¿Í»§¶ËÐòºÅ
-    //     unsigned short code;//ÄÚ²¿´íÎóÂë
-    //     long long frozen_trade_value;//¶³½á½»Ò×½ð¶î
-    //     long long frozen_fee; //¶³½á·ÑÓÃ
-    //     long long fee; // µ¥±Ê³É½»·ÑÓÃ
-    //     long long total_value_traded;//³É½»½ð¶î
+    //     char order_id[17]; ///< äº¤æ˜“æ‰€èµ‹äºˆçš„è®¢å•ç¼–å·, è·¨äº¤æ˜“æ—¥ä¸é‡å¤
+    //     char clordid[11]; ///< ç”³æŠ¥åˆåŒå·
+    //     char security_id[9]; ///< è¯åˆ¸ä»£ç 
+    //     unsigned short market_id; ///< å¸‚åœºä»£ç 
+    //     char exec_type; ///< æ‰§è¡ŒæŠ¥å‘Šç±»åž‹, 0=New, è¡¨ç¤ºæ–°è®¢å•; 4=Cancelled, è¡¨ç¤ºå·²æ’¤é”€; 8=Reject, è¡¨ç¤ºå·²æ‹’ç»; F=Trade, è¡¨ç¤ºå·²æˆäº¤
+    //     unsigned char ord_status; //å†…éƒ¨è®¢å•çŠ¶æ€
+    //     long long price; ///< ä»·æ ¼, N13(4)
+    //     long long order_qty; ///< å§”æ‰˜æ•°é‡, N15(2)
+    //     long long leaves_qty; ///< è®¢å•å‰©ä½™æ•°é‡, N15(2)
+    //     long long cum_qty; ///< ç´¯è®¡æ‰§è¡Œæ•°é‡, N15(2)
+    //     char side; ///< ä¹°å–æ–¹å‘, 1=ä¹°; 2=å–; G=å€Ÿå…¥; F=å€Ÿå‡º; D=ç”³è´­; E=èµŽå›ž
+    //     long long transact_time; //æ—¶é—´æˆ³
+    //     char user_info[65]; ///< ç”¨æˆ·ç§æœ‰ä¿¡æ¯, å°½å¯åŒ…å«ASCIIå¯æ˜¾ç¤ºå­—ç¬¦
+    //     char exec_id[17]; ///< äº¤æ˜“æ‰€èµ‹äºˆçš„æ‰§è¡Œç¼–å·, å•ä¸ªäº¤æ˜“æ—¥å†…ä¸é‡å¤
+    //     char orig_clordid[11]; //åŽŸç”³æŠ¥åˆåŒå·
+    //     char ord_type; ///< è®¢å•ç±»åž‹, 1=å¸‚ä»·; 2=é™ä»·; U=æœ¬æ–¹æœ€ä¼˜
+    //     unsigned short ord_rej_reason;//äº¤æ˜“æ‰€é”™è¯¯ç 
+    //     char time_in_force; ///< è®¢å•æœ‰æ•ˆæ—¶æœŸç±»åž‹, 0=å½“æ—¥æœ‰æ•ˆ, Day(æ¸¯è‚¡é€šå¢žå¼ºé™ä»·ç›˜); 3=å³æ—¶æˆäº¤æˆ–å–æ¶ˆ(IOC); 9=At Crossing(æ¸¯è‚¡é€šç«žä»·é™ä»·ç›˜)
+    //     long long last_px; ///< æˆäº¤ä»·æ ¼, N13(4)
+    //     long long last_qty; ///< æˆäº¤æ•°é‡, N15(2)
+    //     char cash_margin; ///< èžèµ„èžåˆ¸ä¿¡ç”¨æ ‡è¯†, 1=Cash, æ™®é€šäº¤æ˜“; 2=Open, èžèµ„èžåˆ¸å¼€ä»“; 3=Close, èžèµ„èžåˆ¸å¹³ä»“
+    //     char cancel_flag; //æ’¤å•æ ‡å¿—
+    //     long long clordno; ///< å®¢æˆ·è®¢å•ç¼–å·
+    //     long long orig_clordno; ///< åŽŸå§‹å®¢æˆ·è®¢å•ç¼–å·
+    //     long long index; //å‘é€è‡³å®¢æˆ·ç«¯åºå·
+    //     unsigned short code;//å†…éƒ¨é”™è¯¯ç 
+    //     long long frozen_trade_value;//å†»ç»“äº¤æ˜“é‡‘é¢
+    //     long long frozen_fee; //å†»ç»“è´¹ç”¨
+    //     long long fee; // å•ç¬”æˆäº¤è´¹ç”¨
+    //     long long total_value_traded;//æˆäº¤é‡‘é¢
     // };	    
     bool ParseOrdERInfo(njson& reqJsonData, OrdERInfo& stOrdERInfo) {
-        if (ResetData() || !reqJsonData.contains("OrdERInfo")) {
+        if (ResetData() && reqJsonData.contains("OrdERInfo")) {
             std::string sErrMsg;
             njson jsOrdERInfo = reqJsonData["OrdERInfo"];
             GetJsonCharStringField(jsOrdERInfo, "order_id", stOrdERInfo.order_id, sizeof(stOrdERInfo.order_id), sErrMsg);  
@@ -172,22 +253,62 @@ public:
             GetJsonLongLongField(jsOrdERInfo, "fee", stOrdERInfo.fee, sErrMsg);  
             GetJsonLongLongField(jsOrdERInfo, "total_value_traded", stOrdERInfo.total_value_traded, sErrMsg);  
         } else {
-            // ¸³ÖµÄ¬ÈÏ²ÎÊý;    
+            // èµ‹å€¼é»˜è®¤å‚æ•°;    
         }
         
         return true;
     }
 
-    //     //¿Í»§µÇÂ¼ÇëÇó
+    std::string OrdERInfoStr(OrdERInfo& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "order_id:" << std::setw(16) << obj.order_id <<"\n";
+        ssObj << std::setw(30) << "clordid:" << std::setw(16) << obj.clordid <<"\n"; 
+
+        ssObj << std::setw(30) << "security_id:" << std::setw(16) << obj.security_id <<"\n"; 
+        ssObj << std::setw(30) << "market_id:" << std::setw(16) << obj.market_id <<"\n"; 
+        ssObj << std::setw(30) << "exec_type:" << std::setw(16) << obj.exec_type <<"\n"; 
+        ssObj << std::setw(30) << "ord_status:" << std::setw(16) << obj.ord_status <<"\n"; 
+        ssObj << std::setw(30) << "price:" << std::setw(16) << obj.price <<"\n"; 
+        ssObj << std::setw(30) << "order_qty:" << std::setw(16) << obj.order_qty <<"\n"; 
+        ssObj << std::setw(30) << "leaves_qty:" << std::setw(16) << obj.leaves_qty <<"\n"; 
+        ssObj << std::setw(30) << "cum_qty:" << std::setw(16) << obj.cum_qty <<"\n"; 
+        ssObj << std::setw(30) << "side:" << std::setw(16) << obj.side <<"\n"; 
+        ssObj << std::setw(30) << "transact_time:" << std::setw(16) << obj.transact_time <<"\n"; 
+        ssObj << std::setw(30) << "user_info:" << std::setw(16) << obj.user_info <<"\n"; 
+        ssObj << std::setw(30) << "exec_id:" << std::setw(16) << obj.exec_id <<"\n"; 
+        ssObj << std::setw(30) << "orig_clordid:" << std::setw(16) << obj.orig_clordid <<"\n"; 
+        ssObj << std::setw(30) << "ord_type:" << std::setw(16) << obj.ord_type <<"\n"; 
+        ssObj << std::setw(30) << "ord_rej_reason:" << std::setw(16) << obj.ord_rej_reason <<"\n"; 
+        ssObj << std::setw(30) << "time_in_force:" << std::setw(16) << obj.time_in_force <<"\n"; 
+        ssObj << std::setw(30) << "last_px:" << std::setw(16) << obj.last_px <<"\n"; 
+        ssObj << std::setw(30) << "last_qty:" << std::setw(16) << obj.last_qty <<"\n"; 
+        ssObj << std::setw(30) << "cash_margin:" << std::setw(16) << obj.cash_margin <<"\n"; 
+        ssObj << std::setw(30) << "cancel_flag:" << std::setw(16) << obj.cancel_flag <<"\n"; 
+        ssObj << std::setw(30) << "clordno:" << std::setw(16) << obj.clordno <<"\n"; 
+        ssObj << std::setw(30) << "orig_clordno:" << std::setw(16) << obj.orig_clordno <<"\n"; 
+        ssObj << std::setw(30) << "index:" << std::setw(16) << obj.index <<"\n"; 
+
+        ssObj << std::setw(30) << "code:" << std::setw(16) << obj.code <<"\n"; 
+        ssObj << std::setw(30) << "frozen_trade_value:" << std::setw(16) << obj.frozen_trade_value <<"\n"; 
+        ssObj << std::setw(30) << "frozen_fee:" << std::setw(16) << obj.frozen_fee <<"\n"; 
+        ssObj << std::setw(30) << "fee:" << std::setw(16) << obj.fee <<"\n"; 
+        ssObj << std::setw(30) << "total_value_traded:" << std::setw(16) << obj.total_value_traded <<"\n"; 
+
+        return ssObj.str();
+    }    
+
+    //     //å®¢æˆ·ç™»å½•è¯·æ±‚
     // struct LogOnReq
     // {
-    // 	TradeOrderUser trade_order_user; //¿Í»§ÐÅÏ¢
-    // 	unsigned int heart_bt_int; ///< ÐÄÌø¼ì²âÊ±¼ä
-    // 	char password[101]; ///< ÃÜÂë
-    // 	char client_feature_code[1025]; //¿Í»§¶ËÌØÕ÷Âë
+    // 	TradeOrderUser trade_order_user; //å®¢æˆ·ä¿¡æ¯
+    // 	unsigned int heart_bt_int; ///< å¿ƒè·³æ£€æµ‹æ—¶é—´
+    // 	char password[101]; ///< å¯†ç 
+    // 	char client_feature_code[1025]; //å®¢æˆ·ç«¯ç‰¹å¾ç 
     // };
     bool ParseLogOnReq(LogOnReq& stLogOnReq) {
-        if (ResetData() || !m_jsonData.contains("LogOnReq")) {
+        if (ResetData() && m_jsonData.contains("LogOnReq")) {
             std::string sErrMsg;
             njson jsLogOnReq = m_jsonData["LogOnReq"];
             ParseTraderOrderUser(jsLogOnReq, stLogOnReq.trade_order_user);
@@ -210,22 +331,41 @@ public:
     }
 
 
-    // //¿Í»§µÇÂ¼Ó¦´ð
+    std::string LogOnReqStr(LogOnReq& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+
+        ssObj << std::setw(30) << "password:" << std::setw(16) << obj.password <<"\n"; 
+
+        ssObj << std::setw(30) << "client_feature_code:" << std::setw(16) << obj.client_feature_code <<"\n"; 
+        ssObj << std::setw(30) << "heart_bt_int:" << std::setw(16) << obj.heart_bt_int <<"\n"; 
+
+        return ssObj.str();
+    }    
+
+
+    // //å®¢æˆ·ç™»å½•åº”ç­”
     // struct LogOnAns
     // {
-    //     TradeOrderUser trade_order_user; //¿Í»§ÐÅÏ¢
-    //     int session_status; ///< »á»°×´Ì¬
-    //     unsigned int error_code; //´íÎóÂë
+    //     TradeOrderUser trade_order_user; //å®¢æˆ·ä¿¡æ¯
+    //     int session_status; ///< ä¼šè¯çŠ¶æ€
+    //     unsigned int error_code; //é”™è¯¯ç 
     // };
     bool ParseLogOnAns(LogOnAns& stLogOnAns) {
-        if (ResetData() || !m_jsonData.contains("LogOnAns")) {
+
+        // LOG_DEBUG("SrcFileName: {}", m_strSrcJsonFileName);
+        CheckProperties();
+
+        if (ResetData() && m_jsonData.contains("LogOnAns")) {
             std::string sErrMsg;
             njson jsLogOnAns = m_jsonData["LogOnAns"];
             ParseTraderOrderUser(jsLogOnAns, stLogOnAns.trade_order_user);
             GetJsonIntField(jsLogOnAns, "session_status", stLogOnAns.session_status, sErrMsg);  
             GetJsonUnsignedIntField(jsLogOnAns, "error_code", stLogOnAns.error_code, sErrMsg); 
         } else {
-            // ¸³ÖµÄ¬ÈÏ²ÎÊý;
+            // èµ‹å€¼é»˜è®¤å‚æ•°;
             strcpy(stLogOnAns.trade_order_user.fund_account_id, "XXXXXX");
             strcpy(stLogOnAns.trade_order_user.branch_id, "XXXXXX");
             strcpy(stLogOnAns.trade_order_user.account_id, "XXXXXX");
@@ -235,14 +375,28 @@ public:
         return true;
     }
 
-    //     //¿Í»§µÇ³öÇëÇó
+
+    std::string LogOnAnsStr(LogOnAns& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+
+        ssObj << std::setw(30) << "session_status:" << std::setw(16) << obj.session_status <<"\n"; 
+
+        ssObj << std::setw(30) << "error_code:" << std::setw(16) << obj.error_code <<"\n"; 
+        return ssObj.str();
+    }    
+
+
+    //     //å®¢æˆ·ç™»å‡ºè¯·æ±‚
     // struct LogOutReq
     // {
-    // 	TradeOrderUser trade_order_user; //¿Í»§ÐÅÏ¢
-    //     char password[101]; ///< ÃÜÂë
+    // 	TradeOrderUser trade_order_user; //å®¢æˆ·ä¿¡æ¯
+    //     char password[101]; ///< å¯†ç 
     // };
     bool ParseLogOutReq(LogOutReq& stLogOutReq) {
-        if (ResetData() || !m_jsonData.contains("LogOutReq")) {
+        if (ResetData() && m_jsonData.contains("LogOutReq")) {
             std::string sErrMsg;
             njson jsLogOutReq = m_jsonData["LogOutReq"];
             ParseTraderOrderUser(jsLogOutReq, stLogOutReq.trade_order_user);
@@ -250,20 +404,31 @@ public:
             GetJsonCharStringField(jsLogOutReq, "password", stLogOutReq.password, sizeof(stLogOutReq.password), sErrMsg);  
 
         } else {
-            // ¸³ÖµÄ¬ÈÏ²ÎÊý;
+            // èµ‹å€¼é»˜è®¤å‚æ•°;
         }
         return true;
     }
 
-    //     //¿Í»§µÇ³öÓ¦´ð
+    std::string LogOutReqStr(LogOutReq& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+
+        ssObj << std::setw(30) << "password:" << std::setw(16) << obj.password <<"\n";
+        return ssObj.str();
+    }    
+
+
+    //     //å®¢æˆ·ç™»å‡ºåº”ç­”
     // struct LogOutAns
     // {
-    //     TradeOrderUser trade_order_user; //¿Í»§ÐÅÏ¢
-    //     int session_status; ///< »á»°×´Ì¬
-    //     unsigned int error_code; ///< ´íÎóÂë
+    //     TradeOrderUser trade_order_user; //å®¢æˆ·ä¿¡æ¯
+    //     int session_status; ///< ä¼šè¯çŠ¶æ€
+    //     unsigned int error_code; ///< é”™è¯¯ç 
     // };
     bool ParseLogOutAns(LogOutAns& stLogOutAns) {
-        if (ResetData() || !m_jsonData.contains("LogOutAns")) {
+        if (ResetData() && m_jsonData.contains("LogOutAns")) {
             std::string sErrMsg;
             njson jsLogOutAns = m_jsonData["LogOutAns"];
             ParseTraderOrderUser(jsLogOutAns, stLogOutAns.trade_order_user);
@@ -271,19 +436,31 @@ public:
             GetJsonUnsignedIntField(jsLogOutAns, "error_code", stLogOutAns.error_code, sErrMsg); 
 
         } else {
-            // ¸³ÖµÄ¬ÈÏ²ÎÊý;
+            // èµ‹å€¼é»˜è®¤å‚æ•°;
         }
         return true;
     }
 
-    // //Î¯ÍÐÇëÇó
+    std::string LogOutAnsStr(LogOutAns& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+
+        ssObj << std::setw(30) << "session_status:" << std::setw(16) << obj.session_status <<"\n";
+        ssObj << std::setw(30) << "error_code:" << std::setw(16) << obj.error_code <<"\n";
+        return ssObj.str();
+    }    
+
+
+    // //å§”æ‰˜è¯·æ±‚
     // struct TradeOrderReq
     // {
-    //     TradeOrderUser trade_order_user; //¿Í»§ÐÅÏ¢
-    //     TradeOrderInfo trade_order_info; //Î¯ÍÐÐÅÏ¢
+    //     TradeOrderUser trade_order_user; //å®¢æˆ·ä¿¡æ¯
+    //     TradeOrderInfo trade_order_info; //å§”æ‰˜ä¿¡æ¯
     // };    
     bool ParseTradeOrderReq(TradeOrderReq& stTradeOrderReq) {
-        if (ResetData() || !m_jsonData.contains("TradeOrderReq")) {
+        if (ResetData() && m_jsonData.contains("TradeOrderReq")) {
             std::string sErrMsg;
             njson jsTradeOrderReq = m_jsonData["TradeOrderReq"];
 
@@ -305,14 +482,25 @@ public:
         return true;
     }
 
-    //     //³·µ¥ÇëÇó
+    std::string TradeOrderReqStr(TradeOrderReq& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nTradeOrderInfo:\n" << TradeOrderInfoStr(obj.trade_order_info) <<"\n";
+
+        return ssObj.str();
+    }    
+
+
+    //     //æ’¤å•è¯·æ±‚
     // struct CancelOrderReq
     // {
-    //     TradeOrderUser   trade_order_user; //¿Í»§ÐÅÏ¢
-    //     CancelOrderInfo  cancel_order_info; //³·µ¥ÐÅÏ¢
+    //     TradeOrderUser   trade_order_user; //å®¢æˆ·ä¿¡æ¯
+    //     CancelOrderInfo  cancel_order_info; //æ’¤å•ä¿¡æ¯
     // };
     bool ParseCancelOrderReq(CancelOrderReq& stCancelOrderReq) {
-        if (ResetData() || !m_jsonData.contains("CancelOrderReq")) {
+        if (ResetData() && m_jsonData.contains("CancelOrderReq")) {
             std::string sErrMsg;
             njson jsCancelOrderReq = m_jsonData["CancelOrderReq"];
 
@@ -329,14 +517,25 @@ public:
         return true;
     }
 
-    //     //ÒµÎñ»Ø±¨
+    std::string CancelOrderReqStr(CancelOrderReq& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nCancelOrderInfo:\n" << CancelOrderInfoStr(obj.cancel_order_info) <<"\n";
+
+        return ssObj.str();
+    }    
+
+
+    //     //ä¸šåŠ¡å›žæŠ¥
     // struct TradeOrderER
     // {
-    //     TradeOrderUser trade_order_user; //¿Í»§ÐÅÏ¢
-    //     OrdERInfo order_er_info; //¶©µ¥ÐÅÏ¢
+    //     TradeOrderUser trade_order_user; //å®¢æˆ·ä¿¡æ¯
+    //     OrdERInfo order_er_info; //è®¢å•ä¿¡æ¯
     // };
     bool ParseTradeOrderER(TradeOrderER& stTradeOrderER) {
-        if (ResetData() || !m_jsonData.contains("TradeOrderER")) {
+        if (ResetData() && m_jsonData.contains("TradeOrderER")) {
             std::string sErrMsg;
             njson jsTradeOrderER = m_jsonData["TradeOrderER"];
 
@@ -344,7 +543,7 @@ public:
             ParseOrdERInfo(jsTradeOrderER, stTradeOrderER.order_er_info);
 
         } else {
-            // ¸³ÖµÄ¬ÈÏ²ÎÊý;
+            // èµ‹å€¼é»˜è®¤å‚æ•°;
             strcpy(stTradeOrderER.trade_order_user.fund_account_id, "XXXXXX");
             strcpy(stTradeOrderER.trade_order_user.branch_id, "XXXXXX");
             strcpy(stTradeOrderER.trade_order_user.account_id, "XXXXXX");
@@ -353,15 +552,26 @@ public:
         return true;
     }
 
-    //     //¾Ü¾ø·µ»Ø
+    std::string TradeOrderERStr(TradeOrderER& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "\nOrdERInfo:\n" << OrdERInfoStr(obj.order_er_info) <<"\n";
+
+        return ssObj.str();
+    }    
+
+
+    //     //æ‹’ç»è¿”å›ž
     // struct RejectMsg
     // {
-    //     TradeOrderUser trade_order_user; //¿Í»§ÐÅÏ¢
-    //     unsigned short reject_reason_code; /// ´íÎó±àÂë
-    //     char cancel_flag; //³·µ¥±êÊ¶
+    //     TradeOrderUser trade_order_user; //å®¢æˆ·ä¿¡æ¯
+    //     unsigned short reject_reason_code; /// é”™è¯¯ç¼–ç 
+    //     char cancel_flag; //æ’¤å•æ ‡è¯†
     // };
     bool ParseRejectMsg(RejectMsg& stRejectMsg) {
-        if (ResetData() || !m_jsonData.contains("RejectMsg")) {
+        if (ResetData() && m_jsonData.contains("RejectMsg")) {
             std::string sErrMsg;
             njson jsRejectMsg = m_jsonData["RejectMsg"];
 
@@ -370,11 +580,89 @@ public:
             GetJsonCharField(jsRejectMsg, "cancel_flag", stRejectMsg.cancel_flag, sErrMsg);  
 
         } else {
-            // ¸³ÖµÄ¬ÈÏ²ÎÊý;
+            // èµ‹å€¼é»˜è®¤å‚æ•°;
         }
         return true;
     }    
 
+    std::string RejectMsgStr(RejectMsg& obj) {
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "\nTradeOrderUser:\n" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
+        ssObj << std::setw(30) << "reject_reason_code:\n" << obj.reject_reason_code <<"\n";
+        ssObj << std::setw(30) << "cancel_flag:\n" << obj.cancel_flag <<"\n";
+
+        return ssObj.str();
+    }    
+
+
+public:
     std::string m_strSrcJsonFileName;
-    njson m_jsonData;
+    njson       m_jsonData;
 };
+
+class JsonMeta {
+public:
+    string Init(std::string strSrcJsonFileName) {
+        Error error;
+        njson reqJsonData;
+        if ((error = GetJsonFromFile(reqJsonData, strSrcJsonFileName)).IsFailed()) {
+            LOG_ERROR("JsonStructHelper::Init, ParseJsonFile:{} failed, error: {}", strSrcJsonFileName, error.Str());
+            return false;
+        }
+        
+        strUteName_ = "test_ute";
+        uiStrategyKey_ = 1;
+        uiWaitSec_ = 10;
+        uiHeartbeatSec_ = 3;
+        uiApiProcessCount_ = 1;
+        uiStrategyProcessCount_ = 2;
+        uiReqQueueNum_ = 1000;
+        uiRspQueueNum_ = 1000;
+        uiApiQueueNum_ = 1000;
+
+        string sErrMsg;
+
+        GetJsonUnsignedIntField(reqJsonData["strategy"], "key", uiStrategyKey_, sErrMsg);  
+        GetJsonUnsignedIntField(reqJsonData["strategy"], "wait_sec", uiWaitSec_, sErrMsg);     
+        GetJsonUnsignedIntField(reqJsonData["strategy"], "heartbeat_sec", uiHeartbeatSec_, sErrMsg);   
+
+        GetJsonUnsignedIntField(reqJsonData["ute"], "api_process_count", uiApiProcessCount_, sErrMsg);  
+        GetJsonUnsignedIntField(reqJsonData["ute"], "strategy_process_count", uiStrategyProcessCount_, sErrMsg);  
+        GetJsonUnsignedIntField(reqJsonData["ute"], "req_queue_num", uiReqQueueNum_, sErrMsg);  
+        GetJsonUnsignedIntField(reqJsonData["ute"], "rsp_queue_num", uiRspQueueNum_, sErrMsg);  
+        GetJsonUnsignedIntField(reqJsonData["ute"], "api_queue_num", uiApiQueueNum_, sErrMsg);  
+
+        GetJsonStringField(reqJsonData["ute"], "ute_name", strUteName_, sErrMsg);   
+
+
+        std::stringstream ssObj; 
+        ssObj.setf(ios::left); 
+        ssObj << std::fixed; 
+        ssObj << std::setw(30) << "strUteName_:" << strUteName_ <<"\n";
+        ssObj << std::setw(30) << "uiStrategyKey_:" << uiStrategyKey_ <<"\n";
+        ssObj << std::setw(30) << "uiWaitSec_:" << uiWaitSec_ <<"\n";
+        ssObj << std::setw(30) << "uiHeartbeatSec_:" << uiHeartbeatSec_ <<"\n";
+        ssObj << std::setw(30) << "uiApiProcessCount_:" << uiApiProcessCount_ <<"\n";
+        ssObj << std::setw(30) << "uiStrategyProcessCount_:" << uiStrategyProcessCount_ <<"\n";
+        ssObj << std::setw(30) << "uiReqQueueNum_:" << uiReqQueueNum_ <<"\n";
+        ssObj << std::setw(30) << "uiRspQueueNum_:" << uiRspQueueNum_ <<"\n";
+        ssObj << std::setw(30) << "uiApiQueueNum_:" << uiApiQueueNum_ <<"\n";
+
+        return ssObj.str();
+
+    }  
+
+    string strUteName_;
+    unsigned int uiStrategyKey_;
+    unsigned int uiWaitSec_;
+    unsigned int uiHeartbeatSec_;
+    unsigned int uiApiProcessCount_;
+    unsigned int uiStrategyProcessCount_;
+    unsigned int uiReqQueueNum_;
+    unsigned int uiRspQueueNum_;
+    unsigned int uiApiQueueNum_;
+};
+
+#define JSON_HELPER ThreadSafeSingleton<JsonStructHelper>::DoubleCheckInstance()

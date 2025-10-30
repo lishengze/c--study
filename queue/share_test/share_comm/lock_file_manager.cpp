@@ -1,6 +1,4 @@
 #include "lock_file_manager.h"
-#include "strategy_message_manager.h"
-#include "ute_message_manager.h"
 #include <sys/mman.h>
 #include <chrono>
 #include <thread>
@@ -37,14 +35,17 @@ namespace share_common
 {
 
 bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrategyKey, 
-           StrategyMessageManager* pStrategyMessageManager, int iEventSleepSec) {
+           StrategyGetRspCallbackEventFuncType StrategyOnEventFunc,
+           long lStartSec,  
+           int iEventSleepSec, int iWaitUteSec) {
 
-    pStrategyMessageManager_ = pStrategyMessageManager;
+    StrategyOnEventFunc_  = StrategyOnEventFunc;
+
     iHeartBeatSec_ = iEventSleepSec;
 
-    if (!pStrategyMessageManager_ || !pStrategyMessageManager_->m_pfnOnEvent) {
+    if (!StrategyOnEventFunc_ ) {
         // todo 增加日志信息;
-        LOG_ERROR("Init: pStrategyMessageManager_ or pStrategyMessageManager_->m_pfnOnEvent is NULL");
+        LOG_ERROR("Init: StrategyOnEventFunc_ is NULL");
         return false;
     }    
     
@@ -59,34 +60,31 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
     }
     mapNonListenLockFileFd_[std::to_string(ulStrategyKey)] = iStrategyFd;
 
-    // 开始监听
-    int iUteFd = -1;
-    std::string strUteName = GetLockFileName(cstrUteName);
-    LOG_INFO("Wait For UTE: {} To Start! ", strUteName);
+    LOG_INFO("Init Strategy Lock File:[{}]  SUCESS", GetLockFileName(ulStrategyKey));
 
-    long lStartWaitSec = SecTime();
     bool isUteReady = false;
+    int iUteFd = -1;
 
+    std::string strUteName = GetLockFileName(cstrUteName);
     do {
-       if (iUteFd < 0) {
+
+        LOG_DEBUG("Start Waiting UTE LockFile:[{}]", strUteName);
+
+        if (iUteFd < 0) {
             iUteFd = shm_open(strUteName.c_str(), O_RDWR, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
-       }       
-       if (iUteFd > 0) {
-            LOG_DEBUG("Try Lock file : [{}]", iUteFd);
-           bool opposite_alive = (lockf(iUteFd, F_TEST, 0) != 0);
-           if (opposite_alive) {
+        }       
+        if (iUteFd > 0) {            
+            bool opposite_alive = (lockf(iUteFd, F_TEST, 0) != 0);
+            if (opposite_alive) {
                 LOG_INFO("UTE Lock file {} already exists and locked, opposite process is alive", strUteName);
                 isUteReady = true;
                 break; // UTE进程已启动
-           } else {
-                std::this_thread::sleep_for(std::chrono::seconds(iWaitUteSec_));
-           }
-       }     
-       
-       sleep(iHeartBeatSec_);
+            }
+        }     
+        
+        sleep(1);
 
-        if (SecTime() - lStartWaitSec > pStrategyMessageManager_->GetWaitUteSec()) {
-            pStrategyMessageManager_->m_pfnOnEvent(kUteNotInited, "Wait Too long For Ute Start!");
+        if (SecTime() - lStartSec > iWaitUteSec) {
             return false;
         }
 
@@ -94,19 +92,10 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
 
     LOG_INFO("Check UTE lock file [{}] , fd: {} SUCCESS", strUteName, iUteFd);
 
-    sleep(5);
-
-    if ((lockf(iUteFd, F_TEST, 0) != 0)) {
-        LOG_DEBUG("---- Check UTE lock file [{}] , fd: [{}] is still alive", strUteName, iUteFd);
-    } else {
-        LOG_WARN("---- Check UTE lock file [{}] , fd: [{}] is Dead", strUteName, iUteFd);
-    }
-
-    pStrategyMessageManager_ ->SetUteInit(true);
-
-    mapListenLockFileFd_[std::string(cstrUteName)] = iUteFd; // 监听 UTE 进程的锁文件描述符;
-    
-    StartHeartbeatThread();
+    {
+        std::lock_guard<std::mutex> lock(mtxHeartbeat_);
+        mapListenLockFileFd_[strUteName] = iUteFd; // 监听 UTE 进程的锁文件描述符;
+    }      
 
     return true;
 }
@@ -117,13 +106,13 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
 /// @param cstrUteName UTE进程名，也是锁文件名；
 /// @param pUteMessageManager UTE进程的消息管理器；
 /// @param iEventSleepSec 事件监听线程的睡眠时间间隔，默认为5秒；
-bool LockFileManager::Init(const char* cstrUteName,  UteMessageManager* pUteMessageManager, int iEventSleepSec) {
+bool LockFileManager::Init(const char* cstrUteName,  UteGetStrategyReqCallBackFuncType UteOnEventFunc, int iEventSleepSec) {
     LOG_INFO("Init UTE lock file:[{}] Starting!", cstrUteName);
 
-    pUteMessageManager_ = pUteMessageManager;
+    UteOnEventFunc_ = UteOnEventFunc;
 
-    if (!pUteMessageManager || !pUteMessageManager->m_pfnOnEvent) {
-        LOG_ERROR("Init: pUteMessageManager_ or pUteMessageManager->m_pfnOnEvent is NULL");
+    if (!UteOnEventFunc) {
+        LOG_ERROR("Init: UteOnEventFunc is NULL");
         return false;
     }
 
@@ -192,7 +181,7 @@ void LockFileManager::StartHeartbeatThread() {
     LOG_INFO("StartHeartbeatThread Starting, mapListenLockFileFd_ size: {}, iHeartBeatSec_: {}", mapListenLockFileFd_.size(), iHeartBeatSec_);
 
     shptrHearbeatThread_ = std::make_shared<std::thread>([this]() {
-        while (true) {
+        while (bIsRunning_) {
             {
                 std::lock_guard<std::mutex> lock(mtxHeartbeat_);
                 std::vector<std::string> vecInvalidLockFileNames;
@@ -200,12 +189,13 @@ void LockFileManager::StartHeartbeatThread() {
                 for (auto& iter:mapListenLockFileFd_) {
                     if (!test_lock_file_is_alive(iter.second)) {
                         LOG_WARN("Lock file [{}], fd: [{}] is dead, remove it from listen list", iter.first, iter.second);
+                        close(iter.second);
                         
                         // 这两个指针在 Init 时已经判空过，这里不用再判空； //todo 暂时有问题;
-                        if (pStrategyMessageManager_) {
-                            pStrategyMessageManager_->m_pfnOnEvent(kUteFailed, (iter.first + + " is Dead!").c_str()); // 检测到 UTE 进程终止;
-                        } else if (pUteMessageManager_) {
-                            pUteMessageManager_->m_pfnOnEvent(kUteFailed, (iter.first + " is Dead!").c_str(), std::stoull(iter.first)); // 检测到 某个策略进程终止;
+                        if (StrategyOnEventFunc_) {
+                            StrategyOnEventFunc_(kUteFailed, (iter.first + + " is Dead!").c_str());
+                        } else if (UteOnEventFunc_) {
+                            UteOnEventFunc_(kUteFailed, (iter.first + " is Dead!").c_str(), std::stoull(iter.first)); // 检测到 某个策略进程终止;
                         }
                         
                         vecInvalidLockFileNames.push_back(iter.first);

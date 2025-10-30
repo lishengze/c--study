@@ -101,7 +101,7 @@ public:
         mask_ = size - 1;
         bit_mask_ = __builtin_ctz((uint64_t)size);
         // 步长值，用于哈希计算索引，减少冲突
-        stride_ = 1;
+        stride_ = 37;
         // 初始化生产者和消费者ticket
         push_ticket_ = 0;
         pop_ticket_ = 0;
@@ -135,7 +135,7 @@ public:
         
         // 初始化所有元素槽（如果需要）
         for (uint32_t i = 0; i < size; ++i) {
-            new (&pMpmcShareSlots[i]) slot_type(i);
+            new (&pMpmcShareSlots[i]) slot_type();
         }
         
         mask_ = size - 1;
@@ -154,7 +154,7 @@ public:
         }
         #endif
         
-        LOG_INFO("queue init successed, capacity is {}", mask_ + 1);
+        // LOG_INFO("queue init successed, capacity is {}", mask_ + 1);
         
         return true;
     }
@@ -270,6 +270,7 @@ public:
     template <class... Args>
     int push_share(slot_type* pSlot, Args&&... args)
     {
+        // LOG_DEBUG("Push Share Start!");
         // printf("-------- mpmc_queue push\n");
         // 获取并自增生产者ticket
         uint64_t ticket = push_ticket_++;
@@ -277,7 +278,7 @@ public:
         auto cur_turn = turn(ticket);
         // printf("-------- mpmc_queue push ticket: %ld, index: %ld, cur_turn: %d\n", ticket, index, cur_turn);
         // 执行入队操作，可能阻塞
-        LOG_DEBUG("cur_turn: {}, index: {}, push_ticket: {}", cur_turn, index, push_ticket_);
+        // LOG_DEBUG("cur_turn: {}, index: {}, push_ticket: {}", cur_turn, index, push_ticket_);
         pSlot[index].enqueue(cur_turn, std::forward<Args>(args)...);
         return index;
     }    

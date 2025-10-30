@@ -52,7 +52,7 @@ void DoLoginReq(StrategyMessageManager& stragegyMsgManager) {
 }
 
 void DoTradeOrderReq(StrategyMessageManager& stragegyMsgManager) {
-    TradeOrderReq req = {0};
+    TradeOrderReq req;
     strcpy(req.trade_order_user.fund_account_id, "XXXXXX");
     strcpy(req.trade_order_user.branch_id, "XXXXXX");
     strcpy(req.trade_order_user.account_id, "XXXXXX");

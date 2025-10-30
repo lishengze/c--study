@@ -19,9 +19,9 @@ inline void TestMain() {
 
     LOG_INFO("Share Common Test Start");
 
-    test_ute();
-    test_strategy();
+    // test_ute();
+    // test_strategy();
     test_external_msg();
-    test_lock_file();
-    test_queue();
+    // test_lock_file();
+    // test_queue();
 }

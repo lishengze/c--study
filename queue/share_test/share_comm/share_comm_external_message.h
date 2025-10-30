@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include "logger.h"
 
 namespace share_common 
 {
@@ -19,7 +20,7 @@ const unsigned int kPktCancelOrderAns= 2004; //撤单应答
 const unsigned int kPktOrderMatch = 2005; //委托成交回报
 const unsigned int kPktRejectMsg = 9; //请求拒单
 const unsigned int kPktStrategyEnd = 10; //策略结束
-
+const unsigned int kPktStrategyInit = 8; // 策略初始化消息;
 
 //order_staus字典
 const unsigned char kNew = 0;                                    //已申报
@@ -93,6 +94,51 @@ struct TradeOrderInfo
     long long stop_px; ///< 止损价, N13(4)
 };
 
+//委托请求
+struct TradeOrderReq
+{
+    TradeOrderUser trade_order_user;    //客户信息
+    TradeOrderInfo trade_order_info;    //委托信息
+    unsigned long long ulStrategyKey;  //测试专用-记录压入时间;
+
+    TradeOrderReq() {
+        ulStrategyKey = 0;
+        memset(&trade_order_user, 0, sizeof(TradeOrderUser));
+        memset(&trade_order_info, 0, sizeof(TradeOrderInfo));
+    }
+
+    explicit TradeOrderReq(const char* pBuffer) {
+        // if (!pBuffer) {
+        //     LOG_ERROR("pBuffer is nullptr");
+        // } else {
+        //     // LOG_DEBUG("ReqOrder Default Structor");
+        //     // memcpy(&(trade_order_user), pBuffer, sizeof(TradeOrderUser));
+        //     // memcpy(&(trade_order_user), (char*)pBuffer + sizeof(TradeOrderUser), sizeof(TradeOrderInfo));
+        //     // ulStrategyKey = *((unsigned long long*)((char*)pBuffer + sizeof(TradeOrderUser) + sizeof(TradeOrderInfo)));
+
+            
+        //     // LOG_DEBUG("CUST:{} ", trade_order_user.cust_id);
+        // }
+
+        memcpy(this, pBuffer, sizeof(TradeOrderReq));
+
+     }
+
+    TradeOrderReq(const TradeOrderReq&& other) {
+        // LOG_DEBUG("ReqOrder Move Structor");
+        memcpy(this, &other, sizeof(TradeOrderReq));        
+    }
+
+    TradeOrderReq& operator=(const TradeOrderReq&& other)
+    {
+        // LOG_DEBUG("ReqOrder operator=");
+        if (this == &other ) return *this;
+        memcpy(this, &other, sizeof(TradeOrderReq));       
+        return *this;
+    }     
+};
+
+
 struct CancelOrderInfo
 {
     long long   orig_client_seq_id; //原用户系统消息序号
@@ -165,12 +211,6 @@ struct LogOutAns
     unsigned int error_code; ///< 错误码
 };
 
-//委托请求
-struct TradeOrderReq
-{
-    TradeOrderUser trade_order_user; //客户信息
-    TradeOrderInfo trade_order_info; //委托信息
-};
 
 //撤单请求
 struct CancelOrderReq
@@ -199,6 +239,10 @@ struct StrategyEnd {
     unsigned long long ulStrategyKey; //策略ID
 };
 
+struct StrategyKey {
+    unsigned long long ulStrategyKey; //策略ID
+};
+
 /// @brief 通用请求消息结构体
 struct UteMsg {
     UteMsg() : iMsgID(0), iMsgSrcType(0), pMsgHander(nullptr), iMsgLen(0), ulStrategyKey(0) {
@@ -208,6 +252,8 @@ struct UteMsg {
     UteMsg(int iMsgID, unsigned int iMsgLen, unsigned long long ulStrategyKey, const char* pMsgBuf) :
          iMsgID(iMsgID), iMsgSrcType(0), pMsgHander(nullptr), iMsgLen(iMsgLen), ulStrategyKey(ulStrategyKey) {
         memset(strMsgBuf, 0, sizeof(strMsgBuf));
+
+        // LOG_DEBUG("***** Default Constructor!");
 
         if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
             memcpy(strMsgBuf, pMsgBuf, iMsgLen);            
@@ -228,13 +274,14 @@ struct UteMsg {
         pMsgHander(other.pMsgHander), iMsgLen(other.iMsgLen), ulStrategyKey(other.ulStrategyKey) {
         // memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
 
-        if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
-            memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);           
-        }        
+        // LOG_DEBUG("***** Move Constructor!");
+        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);         
     }
 
     UteMsg& operator=(const UteMsg&& other)
     {
+        // LOG_DEBUG("***** Operator = Constructor!");
+
         if (this == &other ) return *this;
         iMsgID = other.iMsgID;
         iMsgLen = other.iMsgLen;
@@ -247,6 +294,8 @@ struct UteMsg {
 
      UteMsg(const UteMsg& other)
     {
+        // LOG_DEBUG("***** Copy Constructor!");
+
         if (this == &other ) return;
         iMsgID = other.iMsgID;
         iMsgLen = other.iMsgLen;
@@ -262,8 +311,50 @@ struct UteMsg {
     void* pMsgHander;       // 消息处理句柄
     unsigned int iMsgLen;  // 拷贝消息缓冲区的真实长度;
     unsigned long long ulStrategyKey; // 由strategyID 和 bachID 拼接的key;
-    char strMsgBuf[sizeof(LogOnReq)+1]; // 增加编译宏判断;
+    char strMsgBuf[2048]; // 增加编译宏判断;
 };
+
+// 用于策略进程和UTE进程之间的消息通信;
+// 1. iMsgID: 消息ID;
+// 2. pMsgBuf: 消息缓冲区;
+// 3. ulMsgKey: 策略ID;;
+
+using UteGetStrategyReqCallBackFuncType = std::function<void(int , const char* , unsigned long long)>;
+
+
+// 用于转发API请求和交易所回报 到 UTE 业务线程的回调接口;
+// 1. iMsgID: 消息ID;
+// 2. pMsgBuf: 消息缓冲区;
+// 3. iMsgLen: 消息长度;
+// 4. iMsgSrcType: 消息来源类型;
+// 5. pMsgHandler: 消息处理句柄;
+using UteGetInnerReqCallBackFuncType = std::function<void(int , const char* , int , int, void*)>;
+
+// 策略接收UTE Event 事件的回调接口类型;
+// 1. iErrCode: 错误码;
+// 2. pErrDesc: 错误信息;
+using StrategyGetRspCallbackEventFuncType = std::function<void(int , const char*)>;
+
+
+// 策略接收UTE 回报消息的 事件的回调接口类型;
+// 1. iMsgID: 消息ID;
+// 2. pMsgBuf: 消息缓冲区;
+// 3. iMsgLen: 消息长度;
+using StrategyGetRspCallbackMessageFuncType = std::function<void(int , const char*, const int)>;
+
+
+#ifdef __GNUC__
+/**
+ * @brief      生成有利于分支预测的代码,告知编译器条件表达式"x"为false的概率较高
+ *
+ * @param      x     条件表达式
+ *
+ * @return     条件表达式的布尔值
+ */
+#define SHARE_COMM_LIKELY(x) (__builtin_expect(!!(x), 1))
+#else
+#define SHARE_COMM_LIKELY(x) (x)
+#endif
 
 } // namespace share_common
 

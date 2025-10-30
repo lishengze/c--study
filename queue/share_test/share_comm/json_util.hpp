@@ -1,7 +1,10 @@
 #pragma once
 
 #include "json.hpp"
-#include "base_util.h"
+#include "share_comm_util.h"
+
+#include "code_util.h"
+
 #include <string>
 #include <iostream>
 using std::string;
@@ -18,6 +21,38 @@ using std::string;
 #define GET_JSON_INT(js) (js.is_null() ? 0 : (js.is_string() ? atol(js.get<std::string>().c_str()) : js.get<int>()))
 #define GET_JSON_BOOL(js) (js.is_null() ? 0 : (js.is_string() ? atol(js.get<std::string>().c_str()) : js.get<bool>()))
 #define GET_JSON_STR(js) js.is_null() ? "" : js.get<std::string>().c_str()
+
+using njson = nlohmann::json;
+
+
+class Error {
+public:
+    Error():m_iErrorCode{0}, m_sErrorMsg{""} {
+
+    }
+
+    Error(int iErrorCode, string sErrMsg):m_iErrorCode(iErrorCode), m_sErrorMsg{sErrMsg} {
+
+    }
+
+    Error Set(int iErrorCode, string sErrorMsg) {
+        m_iErrorCode = iErrorCode;
+        m_sErrorMsg = sErrorMsg;
+
+        return *this;
+    }
+
+    string Str() {
+        return string("err_code: ") + std::to_string(m_iErrorCode) + ", err_msg: " + m_sErrorMsg;
+    }
+
+    int     m_iErrorCode;
+    string  m_sErrorMsg;
+
+    bool IsFailed() {
+        return m_iErrorCode > 0;
+    }
+};
 
 inline Error GetJsonFromFile(njson& dstJsonData, string sFullFileName) {
     Error error;
@@ -37,39 +72,6 @@ inline Error GetJsonFromFile(njson& dstJsonData, string sFullFileName) {
     }
     return error;    
 }
-
-// inline bool GetJsonFromFile(njson& dstJsonData, string sFullFileName) {
-//     Error error;
-//     try
-//     {
-//         std::fstream file(sFullFileName.c_str());
-//         std::ifstream in_config(sFullFileName);
-//         std::string sOriContents((std::istreambuf_iterator<char>(in_config)), std::istreambuf_iterator<char>());
-//         string sUtf8Contents = GetUtf8String(sOriContents);
-//         dstJsonData = njson::parse(sUtf8Contents);
-//     }
-//     catch(const std::exception& e)
-//     {
-//         std::string sErrMsg = sFullFileName + " parse exception: " + e.what();
-//         std::cerr << sErrMsg << '\n';
-//         return false;
-//     }
-//     return true;    
-// }
-
-
-// inline string RecordMsg(long startTime, string sErrMsg, njson& checkDetails, njson& outputJsonDetail) {
-//     checkDetails["result"] = "FAILED";
-//     checkDetails["Msg"] = sErrMsg;
-//     long endTime = NanoTime();
-//     double deltaMicrosSecs = double(endTime - startTime) / NANO_PER_MICRO;
-
-//     checkDetails["Mircros"] = deltaMicrosSecs;
-//     outputJsonDetail.push_back(checkDetails);
-
-//     return sErrMsg;
-// }
-
 
 /// -------------- char;
 inline bool GetValueFromJson(njson& jsonData, char& dst, string& sErrMsg, string metaInfo="", bool bAllowDefaultValue=true) {

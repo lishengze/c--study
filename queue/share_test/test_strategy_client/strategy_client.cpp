@@ -2,6 +2,19 @@
 
 #include "strategy_message_manager.h"
 
+#include "json_struct.h"
+
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <utility>
+
+#include <thread>
+#include <mutex>
+#include <iostream>
+
+
 #include <thread>
 #include <mutex>
 #include <iostream>
@@ -11,15 +24,18 @@
 #include <termios.h>  // 用于修改终端模式（关闭缓冲）
 #include <unistd.h>
 
-#include "json.hpp"
-#include "json_util.hpp"
 #include "json_struct.h"
 
 using namespace share_common;
 
+int gTestCount = 10000;
+
 StrategyMessageManager gStStrategyMessageManager;
 
 JsonStructHelper gJsonStructHelper;
+JsonMeta gJsonMeta;
+
+
 void StrategyOnEvent(int iErrCode, const char* pErrDesc) {
     LOG_WARN("StrategyOnEvent: iErrCode={}, pErrDesc={}", iErrCode, pErrDesc);
 }
@@ -27,47 +43,243 @@ void StrategyOnEvent(int iErrCode, const char* pErrDesc) {
 void StrategyOnMessage(int iMsgID, const char* pMsgBuf, const int iMsgLen) {
     LOG_INFO("StrategyOnMessage: iMsgID={}, iMsgLen={}", iMsgID, iMsgLen);
 
-    if (kPktLoginAns == iMsgID) {
-        LogOnAns* pLogonAns = (LogOnAns*)(pMsgBuf);
-        LOG_DEBUG("LogOnAns client: {}", pLogonAns->trade_order_user.cust_id);
+    switch (iMsgID) {
+        case kPktLoginAns:
+        {
+            LogOnAns* pStData = (LogOnAns*)(pMsgBuf);
+            LOG_INFO("LogOnAns: {}", gJsonStructHelper.LogOnAnsStr(*pStData));
+            break;
+        }
+
+        case kPktLogoutAns:
+        {
+            LogOutAns* pStData = (LogOutAns*)(pMsgBuf);
+            LOG_INFO("LogOnAns: {}", gJsonStructHelper.LogOutAnsStr(*pStData));
+            break;
+        }
+
+        case kPktOrderAns:
+        {
+            TradeOrderER* pStData = (TradeOrderER*)(pMsgBuf);
+            LOG_INFO("TradeOrderER: {}", gJsonStructHelper.TradeOrderERStr(*pStData));
+            break;
+        }
+        case kPktCancelOrderAns:
+        {
+            TradeOrderER* pStData = (TradeOrderER*)(pMsgBuf);
+            LOG_INFO("TradeOrderER: {}", gJsonStructHelper.TradeOrderERStr(*pStData));
+            break;
+        }
+        case kPktOrderMatch:
+        {
+            TradeOrderER* pStData = (TradeOrderER*)(pMsgBuf);
+            LOG_INFO("TradeOrderER: {}", gJsonStructHelper.TradeOrderERStr(*pStData));
+            break;
+        }
+        case kPktRejectMsg:
+        {
+            RejectMsg* pStData = (RejectMsg*)(pMsgBuf);
+            LOG_INFO("LogOnAns: {}", gJsonStructHelper.RejectMsgStr(*pStData));
+            break;
+        }
+        default:
+            break;
+    }    
+
+}
+
+// 举例进行登录请求设置
+void DoLoginReq(StrategyMessageManager& stragegyMsgManager) {
+    // LOG_INFO("DoLoginReq");
+
+    LogOnReq req = {0};
+    req.heart_bt_int = 3;
+    req.trade_order_user.agw_seq_id = 10001;
+    strcpy(req.password, "XXXXXX");
+    strcpy(req.trade_order_user.fund_account_id, "XXXXXX");
+    strcpy(req.trade_order_user.branch_id, "XXXXXX");
+    strcpy(req.trade_order_user.account_id, "XXXXXX");
+    strcpy(req.trade_order_user.cust_id, "TestLogin");
+    req.trade_order_user.client_seq_id = 1;
+
+    stragegyMsgManager.SendMsg(kPktLoginReq, (char*)&req, sizeof(req));
+}
+
+void DoTradeOrderReq(StrategyMessageManager& stragegyMsgManager) {
+    // LOG_INFO("DoTradeOrderReq");
+    TradeOrderReq req;
+    strcpy(req.trade_order_user.fund_account_id, "Client");
+    strcpy(req.trade_order_user.branch_id, "XXXXXX");
+    strcpy(req.trade_order_user.account_id, "XXXXXX");
+    strcpy(req.trade_order_user.cust_id, "TestOrderTime");
+    req.trade_order_user.client_seq_id = 10001;
+    req.trade_order_info.order_qty = 800;
+    req.trade_order_info.side = kBuy;
+    req.trade_order_info.order_type = kLimited;
+    req.trade_order_info.market_id = kShangHai;
+    strcpy(req.trade_order_info.security_id, "XXXXXX");
+  
+    req.ulStrategyKey = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock().now().time_since_epoch()).count();
+
+    stragegyMsgManager.SendMsg(kPktOrderReq, (char*)&req, sizeof(req));
+}
+
+void TestStrategyClient() {
+    StrategyMessageManager stStrategyMessageManager;
+
+    std::string strUteName = "test_ute";
+    unsigned int uiStrategySysID = 1;
+    int iSleepSec = 5;
+
+    stStrategyMessageManager.SetOnEvent(iSleepSec, StrategyOnEvent);
+    stStrategyMessageManager.SetOnMessage(StrategyOnMessage);
+
+    stStrategyMessageManager.Init(strUteName.c_str(), uiStrategySysID, 100);
+
+    sleep(8);
+
+
+    for (int i = 0; i < gTestCount; ++i) {
+        DoTradeOrderReq(stStrategyMessageManager);
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
+    }
+
+
+    // sleep(20);
+
+    // DoTradeOrderReq(stStrategyMessageManager);
+
+    // while(true) {
+    //     sleep(3);
+    // }
+
+    // UteMsg testPopMsg;
+    // if (stStrategyMessageManager.TryPopMsg(testPopMsg)) {
+    //     LOG_DEBUG("[SUCCESS] trypop msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPopMsg.iMsgID, testPopMsg.iMsgLen, testPopMsg.ulStrategyKey);
+    // } else {
+    //     LOG_ERROR("[FAILED] trypop msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPopMsg.iMsgID, testPopMsg.iMsgLen, testPopMsg.ulStrategyKey);
+    // }
+
+    // sleep(1);
+
+    // UteMsg msg;
+    // while (stStrategyMessageManager.TryPopMsg(msg)) {
+    //     LOG_INFO("TryPopMsg: iMsgID={}, iMsgLen={}", msg.iMsgID, msg.iMsgLen);
+    // }
+
+    // DoTradeOrderReq(stStrategyMessageManager);
+
+    // stStrategyMessageManager.Init();
+}
+
+template<typename T>
+bool AttachShareQueue(const char * cstrSharedMemName , mpmc_queue<T>* & pMpmcQueue, element_slot<T, false>*&  pMpmcShareSlots) {
+    int shm_fd = shm_open(cstrSharedMemName, O_RDWR, 0);
+    if (shm_fd == -1) {
+        LOG_WARN("shm_open {} failed ", cstrSharedMemName);
+        return false;
+    }
+    
+    // 获取共享内存大小
+    struct stat stat_buf;
+    if (fstat(shm_fd, &stat_buf) == -1) {
+        LOG_WARN("fstat {} failed ", cstrSharedMemName);
+        close(shm_fd);
+        return false;
+    }
+    
+    // 映射共享内存
+    int uiMemorySize_ = stat_buf.st_size; // 记录共享内存大小
+    void* addr = mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (addr == MAP_FAILED) {
+        LOG_WARN("mmap {} failed ", cstrSharedMemName);
+        close(shm_fd);
+        return false;
+    }
+
+    // LOG_DEBUG("pUteMsgMpmcQueue_ attach uiMemorySize_: {}", uiMemorySize_);
+    
+    close(shm_fd);
+    pMpmcQueue = static_cast<mpmc_queue<UteMsg>*>(addr);   
+
+    if (!pMpmcQueue) {
+        LOG_WARN("pUteMsgMpmcQueue_ is null");
+        return false;
+    }
+
+    
+     // 手动将slot 映射到外部的内存地址中 -- 共享内存版本,这一步导致了很多的问题，导致无法进行服务端对slot 的解锁出错了。
+    pMpmcQueue->slot_attach(pMpmcShareSlots, static_cast<void*>((char*)addr + sizeof(mpmc_queue<UteMsg>) + 128));
+
+    return true;
+
+}
+
+void TestStrategyTime() {
+    const char * cstrSharedMemName = "test_time.queue";
+
+    mpmc_queue<UteMsg>* pMpmcQueue = nullptr;
+    element_slot<UteMsg, false>*  pMpmcShareSlots = nullptr;
+
+    if (!AttachShareQueue<UteMsg>(cstrSharedMemName, pMpmcQueue, pMpmcShareSlots)) {
+        LOG_ERROR("Attach cstrSharedMemName:{}, Failed!", cstrSharedMemName);
+        return;
+    }
+
+    int iMsgLen = sizeof(TradeOrderReq);
+    TradeOrderReq tmpObj;
+    unsigned long long ulPushTime;
+    for (int i = 0; i < gTestCount; ++i) {
+        ulPushTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock().now().time_since_epoch()).count();
+        pMpmcQueue->push_share(pMpmcShareSlots, kPktOrderReq, iMsgLen, ulPushTime,(char*)(&tmpObj));
+        usleep(1);
     }
 }
 
 
 // 举例进行登录请求设置
-void DoLoginReq(StrategyMessageManager& stragegyMsgManager) {
+void JsonDoLoginReq(StrategyMessageManager& stragegyMsgManager) {
     LOG_INFO("DoLoginReq");
 
     LogOnReq req = {0};
 
     gJsonStructHelper.ParseLogOnReq(req);
 
+    LOG_INFO("LogOnReq: {}",  gJsonStructHelper.LogOnReqStr(req)); 
+
     stragegyMsgManager.SendMsg(kPktLoginReq, (char*)&req, sizeof(req));
 }
 
 // 举例进行注销请求设置
-void DoLogoutReq(StrategyMessageManager& stragegyMsgManager) {
+void JsonDoLogoutReq(StrategyMessageManager& stragegyMsgManager) {
     LOG_INFO("DoLogoutReq");
     LogOutReq req = {0};
-    gJsonStructHelper.ParseLogOutReq(req);  
+    gJsonStructHelper.ParseLogOutReq(req); 
+
+    LOG_INFO("LogOutReq: {}" , gJsonStructHelper.LogOutReqStr(req)); 
 
     stragegyMsgManager.SendMsg(kPktLogoutReq, (char*)&req, sizeof(req));
 }
 
 // 举例进行订单请求设置
-void DoTradeOrderReq(StrategyMessageManager& stragegyMsgManager) {
+void JsonDoTradeOrderReq(StrategyMessageManager& stragegyMsgManager) {
     LOG_INFO("DoTradeOrderReq");
-    TradeOrderReq req = {0};
+    TradeOrderReq req;
     gJsonStructHelper.ParseTradeOrderReq(req);
+
+    LOG_INFO("DoTradeOrderReq: {}" , gJsonStructHelper.TradeOrderReqStr(req)); 
   
     stragegyMsgManager.SendMsg(kPktOrderReq, (char*)&req, sizeof(req));
 }
 
 // 举例进行取消订单请求设置
-void DoCancelOrder(StrategyMessageManager& stragegyMsgManager) {
+void JsonDoCancelOrder(StrategyMessageManager& stragegyMsgManager) {
     LOG_INFO("DoCancelOrder");
     CancelOrderReq req = {0};
     gJsonStructHelper.ParseCancelOrderReq(req);  
+
+    LOG_INFO("DoCancelOrder: {}" , gJsonStructHelper.CancelOrderReqStr(req)); 
+
     stragegyMsgManager.SendMsg(kPktCancelOrderReq, (char*)&req, sizeof(req));
 }
 
@@ -96,12 +308,15 @@ std::string GetHelpInfo() {
 }
 
 void StartWaitReqCommand()  {
-    disableInputBuffering(); // 关闭缓冲，即时读取
+    // disableInputBuffering(); // 关闭缓冲，即时读取
+
+    LOG_INFO("Start Waiting Command");
 
     std::thread testThread([](){
         char input;
         while(true) {
             input = getchar();
+            LOG_INFO("input char{}, int{}", input, (int)(input));
 
             switch (input) {
             case 'h':
@@ -111,16 +326,16 @@ void StartWaitReqCommand()  {
                 exit(0);
                 break;
             case '1':
-                DoLoginReq(gStStrategyMessageManager);
+                JsonDoLoginReq(gStStrategyMessageManager);
                 break;
             case '2':
-                DoLogoutReq(gStStrategyMessageManager);
+                JsonDoLogoutReq(gStStrategyMessageManager);
                 break;
             case '3':
-                DoTradeOrderReq(gStStrategyMessageManager);
+                JsonDoTradeOrderReq(gStStrategyMessageManager);
                 break;
             case '4':
-                DoCancelOrder(gStStrategyMessageManager);
+                JsonDoCancelOrder(gStStrategyMessageManager);
                 break;
             default:
                 break;
@@ -131,44 +346,38 @@ void StartWaitReqCommand()  {
 
     });
 
-    restoreInputBuffering(); // 退出前恢复终端模式
+    testThread.join();
+
+    // restoreInputBuffering(); // 退出前恢复终端模式
 }
 
-void TestStrategyClient() {
-    const string strSrcJsonFileName = "test_data.json";
-    gJsonStructHelper.Init(strSrcJsonFileName);
-    
+
+void TestJsonStrategyClient() {
 
     std::string strUteName = "test_ute";
     unsigned int uiStrategySysID = 1;
     int iSleepSec = 3;
 
-    gStStrategyMessageManager.SetOnEvent(iSleepSec, StrategyOnEvent);
+    gStStrategyMessageManager.SetOnEvent(gJsonMeta.uiHeartbeatSec_, StrategyOnEvent);
     gStStrategyMessageManager.SetOnMessage(StrategyOnMessage);
+    gStStrategyMessageManager.Init(gJsonMeta.strUteName_.c_str(), gJsonMeta.uiStrategyKey_, gJsonMeta.uiWaitSec_);
 
-    gStStrategyMessageManager.Init(strUteName.c_str(), uiStrategySysID, 10);
+    sleep(8);
 
-    sleep(3);
+    StartWaitReqCommand();
+}
 
+void TestStrategyMain() {
+    const string strSrcJsonFileName = "test_data.json";
+    gJsonStructHelper.Init(strSrcJsonFileName);    
 
-    DoLoginReq(gStStrategyMessageManager);
-    
+    std::string strMetaInfo = gJsonMeta.Init("meta_data.json");
+    LOG_INFO("MetaInfo:\n{}", strMetaInfo);
 
-    // UteMsg testPopMsg;
-    // if (gStStrategyMessageManager.TryPopMsg(testPopMsg)) {
-    //     LOG_DEBUG("[SUCCESS] trypop msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPopMsg.iMsgID, testPopMsg.iMsgLen, testPopMsg.ulStrategyKey);
-    // } else {
-    //     LOG_ERROR("[FAILED] trypop msg: iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}", testPopMsg.iMsgID, testPopMsg.iMsgLen, testPopMsg.ulStrategyKey);
-    // }
+    // TestStrategyClient();
 
-    // sleep(1);
+    // TestStrategyTime();
 
-    // UteMsg msg;
-    // while (gStStrategyMessageManager.TryPopMsg(msg)) {
-    //     LOG_INFO("TryPopMsg: iMsgID={}, iMsgLen={}", msg.iMsgID, msg.iMsgLen);
-    // }
+    TestJsonStrategyClient();
 
-    // DoTradeOrderReq(gStStrategyMessageManager);
-
-    // gStStrategyMessageManager.Init();
 }

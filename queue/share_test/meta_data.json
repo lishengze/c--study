@@ -1,0 +1,15 @@
+{
+    "strategy":{
+        "key":8,
+        "wait_sec":10,
+        "heartbeat_sec":3
+    },
+    "ute":{
+        "ute_name":"test_ute",
+        "api_process_count":1,
+        "strategy_process_count":1,
+        "req_queue_num":1000,
+        "rsp_queue_num":1000,
+        "api_queue_num":1000
+    }
+}

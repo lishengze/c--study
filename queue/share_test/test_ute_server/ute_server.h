@@ -1,3 +1,4 @@
 #pragma once
 
-void TestUteServer();
+void TestUteMain();
+
