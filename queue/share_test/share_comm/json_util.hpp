@@ -7,6 +7,12 @@
 
 #include <string>
 #include <iostream>
+#include <cstring>
+#include <array>
+#include <functional>
+#include <algorithm>
+#include <string>
+
 using std::string;
 
 // sometimes, the int/long/double type filed is string ,
@@ -24,6 +30,46 @@ using std::string;
 
 using njson = nlohmann::json;
 
+template <size_t Size>
+inline std::string StdArrayToStr( std::array<char, Size>& to)
+{
+	std::string s(to.data(), Size);
+	// str = s;
+	return s;
+}
+
+
+template <size_t Size>
+inline void CopyToStdArray(const char* buf,
+						size_t buf_len,
+						std::array<char, Size>& to)
+{
+	size_t min = std::min(buf_len, Size);
+	if (min <= 0)
+	{
+		std::memset(&to[0], ' ', Size);
+	}
+	else
+	{
+		std::memcpy(&to[0], buf, min);
+		if (min < Size)
+		{
+			std::memset(&to[min], ' ', Size - min);
+		}
+		
+		if (buf[min - 1] == 0)
+		{
+			to[min - 1] = ' ';
+		}
+	}
+}
+
+template <size_t Size>
+inline void CopyToStdArray(std::string& str,
+						std::array<char, Size>& to)
+{
+	CopyToStdArray<Size>(str.c_str(), str.size(), to);
+}
 
 class Error {
 public:
@@ -485,6 +531,14 @@ inline bool GetJsonStringField(njson& jsonData, string filedName, string& dst, s
         sErrMsg = metaInfo + " Need " + filedName + "[string]--[ERROR]";
         return false;
     }
+    return true;
+}
+template <size_t Size>
+inline bool GetJsonArrayStringField(njson& jsonData, string filedName, std::array<char, Size>& dst, 
+                                string& sErrMsg, string metaInfo="", bool bAllowDefaultValue=true) {
+    std::string strDst;
+    GetJsonStringField(jsonData, filedName, strDst, sErrMsg, metaInfo, bAllowDefaultValue);
+    CopyToStdArray<Size>(strDst, dst);
     return true;
 }
 

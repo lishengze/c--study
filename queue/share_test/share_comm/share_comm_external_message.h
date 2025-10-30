@@ -1,10 +1,55 @@
 #pragma once
 
 #include <cstring>
-#include "logger.h"
+#include <array>
+#include <functional>
+#include <algorithm>
+#include <string>
 
 namespace share_common 
 {
+
+
+
+
+template <size_t Size>
+inline void CopyToArray(const char* buf,
+						size_t buf_len,
+						std::array<char, Size>& to)
+{
+	size_t min = std::min(buf_len, Size);
+	if (min <= 0)
+	{
+		std::memset(&to[0], ' ', Size);
+	}
+	else
+	{
+		std::memcpy(&to[0], buf, min);
+		if (min < Size)
+		{
+			std::memset(&to[min], ' ', Size - min);
+		}
+		
+		if (buf[min - 1] == 0)
+		{
+			to[min - 1] = ' ';
+		}
+	}
+}
+
+template <size_t Size>
+inline void CopyToArray(std::string& str,
+						std::array<char, Size>& to)
+{
+	CopyToArray<Size>(str.c_str(), str.size(), to);
+}
+
+template <size_t Size, int CArraySize>
+inline void CopyToArray(const char (&c_array)[CArraySize],
+						std::array<char, Size>& target)
+{
+	CopyToArray(&c_array[0], CArraySize, target);
+}
 
 #pragma pack(push, 1)
 
@@ -75,17 +120,17 @@ const unsigned int kUteNotInited = 2; //UTE进程终止;
 
 struct TradeOrderUser
 {
-	char fund_account_id[17]; //资金账号
-	char branch_id[11]; //营业部代码
-	char account_id[13]; //证券账户
-	char cust_id[17]; //客户号
+	std::array<char, 16> fund_account_id; //资金账号
+	std::array<char, 10> branch_id; //营业部代码
+	std::array<char, 12> account_id; //证券账户
+	std::array<char, 16> cust_id; //客户号
 	unsigned long long client_seq_id; //用户系统消息编号
 	unsigned long long agw_seq_id; //内部订单编号
 };
 
 struct TradeOrderInfo
 {
-    char security_id[9]; //证券代码
+    std::array<char, 8> security_id; //证券代码
     unsigned short market_id; //市场
     char side; ///< 买卖方向, 1=买; 2=卖; G=借入; F=借出; D=申购; E=赎回
     char order_type; ///< 订单类型, 1=市价; 2=限价; U=本方最优
@@ -108,30 +153,16 @@ struct TradeOrderReq
     }
 
     explicit TradeOrderReq(const char* pBuffer) {
-        // if (!pBuffer) {
-        //     LOG_ERROR("pBuffer is nullptr");
-        // } else {
-        //     // LOG_DEBUG("ReqOrder Default Structor");
-        //     // memcpy(&(trade_order_user), pBuffer, sizeof(TradeOrderUser));
-        //     // memcpy(&(trade_order_user), (char*)pBuffer + sizeof(TradeOrderUser), sizeof(TradeOrderInfo));
-        //     // ulStrategyKey = *((unsigned long long*)((char*)pBuffer + sizeof(TradeOrderUser) + sizeof(TradeOrderInfo)));
-
-            
-        //     // LOG_DEBUG("CUST:{} ", trade_order_user.cust_id);
-        // }
-
         memcpy(this, pBuffer, sizeof(TradeOrderReq));
 
      }
 
     TradeOrderReq(const TradeOrderReq&& other) {
-        // LOG_DEBUG("ReqOrder Move Structor");
         memcpy(this, &other, sizeof(TradeOrderReq));        
     }
 
     TradeOrderReq& operator=(const TradeOrderReq&& other)
     {
-        // LOG_DEBUG("ReqOrder operator=");
         if (this == &other ) return *this;
         memcpy(this, &other, sizeof(TradeOrderReq));       
         return *this;
@@ -147,9 +178,9 @@ struct CancelOrderInfo
 
 struct OrdERInfo
 {
-    char order_id[17]; ///< 交易所赋予的订单编号, 跨交易日不重复
-    char clordid[11]; ///< 申报合同号
-    char security_id[9]; ///< 证券代码
+    std::array<char, 16> order_id; ///< 交易所赋予的订单编号, 跨交易日不重复
+    std::array<char, 10> clordid; ///< 申报合同号
+    std::array<char, 8> security_id; ///< 证券代码
     unsigned short market_id; ///< 市场代码
     char exec_type; ///< 执行报告类型, 0=New, 表示新订单; 4=Cancelled, 表示已撤销; 8=Reject, 表示已拒绝; F=Trade, 表示已成交
     unsigned char ord_status; //内部订单状态
@@ -159,9 +190,9 @@ struct OrdERInfo
     long long cum_qty; ///< 累计执行数量, N15(2)
     char side; ///< 买卖方向, 1=买; 2=卖; G=借入; F=借出; D=申购; E=赎回
     long long transact_time; //时间戳
-    char user_info[65]; ///< 用户私有信息, 尽可包含ASCII可显示字符
-    char exec_id[17]; ///< 交易所赋予的执行编号, 单个交易日内不重复
-    char orig_clordid[11]; //原申报合同号
+    std::array<char, 64> user_info; ///< 用户私有信息, 尽可包含ASCII可显示字符
+    std::array<char, 16> exec_id; ///< 交易所赋予的执行编号, 单个交易日内不重复
+    std::array<char, 10> orig_clordid; //原申报合同号
     char ord_type; ///< 订单类型, 1=市价; 2=限价; U=本方最优
     unsigned short ord_rej_reason;//交易所错误码
     char time_in_force; ///< 订单有效时期类型, 0=当日有效, Day(港股通增强限价盘); 3=即时成交或取消(IOC); 9=At Crossing(港股通竞价限价盘)
@@ -184,8 +215,8 @@ struct LogOnReq
 {
 	TradeOrderUser trade_order_user; //客户信息
 	unsigned int heart_bt_int; ///< 心跳检测时间
-	char password[101]; ///< 密码
-	char client_feature_code[1025]; //客户端特征码
+	std::array<char, 100> password; ///< 密码
+	std::array<char, 1024> client_feature_code; //客户端特征码
 };
 
 //客户登录应答
@@ -200,7 +231,7 @@ struct LogOnAns
 struct LogOutReq
 {
 	TradeOrderUser trade_order_user; //客户信息
-    char password[101]; ///< 密码
+    std::array<char, 100> password; ///< 密码
 };
 
 //客户登出应答
@@ -210,7 +241,6 @@ struct LogOutAns
     int session_status; ///< 会话状态
     unsigned int error_code; ///< 错误码
 };
-
 
 //撤单请求
 struct CancelOrderReq
@@ -252,13 +282,9 @@ struct UteMsg {
     UteMsg(int iMsgID, unsigned int iMsgLen, unsigned long long ulStrategyKey, const char* pMsgBuf) :
          iMsgID(iMsgID), iMsgSrcType(0), pMsgHander(nullptr), iMsgLen(iMsgLen), ulStrategyKey(ulStrategyKey) {
         memset(strMsgBuf, 0, sizeof(strMsgBuf));
-
-        // LOG_DEBUG("***** Default Constructor!");
-
         if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
             memcpy(strMsgBuf, pMsgBuf, iMsgLen);            
         }
-
     }
 
     UteMsg(int iMsgID, unsigned int iMsgLen, int iMsgSrcType, void* pMsgHander, const char* pMsgBuf) :
@@ -272,16 +298,11 @@ struct UteMsg {
     UteMsg(const UteMsg&& other) :
         iMsgID(other.iMsgID),iMsgSrcType(other.iMsgSrcType), 
         pMsgHander(other.pMsgHander), iMsgLen(other.iMsgLen), ulStrategyKey(other.ulStrategyKey) {
-        // memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
-
-        // LOG_DEBUG("***** Move Constructor!");
         memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);         
     }
 
     UteMsg& operator=(const UteMsg&& other)
     {
-        // LOG_DEBUG("***** Operator = Constructor!");
-
         if (this == &other ) return *this;
         iMsgID = other.iMsgID;
         iMsgLen = other.iMsgLen;
@@ -294,8 +315,6 @@ struct UteMsg {
 
      UteMsg(const UteMsg& other)
     {
-        // LOG_DEBUG("***** Copy Constructor!");
-
         if (this == &other ) return;
         iMsgID = other.iMsgID;
         iMsgLen = other.iMsgLen;

@@ -83,10 +83,10 @@ public:
         if (reqJsonData.contains("TradeOrderUser")) {
             std::string sErrMsg;
             njson jsTradeOrderUser = reqJsonData["TradeOrderUser"];
-            GetJsonCharStringField(jsTradeOrderUser, "fund_account_id", stTraderOrderUser.fund_account_id, sizeof(stTraderOrderUser.fund_account_id), sErrMsg);  
-            GetJsonCharStringField(jsTradeOrderUser, "branch_id", stTraderOrderUser.branch_id, sizeof(stTraderOrderUser.branch_id), sErrMsg);  
-            GetJsonCharStringField(jsTradeOrderUser, "account_id", stTraderOrderUser.account_id, sizeof(stTraderOrderUser.account_id), sErrMsg);  
-            GetJsonCharStringField(jsTradeOrderUser, "cust_id", stTraderOrderUser.cust_id, sizeof(stTraderOrderUser.cust_id), sErrMsg);   
+            GetJsonArrayStringField<16>(jsTradeOrderUser, "fund_account_id", stTraderOrderUser.fund_account_id, sErrMsg);  
+            GetJsonArrayStringField<10>(jsTradeOrderUser, "branch_id", stTraderOrderUser.branch_id, sErrMsg);  
+            GetJsonArrayStringField<12>(jsTradeOrderUser, "account_id", stTraderOrderUser.account_id, sErrMsg);  
+            GetJsonArrayStringField<16>(jsTradeOrderUser, "cust_id", stTraderOrderUser.cust_id, sErrMsg);   
 
             GetJsonUnsignedLongLongField(jsTradeOrderUser, "client_seq_id", stTraderOrderUser.client_seq_id, sErrMsg);  
             GetJsonUnsignedLongLongField(jsTradeOrderUser, "agw_seq_id", stTraderOrderUser.agw_seq_id, sErrMsg);  
@@ -102,10 +102,10 @@ public:
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
         ssObj << "\n";
-        ssObj << std::setw(30) << "fund_account_id:" << std::setw(16) << obj.fund_account_id <<"\n";
-        ssObj << std::setw(30) << "branch_id:" << std::setw(16) << obj.branch_id <<"\n"; 
-        ssObj << std::setw(30) << "account_id:" << std::setw(16) << obj.account_id <<"\n";
-        ssObj << std::setw(30) << "cust_id:" << std::setw(16) << obj.cust_id <<"\n"; 
+        ssObj << std::setw(30) << "fund_account_id:" << std::setw(16) << StdArrayToStr<16>(obj.fund_account_id) <<"\n";
+        ssObj << std::setw(30) << "branch_id:" << std::setw(16) << StdArrayToStr<10>(obj.branch_id) <<"\n"; 
+        ssObj << std::setw(30) << "account_id:" << std::setw(16) << StdArrayToStr<12>(obj.account_id) <<"\n";
+        ssObj << std::setw(30) << "cust_id:" << std::setw(16) << StdArrayToStr<16>(obj.cust_id) <<"\n"; 
 
         ssObj << std::setw(30) << "client_seq_id:" << std::setw(16) << obj.client_seq_id <<"\n";
         ssObj << std::setw(30) << "agw_seq_id:" << std::setw(16) << obj.agw_seq_id <<"\n";                 
@@ -127,7 +127,7 @@ public:
         if (reqJsonData.contains("TradeOrderInfo")) {
             std::string sErrMsg;
             njson jsTradeOrderInfo = reqJsonData["TradeOrderInfo"];
-            GetJsonCharStringField(jsTradeOrderInfo, "security_id", stTradeOrderInfo.security_id, sizeof(stTradeOrderInfo.security_id), sErrMsg);  
+            GetJsonArrayStringField<8>(jsTradeOrderInfo, "security_id", stTradeOrderInfo.security_id, sErrMsg);  
 
             GetJsonUnsignedShortField(jsTradeOrderInfo, "market_id", stTradeOrderInfo.market_id, sErrMsg);  
 
@@ -147,7 +147,7 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << "\nsecurity_id:" << std::setw(16) << obj.security_id <<"\n";
+        ssObj << "\nsecurity_id:" << std::setw(16) << StdArrayToStr<8>(obj.security_id) <<"\n";
         ssObj << std::setw(30) << "market_id:" << std::setw(16) << obj.market_id <<"\n"; 
         ssObj << std::setw(30) << "side:" << std::setw(16) << obj.side <<"\n";
         ssObj << std::setw(30) << "order_type:" << std::setw(16) << obj.order_type <<"\n"; 
@@ -223,9 +223,10 @@ public:
         if (reqJsonData.contains("OrdERInfo")) {
             std::string sErrMsg;
             njson jsOrdERInfo = reqJsonData["OrdERInfo"];
-            GetJsonCharStringField(jsOrdERInfo, "order_id", stOrdERInfo.order_id, sizeof(stOrdERInfo.order_id), sErrMsg);  
-            GetJsonCharStringField(jsOrdERInfo, "clordid", stOrdERInfo.clordid, sizeof(stOrdERInfo.clordid), sErrMsg);  
-            GetJsonCharStringField(jsOrdERInfo, "security_id", stOrdERInfo.security_id, sizeof(stOrdERInfo.security_id), sErrMsg);  
+            GetJsonArrayStringField<16>(jsOrdERInfo, "order_id", stOrdERInfo.order_id, sErrMsg);  
+            GetJsonArrayStringField<10>(jsOrdERInfo, "clordid", stOrdERInfo.clordid, sErrMsg);          
+            GetJsonArrayStringField<8>(jsOrdERInfo, "security_id", stOrdERInfo.security_id, sErrMsg);  
+            GetJsonUnsignedShortField(jsOrdERInfo, "market_id", stOrdERInfo.market_id, sErrMsg);   
             GetJsonUnsignedShortField(jsOrdERInfo, "market_id", stOrdERInfo.market_id, sErrMsg);  
             GetJsonCharField(jsOrdERInfo, "exec_type", stOrdERInfo.exec_type, sErrMsg);  
             GetJsonUnsignedCharField(jsOrdERInfo, "ord_status", stOrdERInfo.ord_status, sErrMsg);  
@@ -235,9 +236,10 @@ public:
             GetJsonLongLongField(jsOrdERInfo, "cum_qty", stOrdERInfo.cum_qty, sErrMsg);  
             GetJsonCharField(jsOrdERInfo, "side", stOrdERInfo.side, sErrMsg);  
             GetJsonLongLongField(jsOrdERInfo, "transact_time", stOrdERInfo.transact_time, sErrMsg);  
-            GetJsonCharStringField(jsOrdERInfo, "user_info", stOrdERInfo.user_info, sizeof(stOrdERInfo.user_info), sErrMsg);  
-            GetJsonCharStringField(jsOrdERInfo, "exec_id", stOrdERInfo.exec_id, sizeof(stOrdERInfo.exec_id), sErrMsg);  
-            GetJsonCharStringField(jsOrdERInfo, "orig_clordid", stOrdERInfo.orig_clordid, sizeof(stOrdERInfo.orig_clordid), sErrMsg);  
+            GetJsonArrayStringField<64>(jsOrdERInfo, "user_info", stOrdERInfo.user_info, sErrMsg);  
+            GetJsonArrayStringField<16>(jsOrdERInfo, "exec_id", stOrdERInfo.exec_id, sErrMsg);        
+            GetJsonArrayStringField<10>(jsOrdERInfo, "orig_clordid", stOrdERInfo.orig_clordid, sErrMsg);  
+
             GetJsonCharField(jsOrdERInfo, "ord_type", stOrdERInfo.ord_type, sErrMsg);  
             GetJsonUnsignedShortField(jsOrdERInfo, "ord_rej_reason", stOrdERInfo.ord_rej_reason, sErrMsg);  
             GetJsonCharField(jsOrdERInfo, "time_in_force", stOrdERInfo.time_in_force, sErrMsg);  
@@ -264,10 +266,10 @@ public:
         std::stringstream ssObj; 
         ssObj.setf(ios::left); 
         ssObj << std::fixed; 
-        ssObj << std::setw(30) << "\norder_id:" << std::setw(16) << obj.order_id <<"\n";
-        ssObj << std::setw(30) << "clordid:" << std::setw(16) << obj.clordid <<"\n"; 
+        ssObj << std::setw(30) << "\norder_id:" << std::setw(16) << StdArrayToStr<16>(obj.order_id) <<"\n";
+        ssObj << std::setw(30) << "clordid:" << std::setw(16) << StdArrayToStr<10>(obj.clordid) <<"\n"; 
+        ssObj << std::setw(30) << "security_id:" << std::setw(16) << StdArrayToStr<8>(obj.security_id) <<"\n"; 
 
-        ssObj << std::setw(30) << "security_id:" << std::setw(16) << obj.security_id <<"\n"; 
         ssObj << std::setw(30) << "market_id:" << std::setw(16) << obj.market_id <<"\n"; 
         ssObj << std::setw(30) << "exec_type:" << std::setw(16) << obj.exec_type <<"\n"; 
         ssObj << std::setw(30) << "ord_status:" << std::setw(16) << obj.ord_status <<"\n"; 
@@ -277,9 +279,11 @@ public:
         ssObj << std::setw(30) << "cum_qty:" << std::setw(16) << obj.cum_qty <<"\n"; 
         ssObj << std::setw(30) << "side:" << std::setw(16) << obj.side <<"\n"; 
         ssObj << std::setw(30) << "transact_time:" << std::setw(16) << obj.transact_time <<"\n"; 
-        ssObj << std::setw(30) << "user_info:" << std::setw(16) << obj.user_info <<"\n"; 
-        ssObj << std::setw(30) << "exec_id:" << std::setw(16) << obj.exec_id <<"\n"; 
-        ssObj << std::setw(30) << "orig_clordid:" << std::setw(16) << obj.orig_clordid <<"\n"; 
+
+        ssObj << std::setw(30) << "user_info:" << std::setw(16) << StdArrayToStr<64>(obj.user_info) <<"\n"; 
+        ssObj << std::setw(30) << "exec_id:" << std::setw(16) << StdArrayToStr<16>(obj.exec_id) <<"\n"; 
+        ssObj << std::setw(30) << "orig_clordid:" << std::setw(16) << StdArrayToStr<10>(obj.orig_clordid) <<"\n"; 
+
         ssObj << std::setw(30) << "ord_type:" << std::setw(16) << obj.ord_type <<"\n"; 
         ssObj << std::setw(30) << "ord_rej_reason:" << std::setw(16) << obj.ord_rej_reason <<"\n"; 
         ssObj << std::setw(30) << "time_in_force:" << std::setw(16) << obj.time_in_force <<"\n"; 
@@ -320,18 +324,18 @@ public:
             njson jsLogOnReq = jsData["LogOnReq"];
             ParseTraderOrderUser(jsLogOnReq, stLogOnReq.trade_order_user);
 
-            GetJsonCharStringField(jsLogOnReq, "password", stLogOnReq.password, sizeof(stLogOnReq.password), sErrMsg);  
-            GetJsonCharStringField(jsLogOnReq, "client_feature_code", stLogOnReq.client_feature_code, sizeof(stLogOnReq.client_feature_code), sErrMsg);  
+            GetJsonArrayStringField<100>(jsLogOnReq, "password", stLogOnReq.password, sErrMsg);  
+            GetJsonArrayStringField<1024>(jsLogOnReq, "client_feature_code", stLogOnReq.client_feature_code, sErrMsg);  
 
             GetJsonUnsignedIntField(jsLogOnReq, "heart_bt_int", stLogOnReq.heart_bt_int, sErrMsg); 
         } else {
             stLogOnReq.heart_bt_int = 3;
             stLogOnReq.trade_order_user.agw_seq_id = 10001;
-            strcpy(stLogOnReq.password, "XXXXXX");
-            strcpy(stLogOnReq.trade_order_user.fund_account_id, "XXXXXX");
-            strcpy(stLogOnReq.trade_order_user.branch_id, "XXXXXX");
-            strcpy(stLogOnReq.trade_order_user.account_id, "XXXXXX");
-            strcpy(stLogOnReq.trade_order_user.cust_id, "TestLogin");
+            // strcpy(stLogOnReq.password, "XXXXXX");
+            // strcpy(stLogOnReq.trade_order_user.fund_account_id, "XXXXXX");
+            // strcpy(stLogOnReq.trade_order_user.branch_id, "XXXXXX");
+            // strcpy(stLogOnReq.trade_order_user.account_id, "XXXXXX");
+            // strcpy(stLogOnReq.trade_order_user.cust_id, "TestLogin");
             stLogOnReq.trade_order_user.client_seq_id = 1;
         }
         return true;
@@ -344,9 +348,9 @@ public:
         ssObj << std::fixed; 
         ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
 
-        ssObj << std::setw(30) << "password:" << std::setw(16) << obj.password <<"\n"; 
-
-        ssObj << std::setw(30) << "client_feature_code:" << std::setw(16) << obj.client_feature_code <<"\n"; 
+        ssObj << std::setw(30) << "password:" << std::setw(16) << StdArrayToStr<100>(obj.password) <<"\n"; 
+        ssObj << std::setw(30) << "client_feature_code:" << std::setw(16) << StdArrayToStr<1024>(obj.client_feature_code) <<"\n";
+        
         ssObj << std::setw(30) << "heart_bt_int:" << std::setw(16) << obj.heart_bt_int <<"\n"; 
 
         return ssObj.str();
@@ -379,10 +383,10 @@ public:
             // cout << "stLogOnAns.error_code:  " << stLogOnAns.error_code << endl;
         } else {
             // 赋值默认参数;
-            strcpy(stLogOnAns.trade_order_user.fund_account_id, "XXXXXX");
-            strcpy(stLogOnAns.trade_order_user.branch_id, "XXXXXX");
-            strcpy(stLogOnAns.trade_order_user.account_id, "XXXXXX");
-            strcpy(stLogOnAns.trade_order_user.cust_id, "RspLogInSucess");
+            // strcpy(stLogOnAns.trade_order_user.fund_account_id, "XXXXXX");
+            // strcpy(stLogOnAns.trade_order_user.branch_id, "XXXXXX");
+            // strcpy(stLogOnAns.trade_order_user.account_id, "XXXXXX");
+            // strcpy(stLogOnAns.trade_order_user.cust_id, "RspLogInSucess");
 
         }
         return true;
@@ -420,7 +424,7 @@ public:
             njson jsLogOutReq = jsData["LogOutReq"];
             ParseTraderOrderUser(jsLogOutReq, stLogOutReq.trade_order_user);
 
-            GetJsonCharStringField(jsLogOutReq, "password", stLogOutReq.password, sizeof(stLogOutReq.password), sErrMsg);  
+            GetJsonArrayStringField<100>(jsLogOutReq, "password", stLogOutReq.password, sErrMsg);  
 
         } else {
             // 赋值默认参数;
@@ -434,7 +438,8 @@ public:
         ssObj << std::fixed; 
         ssObj << std::setw(30) << "\nTradeOrderUser:" << TraderOrderUserStr(obj.trade_order_user) <<"\n";
 
-        ssObj << std::setw(30) << "password:" << std::setw(16) << obj.password <<"\n";
+        ssObj << std::setw(30) << "password:" << std::setw(16) << StdArrayToStr<100>(obj.password) <<"\n"; 
+
         return ssObj.str();
     }    
 
@@ -499,16 +504,16 @@ public:
             ParseTradeOrderInfo(jsTradeOrderReq, stTradeOrderReq.trade_order_info);
 
         } else {
-            strcpy(stTradeOrderReq.trade_order_user.fund_account_id, "Client");
-            strcpy(stTradeOrderReq.trade_order_user.branch_id, "XXXXXX");
-            strcpy(stTradeOrderReq.trade_order_user.account_id, "XXXXXX");
-            strcpy(stTradeOrderReq.trade_order_user.cust_id, "TestOrder");
+            // strcpy(stTradeOrderReq.trade_order_user.fund_account_id, "Client");
+            // strcpy(stTradeOrderReq.trade_order_user.branch_id, "XXXXXX");
+            // strcpy(stTradeOrderReq.trade_order_user.account_id, "XXXXXX");
+            // strcpy(stTradeOrderReq.trade_order_user.cust_id, "TestOrder");
             stTradeOrderReq.trade_order_user.client_seq_id = 10001;
             stTradeOrderReq.trade_order_info.order_qty = 800;
             stTradeOrderReq.trade_order_info.side = kBuy;
             stTradeOrderReq.trade_order_info.order_type = kLimited;
             stTradeOrderReq.trade_order_info.market_id = kShangHai;
-            strcpy(stTradeOrderReq.trade_order_info.security_id, "XXXXXX");
+            // strcpy(stTradeOrderReq.trade_order_info.security_id, "XXXXXX");
         }
         return true;
     }
@@ -545,10 +550,10 @@ public:
             ParseCancelOrderInfo(jsCancelOrderReq, stCancelOrderReq.cancel_order_info);
 
         } else {
-            strcpy(stCancelOrderReq.trade_order_user.fund_account_id, "Client");
-            strcpy(stCancelOrderReq.trade_order_user.branch_id, "XXXXXX");
-            strcpy(stCancelOrderReq.trade_order_user.account_id, "XXXXXX");
-            strcpy(stCancelOrderReq.trade_order_user.cust_id, "TestCancel");
+            // strcpy(stCancelOrderReq.trade_order_user.fund_account_id, "Client");
+            // strcpy(stCancelOrderReq.trade_order_user.branch_id, "XXXXXX");
+            // strcpy(stCancelOrderReq.trade_order_user.account_id, "XXXXXX");
+            // strcpy(stCancelOrderReq.trade_order_user.cust_id, "TestCancel");
             stCancelOrderReq.trade_order_user.client_seq_id = 10001;
         }
         return true;
@@ -587,10 +592,10 @@ public:
 
         } else {
             // 赋值默认参数;
-            strcpy(stTradeOrderER.trade_order_user.fund_account_id, "XXXXXX");
-            strcpy(stTradeOrderER.trade_order_user.branch_id, "XXXXXX");
-            strcpy(stTradeOrderER.trade_order_user.account_id, "XXXXXX");
-            strcpy(stTradeOrderER.trade_order_user.cust_id, "OrderRsp");              
+            // strcpy(stTradeOrderER.trade_order_user.fund_account_id, "XXXXXX");
+            // strcpy(stTradeOrderER.trade_order_user.branch_id, "XXXXXX");
+            // strcpy(stTradeOrderER.trade_order_user.account_id, "XXXXXX");
+            // strcpy(stTradeOrderER.trade_order_user.cust_id, "OrderRsp");              
         }
         return true;
     }

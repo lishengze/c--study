@@ -31,10 +31,10 @@ void SendLogAns(QueueManager* pQueueManager) {
 
     LogOnAns stLogOnAns;
 
-    strcpy(stLogOnAns.trade_order_user.fund_account_id, "XXXXXX");
-    strcpy(stLogOnAns.trade_order_user.branch_id, "XXXXXX");
-    strcpy(stLogOnAns.trade_order_user.account_id, "XXXXXX");
-    strcpy(stLogOnAns.trade_order_user.cust_id, "LogInSucess");
+    // strcpy(stLogOnAns.trade_order_user.fund_account_id, "XXXXXX");
+    // strcpy(stLogOnAns.trade_order_user.branch_id, "XXXXXX");
+    // strcpy(stLogOnAns.trade_order_user.account_id, "XXXXXX");
+    // strcpy(stLogOnAns.trade_order_user.cust_id, "LogInSucess");
 
     // gUteMessageManager.
 
@@ -46,10 +46,10 @@ void SendOrderRsp(QueueManager* pQueueManager) {
     
     TradeOrderER stTradeOrderERP;
 
-    strcpy(stTradeOrderERP.trade_order_user.fund_account_id, "XXXXXX");
-    strcpy(stTradeOrderERP.trade_order_user.branch_id, "XXXXXX");
-    strcpy(stTradeOrderERP.trade_order_user.account_id, "XXXXXX");
-    strcpy(stTradeOrderERP.trade_order_user.cust_id, "XXXXXX");    
+    // strcpy(stTradeOrderERP.trade_order_user.fund_account_id, "XXXXXX");
+    // strcpy(stTradeOrderERP.trade_order_user.branch_id, "XXXXXX");
+    // strcpy(stTradeOrderERP.trade_order_user.account_id, "XXXXXX");
+    // strcpy(stTradeOrderERP.trade_order_user.cust_id, "XXXXXX");    
 
     pQueueManager->SendMsg(kPktOrderAns, (char*)&stTradeOrderERP, sizeof(TradeOrderER));
 }
@@ -167,7 +167,7 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
         if (iMsgID == kPktLoginReq) {
             LogOnReq* pReq = (LogOnReq*)(pMsgBuf);
 
-            LOG_DEBUG("CustID: {}", pReq->trade_order_user.cust_id);
+            // LOG_DEBUG("CustID: {}", pReq->trade_order_user.cust_id);
 
             QueueManager* pQueueManager = gUteMessageManager.CreateStrategyRspQueue(ulStrategyKey);
 
@@ -203,7 +203,7 @@ void UteOnInnerMessage(int iMsgID, const char* pMsgBuf, int iMsgLen, int iMsgSrc
 
     if (iMsgID == kPktLoginAns) {
         LogOnAns* pLogOnAns = (LogOnAns*)pMsgBuf;
-        LOG_DEBUG("From API Request CustID:{}", pLogOnAns->trade_order_user.cust_id);
+        // LOG_DEBUG("From API Request CustID:{}", pLogOnAns->trade_order_user.cust_id);
     }
 
 }
@@ -217,10 +217,10 @@ void SendApiMessage() {
 
     LogOnAns stLogOnAns;
 
-    strcpy(stLogOnAns.trade_order_user.fund_account_id, "XXXXXX");
-    strcpy(stLogOnAns.trade_order_user.branch_id, "XXXXXX");
-    strcpy(stLogOnAns.trade_order_user.account_id, "XXXXXX");
-    strcpy(stLogOnAns.trade_order_user.cust_id, "TestApiRequest");
+    // strcpy(stLogOnAns.trade_order_user.fund_account_id, "XXXXXX");
+    // strcpy(stLogOnAns.trade_order_user.branch_id, "XXXXXX");
+    // strcpy(stLogOnAns.trade_order_user.account_id, "XXXXXX");
+    // strcpy(stLogOnAns.trade_order_user.cust_id, "TestApiRequest");
 
     // gUteMessageManager.
 

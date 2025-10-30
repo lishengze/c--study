@@ -24,7 +24,7 @@
 #include <chrono>
 #include <string>
 #include <iostream>
-#include <numa.h>
+// #include <numa.h>
 
 
 using std::string;

@@ -41,11 +41,11 @@ void DoLoginReq(StrategyMessageManager& stragegyMsgManager) {
     LogOnReq req = {0};
     req.heart_bt_int = 3;
     req.trade_order_user.agw_seq_id = 10001;
-    strcpy(req.password, "XXXXXX");
-    strcpy(req.trade_order_user.fund_account_id, "XXXXXX");
-    strcpy(req.trade_order_user.branch_id, "XXXXXX");
-    strcpy(req.trade_order_user.account_id, "XXXXXX");
-    strcpy(req.trade_order_user.cust_id, "XXXXXX");
+    // strcpy(req.password, "XXXXXX");
+    // strcpy(req.trade_order_user.fund_account_id, "XXXXXX");
+    // strcpy(req.trade_order_user.branch_id, "XXXXXX");
+    // strcpy(req.trade_order_user.account_id, "XXXXXX");
+    // strcpy(req.trade_order_user.cust_id, "XXXXXX");
     req.trade_order_user.client_seq_id = 1;
 
     stragegyMsgManager.SendMsg(kPktLoginReq, (char*)&req, sizeof(req));
@@ -53,16 +53,16 @@ void DoLoginReq(StrategyMessageManager& stragegyMsgManager) {
 
 void DoTradeOrderReq(StrategyMessageManager& stragegyMsgManager) {
     TradeOrderReq req;
-    strcpy(req.trade_order_user.fund_account_id, "XXXXXX");
-    strcpy(req.trade_order_user.branch_id, "XXXXXX");
-    strcpy(req.trade_order_user.account_id, "XXXXXX");
-    strcpy(req.trade_order_user.cust_id, "XXXXXX");
+    // strcpy(req.trade_order_user.fund_account_id, "XXXXXX");
+    // strcpy(req.trade_order_user.branch_id, "XXXXXX");
+    // strcpy(req.trade_order_user.account_id, "XXXXXX");
+    // strcpy(req.trade_order_user.cust_id, "XXXXXX");
     req.trade_order_user.client_seq_id = 10001;
     req.trade_order_info.order_qty = 800;
     req.trade_order_info.side = kBuy;
     req.trade_order_info.order_type = kLimited;
     req.trade_order_info.market_id = kShangHai;
-    strcpy(req.trade_order_info.security_id, "XXXXXX");
+    // strcpy(req.trade_order_info.security_id, "XXXXXX");
   
     stragegyMsgManager.SendMsg(kPktOrderReq, (char*)&req, sizeof(req));
 }
