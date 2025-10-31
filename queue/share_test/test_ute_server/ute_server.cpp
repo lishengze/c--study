@@ -56,6 +56,9 @@ void SendOrderRsp(QueueManager* pQueueManager) {
 
 void UteOnEvent(int iMsgID, const char* pMsgBuf,  unsigned long long ulStrategyKey) {
     LOG_INFO("UteOnEvent: iMsgID={}, ulStrategyKey={}", iMsgID, ulStrategyKey);
+
+
+    gUteMessageManager.WriteMsg(kUteFailed, (char*)&ulStrategyKey, sizeof(unsigned long long), 99, nullptr);       
 }
 
 void AnaTestResult(std::vector<unsigned long long>& vecTime) {
@@ -206,10 +209,17 @@ void UteOnInnerMessage(int iMsgID, const char* pMsgBuf, int iMsgLen, int iMsgSrc
         // LOG_DEBUG("From API Request CustID:{}", pLogOnAns->trade_order_user.cust_id);
     }
 
+    if (iMsgID == kUteFailed) {
+        size_t pStrategyKey = *((size_t*)pMsgBuf);
+        LOG_DEBUG("StrategyKey: {}", pStrategyKey);
+    }
+
+    // if (is_move_assignable)
+
 }
 
 void ApiMessageHandler() {
-
+    cout << "ApiMessageHandler" << endl;
 }
 
 void SendApiMessage() {
@@ -224,7 +234,9 @@ void SendApiMessage() {
 
     // gUteMessageManager.
 
-    gUteMessageManager.WriteMsg(kPktLoginAns, (char*)&stLogOnAns, sizeof(LogOutAns), 99, (void*)(&ApiMessageHandler));    
+    size_t ulStrategyKey = 999999999;
+
+    gUteMessageManager.WriteMsg(kPktStrategyInit, (char*)&ulStrategyKey, sizeof(size_t), 99, (void*)(&ApiMessageHandler));    
 }
 
 void TestUteServer() {

@@ -194,6 +194,11 @@ void UteMessageManager::StartListenQueue() {
                 UteMsg uteMsg;
                 if (m_InnerMsgQueue.TryPop(uteMsg)) {
                     LOG_DEBUG("Get api req msg, msgid:{}, src type:{},", uteMsg.iMsgID, uteMsg.iMsgSrcType);
+                    if (kUteFailed == uteMsg.iMsgID) {
+                        unsigned long long tmpUllStrategyKey = *((unsigned long long*)uteMsg.strMsgBuf);
+                        LOG_DEBUG("ulStrategyKey = {}, iMsgID = {} , iMsgLen = {} !", tmpUllStrategyKey, uteMsg.iMsgID, uteMsg.iMsgLen);
+                        // cout << "ulStrategyKey = " << tmpUllStrategyKey << endl;
+                    }                           
                     m_pfnOnInnerMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iMsgLen, uteMsg.iMsgSrcType,  uteMsg.pMsgHander); // api 请求和交易所回报 过来的消息；                    
                 } else {
                     break; // 没有数据直接结束

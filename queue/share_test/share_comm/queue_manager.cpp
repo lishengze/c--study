@@ -420,6 +420,10 @@ void QueueManager::SendMsgShare(int iMsgID, const char* pMsgBuf, const int iMsgL
 void QueueManager::SendMsg(int iMsgID, const char* pMsgBuf, unsigned int  iMsgLen, int iMsgSrcType, void* pMsgHandler) {
     if (SHARE_COMM_LIKELY(pUteMsgMpmcQueue_)) {
         LOG_DEBUG("iMsgID = {}, iMsgLen = {}, iMsgSrcType = {}", iMsgID, iMsgLen, iMsgSrcType);
+        if (kUteFailed == iMsgID) {
+            LOG_DEBUG("ulStrategyKey = {} !", *((unsigned long long*)pMsgBuf));
+            // return;
+        }
         pUteMsgMpmcQueue_->push(iMsgID, iMsgLen, iMsgSrcType, pMsgHandler, pMsgBuf);         
     } else {
         LOG_ERROR("pUteMsgMpmcQueue_ is null");

@@ -6,6 +6,12 @@
 #include <algorithm>
 #include <string>
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
+#include "logger.h"
+
 namespace share_common 
 {
 
@@ -293,12 +299,24 @@ struct UteMsg {
         if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
             memcpy(strMsgBuf, pMsgBuf, iMsgLen);            
         }
+
+        if (kUteFailed == iMsgID) {
+            unsigned long long tmpUllStrategyKey = *((unsigned long long*)strMsgBuf);
+            LOG_DEBUG("ulStrategyKey = {}, iMsgID = {} , iMsgLen = {} !", tmpUllStrategyKey, iMsgID, iMsgLen);
+            // cout << "ulStrategyKey = " << tmpUllStrategyKey << endl;
+        }
     }    
 
     UteMsg(const UteMsg&& other) :
         iMsgID(other.iMsgID),iMsgSrcType(other.iMsgSrcType), 
         pMsgHander(other.pMsgHander), iMsgLen(other.iMsgLen), ulStrategyKey(other.ulStrategyKey) {
-        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);         
+        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);      
+        
+        if (kUteFailed == iMsgID) {
+            unsigned long long tmpUllStrategyKey = *((unsigned long long*)strMsgBuf);
+            LOG_DEBUG("ulStrategyKey = {}, iMsgID = {} , iMsgLen = {} !", tmpUllStrategyKey, iMsgID, iMsgLen);
+            // cout << "ulStrategyKey = " << tmpUllStrategyKey << endl;
+        }        
     }
 
     UteMsg& operator=(const UteMsg&& other)
@@ -310,6 +328,12 @@ struct UteMsg {
         iMsgSrcType = other.iMsgSrcType;
         pMsgHander = other.pMsgHander;
         memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
+
+        if (kUteFailed == iMsgID) {
+            unsigned long long tmpUllStrategyKey = *((unsigned long long*)strMsgBuf);
+            LOG_DEBUG("ulStrategyKey = {}, iMsgID = {} , iMsgLen = {} !", tmpUllStrategyKey, iMsgID, iMsgLen);
+            // cout << "ulStrategyKey = " << tmpUllStrategyKey << endl;
+        }        
         return *this;
     }
 
@@ -337,7 +361,6 @@ struct UteMsg {
 // 1. iMsgID: 消息ID;
 // 2. pMsgBuf: 消息缓冲区;
 // 3. ulMsgKey: 策略ID;;
-
 using UteGetStrategyReqCallBackFuncType = std::function<void(int , const char* , unsigned long long)>;
 
 
