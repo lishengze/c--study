@@ -4,19 +4,9 @@
 #include <array>
 #include <functional>
 #include <algorithm>
-#include <string>
-
-#include <iostream>
-using std::cout;
-using std::endl;
-
-#include "logger.h"
 
 namespace share_common 
 {
-
-
-
 
 template <size_t Size>
 inline void CopyToArray(const char* buf,
@@ -41,13 +31,6 @@ inline void CopyToArray(const char* buf,
 			to[min - 1] = ' ';
 		}
 	}
-}
-
-template <size_t Size>
-inline void CopyToArray(std::string& str,
-						std::array<char, Size>& to)
-{
-	CopyToArray<Size>(str.c_str(), str.size(), to);
 }
 
 template <size_t Size, int CArraySize>
@@ -288,9 +271,13 @@ struct UteMsg {
     UteMsg(int iMsgID, unsigned int iMsgLen, unsigned long long ulStrategyKey, const char* pMsgBuf) :
          iMsgID(iMsgID), iMsgSrcType(0), pMsgHander(nullptr), iMsgLen(iMsgLen), ulStrategyKey(ulStrategyKey) {
         memset(strMsgBuf, 0, sizeof(strMsgBuf));
+
+        // LOG_DEBUG("***** Default Constructor!");
+
         if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
             memcpy(strMsgBuf, pMsgBuf, iMsgLen);            
         }
+
     }
 
     UteMsg(int iMsgID, unsigned int iMsgLen, int iMsgSrcType, void* pMsgHander, const char* pMsgBuf) :
@@ -299,24 +286,12 @@ struct UteMsg {
         if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
             memcpy(strMsgBuf, pMsgBuf, iMsgLen);            
         }
-
-        if (kUteFailed == iMsgID) {
-            unsigned long long tmpUllStrategyKey = *((unsigned long long*)strMsgBuf);
-            LOG_DEBUG("ulStrategyKey = {}, iMsgID = {} , iMsgLen = {} !", tmpUllStrategyKey, iMsgID, iMsgLen);
-            // cout << "ulStrategyKey = " << tmpUllStrategyKey << endl;
-        }
     }    
 
     UteMsg(const UteMsg&& other) :
         iMsgID(other.iMsgID),iMsgSrcType(other.iMsgSrcType), 
         pMsgHander(other.pMsgHander), iMsgLen(other.iMsgLen), ulStrategyKey(other.ulStrategyKey) {
-        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);      
-        
-        if (kUteFailed == iMsgID) {
-            unsigned long long tmpUllStrategyKey = *((unsigned long long*)strMsgBuf);
-            LOG_DEBUG("ulStrategyKey = {}, iMsgID = {} , iMsgLen = {} !", tmpUllStrategyKey, iMsgID, iMsgLen);
-            // cout << "ulStrategyKey = " << tmpUllStrategyKey << endl;
-        }        
+        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);         
     }
 
     UteMsg& operator=(const UteMsg&& other)
@@ -328,12 +303,6 @@ struct UteMsg {
         iMsgSrcType = other.iMsgSrcType;
         pMsgHander = other.pMsgHander;
         memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
-
-        if (kUteFailed == iMsgID) {
-            unsigned long long tmpUllStrategyKey = *((unsigned long long*)strMsgBuf);
-            LOG_DEBUG("ulStrategyKey = {}, iMsgID = {} , iMsgLen = {} !", tmpUllStrategyKey, iMsgID, iMsgLen);
-            // cout << "ulStrategyKey = " << tmpUllStrategyKey << endl;
-        }        
         return *this;
     }
 
@@ -361,6 +330,7 @@ struct UteMsg {
 // 1. iMsgID: 消息ID;
 // 2. pMsgBuf: 消息缓冲区;
 // 3. ulMsgKey: 策略ID;;
+
 using UteGetStrategyReqCallBackFuncType = std::function<void(int , const char* , unsigned long long)>;
 
 

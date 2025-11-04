@@ -1,17 +1,47 @@
 {
     "LogOnReq":{
         "TradeOrderUser":{
-            "fund_account_id": "test_fund",
-            "branch_id":"001",
-            "account_id":"test_count",
-            "cust_id":"test_logon",
+            "fund_account_id": "0341030000015694",
+            "branch_id":"4103",
+            "account_id":"0166483461",
+            "cust_id":"03000012513705",
             "client_seq_id":0,
             "agw_seq_id":8
         },
-        "password": "88888",
+        "password": "f7f5de21d520e0214bb1b5b2d7c2c7c0bd63b9179a4372be3bc96ab7f2482deb",
         "client_feature_code":"test_feature",
         "heart_bt_int":3
     },
+    "TradeOrderReq":{
+        "TradeOrderUser":{
+            "fund_account_id": "0341030000015694",
+            "branch_id":"4103",
+            "account_id":"0166483461",
+            "cust_id":"03000012513705",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "TradeOrderInfo":{
+            "security_id":"000421", 
+            "market_id":102, 
+            "side":"1",
+            "order_type":"1", 
+            "order_price":66000, 
+            "stop_px":15,
+            "order_qty":20000
+        }
+    },    
+    "LogOutReq":{
+        "TradeOrderUser":{
+            "fund_account_id": "0341030000015694",
+            "branch_id":"4103",
+            "account_id":"0166483461",
+            "cust_id":"03000012513705",
+            "client_seq_id":0,
+            "agw_seq_id":8
+        },
+        "password": "f7f5de21d520e0214bb1b5b2d7c2c7c0bd63b9179a4372be3bc96ab7f2482deb"
+    },      
     "LogOnAns":{
         "TradeOrderUser":{
             "fund_account_id": "test_fund",
@@ -24,17 +54,7 @@
         "session_status": 8,
         "error_code":0
     },
-    "LogOutReq":{
-        "TradeOrderUser":{
-            "fund_account_id": "test_fund",
-            "branch_id":"001",
-            "account_id":"logout",
-            "cust_id":"test_logout",
-            "client_seq_id":0,
-            "agw_seq_id":8
-        },
-        "password": "999"
-    },  
+
     "LogOutAns":{
         "TradeOrderUser":{
             "fund_account_id": "LogoutAns",
@@ -61,25 +81,7 @@
             "orig_clordno":0 
         }
     },      
-    "TradeOrderReq":{
-        "TradeOrderUser":{
-            "fund_account_id": "OrderReq",
-            "branch_id":"001",
-            "account_id":"OrderReq",
-            "cust_id":"test_OrderReq",
-            "client_seq_id":0,
-            "agw_seq_id":8
-        },
-        "TradeOrderInfo":{
-            "security_id":"123456", 
-            "market_id":1, 
-            "side":"1",
-            "ord_type":"2", 
-            "order_price":88, 
-            "stop_px":77,
-            "order_qty":10000
-        }
-    },
+
     "OrderReqRsp":{
         "TradeOrderUser":{
             "fund_account_id": "ReqOrderRsp",

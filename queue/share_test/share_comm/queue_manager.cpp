@@ -187,10 +187,6 @@ bool QueueManager::AttachShareMemory(const char* cstrSharedMemName) {
         
         // 手动将slot 映射到外部的内存地址中 -- 共享内存版本,这一步导致了很多的问题，导致无法进行服务端对slot 的解锁出错了。
         pReqOrderMpmcQueue_->slot_attach(pReqOrderMpmcShareSlots_, static_cast<void*>((char*)addr + sizeof(mpmc_queue<TradeOrderReq>) + 32));
-
-        TradeOrderReq reqOrder;
-        reqOrder.ulStrategyKey = 0;
-        pReqOrderMpmcQueue_->push_share(pReqOrderMpmcShareSlots_, (char*)(&reqOrder)); // 在 enqueue 时会调用 UteMsg 的构造函数
     } else {
         pUteMsgMpmcQueue_ = static_cast<mpmc_queue<UteMsg>*>(addr);   
 
@@ -258,18 +254,6 @@ bool QueueManager::CreateShareMemory(const char* cstrSharedMemName) {
             LOG_ERROR("queue create_shared  failed");
             return false;
         }
-
-        // TradeOrderReq stTestPushReq;
-        // strcpy(stTestPushReq.trade_order_user.fund_account_id, "Client");
-        // strcpy(stTestPushReq.trade_order_user.cust_id, "TestOrder");     
-        // pReqOrderMpmcQueue_->push_share(pReqOrderMpmcShareSlots_, (char*)(&stTestPushReq));
-
-        // sleep(3);
-
-        // TradeOrderReq stTestPopReq;
-        // pReqOrderMpmcQueue_->pop_share(pReqOrderMpmcShareSlots_, stTestPopReq);
-        // LOG_DEBUG("TestPopReqOrdr.Cust: {}", stTestPopReq.trade_order_user.cust_id);
-
 
 
     } else {
@@ -397,7 +381,7 @@ void QueueManager::Release() {
 /// @param iMsgLen 
 /// @param ulStrategyKey 
 void QueueManager::SendMsg(int iMsgID, const char* pMsgBuf, const int iMsgLen, unsigned long long ulStrategyKey) {
-    LOG_DEBUG("iMsgID = {}, iMsgLen = {}, ulStrategyKey = {}, bIsInShareMemory_ = {}", iMsgID, iMsgLen, ulStrategyKey, bIsInShareMemory_);
+    LOG_DEBUG("iMsgID:{}, iMsgLen:{},ulStrategyKey:{},bIsInShareMemory_:{}", iMsgID,iMsgLen,ulStrategyKey, bIsInShareMemory_);
     if (bIsInShareMemory_) {
         pUteMsgMpmcQueue_->push_share(pUteMsgMpmcShareSlots_, iMsgID, iMsgLen, ulStrategyKey, pMsgBuf); // 在 enqueue 时会调用 UteMsg 的构造函数
     } else {
@@ -420,10 +404,6 @@ void QueueManager::SendMsgShare(int iMsgID, const char* pMsgBuf, const int iMsgL
 void QueueManager::SendMsg(int iMsgID, const char* pMsgBuf, unsigned int  iMsgLen, int iMsgSrcType, void* pMsgHandler) {
     if (SHARE_COMM_LIKELY(pUteMsgMpmcQueue_)) {
         LOG_DEBUG("iMsgID = {}, iMsgLen = {}, iMsgSrcType = {}", iMsgID, iMsgLen, iMsgSrcType);
-        if (kUteFailed == iMsgID) {
-            LOG_DEBUG("ulStrategyKey = {} !", *((unsigned long long*)pMsgBuf));
-            // return;
-        }
         pUteMsgMpmcQueue_->push(iMsgID, iMsgLen, iMsgSrcType, pMsgHandler, pMsgBuf);         
     } else {
         LOG_ERROR("pUteMsgMpmcQueue_ is null");
@@ -460,109 +440,6 @@ bool QueueManager::TryPopReqOrder(TradeOrderReq& msg) {
     return pReqOrderMpmcQueue_->TryPopShare(pReqOrderMpmcShareSlots_, msg);  
 }
 
-
-
-// // 在共享内存中创建队列
-// bool create_shared_queue(const char* name, uint32_t size)
-// {
-//     // 打开或创建共享内存对象
-//     int shm_fd = shm_open(name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-//     if (shm_fd == -1) {
-//         perror("shm_open failed");
-//         return false;
-//     }
-    
-//     // 设置共享内存大小
-//     size_t shm_size = sizeof(mpmc_queue<T>) + ...; // 计算完整大小
-//     if (ftruncate(shm_fd, shm_size) == -1) {
-//         perror("ftruncate failed");
-//         close(shm_fd);
-//         return false;
-//     }
-    
-//     // 映射共享内存
-//     void* addr = mmap(NULL, shm_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-//     if (addr == MAP_FAILED) {
-//         perror("mmap failed");
-//         close(shm_fd);
-//         return false;
-//     }
-    
-//     // 在共享内存中构造队列对象
-//     mpmc_queue<T>* queue = new (addr) mpmc_queue<T>();
-    
-//     // 使用自定义内存分配器初始化队列
-//     queue->create_shared(size, addr + sizeof(mpmc_queue<T>));
-    
-//     close(shm_fd);
-//     return true;
-// }
-
-// // 在mpmc_queue类中添加
-// bool create_shared(uint32_t size, void* buffer)
-// {
-//     size = size ? size : 1;
-//     size = roundup_pow_of_two(size + 1);
-    
-//     // 直接使用传入的共享内存地址作为slots_
-//     slots_ = static_cast<slot_type*>(buffer);
-    
-//     // 初始化所有元素槽（如果需要）
-//     for (uint32_t i = 0; i < size; ++i) {
-//         new (&slots_[i]) slot_type();
-//     }
-    
-//     mask_ = size - 1;
-//     bit_mask_ = __builtin_ctz((uint64_t)size);
-//     stride_ = 1;
-//     push_ticket_ = 0;
-//     pop_ticket_ = 0;
-    
-//     return true;
-// }
-
-// mpmc_queue<T>* open_shared_queue(const char* name)
-// {
-//     // 打开已有的共享内存对象
-//     int shm_fd = shm_open(name, O_RDWR, 0);
-//     if (shm_fd == -1) {
-//         perror("shm_open failed");
-//         return nullptr;
-//     }
-    
-//     // 获取共享内存大小
-//     struct stat stat_buf;
-//     if (fstat(shm_fd, &stat_buf) == -1) {
-//         perror("fstat failed");
-//         close(shm_fd);
-//         return nullptr;
-//     }
-    
-//     // 映射共享内存
-//     void* addr = mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-//     if (addr == MAP_FAILED) {
-//         perror("mmap failed");
-//         close(shm_fd);
-//         return nullptr;
-//     }
-    
-//     close(shm_fd);
-//     return static_cast<mpmc_queue<T>*>(addr);
-// }
-
-// void close_shared_queue(mpmc_queue<T>* queue, const char* name)
-// {
-//     // 计算共享内存大小
-//     size_t shm_size = ...; // 与创建时相同的大小
-    
-//     // 解除内存映射
-//     if (munmap(queue, shm_size) == -1) {
-//         perror("munmap failed");
-//     }
-    
-//     // 删除共享内存对象（通常由创建进程完成）
-//     // shm_unlink(name);
-// }
 
 
 

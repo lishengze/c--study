@@ -107,7 +107,7 @@ bool LockFileManager::Init(const char* cstrUteName, unsigned long long ulStrateg
 /// @param pUteMessageManager UTE进程的消息管理器；
 /// @param iEventSleepSec 事件监听线程的睡眠时间间隔，默认为5秒；
 bool LockFileManager::Init(const char* cstrUteName,  UteGetStrategyReqCallBackFuncType UteOnEventFunc, int iEventSleepSec) {
-    LOG_INFO("Init UTE lock file:[{}] Starting!", cstrUteName);
+    LOG_INFO("Init UTE lock file:[{}], iEventSleepSec:{} Starting!", cstrUteName, iEventSleepSec);
 
     UteOnEventFunc_ = UteOnEventFunc;
 
@@ -200,7 +200,7 @@ void LockFileManager::StartHeartbeatThread() {
                         
                         vecInvalidLockFileNames.push_back(iter.first);
                     } else {
-                        // LOG_DEBUG("LockFile [{}], fd: [{}] is still alive!", iter.first, iter.second);
+                        LOG_DEBUG("LockFile [{}], fd: [{}] is still alive!", iter.first, iter.second);
                     }
                 }
 

@@ -16,6 +16,8 @@ using namespace tech;
 namespace share_common 
 {
 
+using TcpInnnerFuncType = std::function<void()>;
+
 /// @brief 用于管理策略进程和UTE进程之间的消息通信;
 /// 问题: 
 /// 1. 是否要增加专门存储 stratey_id 和 batch_id 的结构体, 这两者合起来可以唯一确定一个策略进程;
@@ -30,10 +32,8 @@ public:
         m_pfnOnEvent = nullptr;
         m_pfnOnMessage = nullptr;
         m_pfnOnInnerMessage = nullptr;
-
-        std::string loggerName = "ute_message_manager_"+ SecTimeStr("%Y%m%d") + ".log";
-        logger::init(loggerName);
-        logger::set_level(spdlog::level::debug);        
+        m_pfnOnTcpInnerFunc = nullptr;
+        m_iHeartbeatSec = 1;
     }
 
     ~UteMessageManager() {
@@ -44,14 +44,17 @@ public:
     /// @brief 设置事件回调函数, 告知策略进程, UTE进程是否正常运行;
     /// @param iSleepSec 
     /// @param pfnOnEvent 
-    void SetOnEvent(int iEventSleepSec, UteGetStrategyReqCallBackFuncType pfnOnEvent) { m_pfnOnEvent = pfnOnEvent; }
+    void SetOnEvent(int iEventSleepSec, UteGetStrategyReqCallBackFuncType pfnOnEvent) { m_pfnOnEvent = pfnOnEvent; m_iHeartbeatSec = iEventSleepSec;}
 
     /// @brief 设置消息回调函数, UTE进程向策略进程发送消息的接口;
     /// @param pfnOnMessage 
     void SetOnMessage(UteGetStrategyReqCallBackFuncType pfnOnMessage) { m_pfnOnMessage = pfnOnMessage; }
 
-    /// @brief 设置内部消息回调函数, 用于转发API请求和交易所回报 到 UTE 业务线程;
+    /// @brief 设置内部消息回调函数, 用于接收策略进程终止的消息;
     void SetOnInnerMessage(UteGetInnerReqCallBackFuncType pfnOnInnerMessage) { m_pfnOnInnerMessage = pfnOnInnerMessage; }
+
+    /// @brief 设置内部消息回调函数, 用于转发API请求和交易所回报 到 UTE 业务线程;
+    void SetOnTcpInnnerMessage(TcpInnnerFuncType pTcpInnerFunc) { m_pfnOnTcpInnerFunc = pTcpInnerFunc;}    
 
     /// @brief 初始化消息管理器, 设置策略进程的系统ID和UTE进程的系统ID;
     ///        在Init 会校验, OnMessage,OnEvent 是否设置;
@@ -96,7 +99,8 @@ public:
     /// 外部设置的参数;
     UteGetStrategyReqCallBackFuncType m_pfnOnMessage;       // 消息回调函数,通知UTE请求相关信息;
     UteGetStrategyReqCallBackFuncType m_pfnOnEvent;           // 事件回调函数,告知UTE进程, 某个策略进程是否正常运行;
-    UteGetInnerReqCallBackFuncType m_pfnOnInnerMessage; // 内部消息回调函数, 用于转发API请求和交易所回报 到 UTE 业务线程;
+    UteGetInnerReqCallBackFuncType    m_pfnOnInnerMessage; // 内部消息回调函数, 用于转发API请求和交易所回报 到 UTE 业务线程;
+    TcpInnnerFuncType m_pfnOnTcpInnerFunc;
 
     std::unordered_map<unsigned long long, QueueManager*>& get_map_rsp_queue() { return m_mapRspQueue; }    // 共
 
@@ -114,6 +118,7 @@ private:
     int m_iListenNumaCode;   // 监听的线程绑定的NumaCode;
 
     LockFileManager m_LockFileManager; // 锁文件管理器;
+    int m_iHeartbeatSec;
 
     QueueManager m_StrategyNonReqOrderQueue;                           // 策略非登录请求队列管理器;
     QueueManager m_StrategyReqOrderQueue;                           // 策略非登录请求队列管理器;

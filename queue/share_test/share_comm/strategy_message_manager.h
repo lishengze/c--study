@@ -45,7 +45,7 @@ public:
         m_bRspQueueInit = false;
         memset(m_UteName, 0, sizeof(m_UteName));
 
-        std::string loggerName = "startegy_message_manager_"+ SecTimeStr("%Y%m%d") + ".log";
+        std::string loggerName = "strategy_message_manager_"+ SecTimeStr("%Y%m%d") + ".log";
         logger::init(loggerName);
         logger::set_level(spdlog::level::debug);
     }

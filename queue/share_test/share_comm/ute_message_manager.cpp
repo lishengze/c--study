@@ -1,4 +1,5 @@
 #include "ute_message_manager.h"
+#include <fstream>
 
 namespace share_common {
 
@@ -30,6 +31,11 @@ bool UteMessageManager::Init (const char* cstrUTESysName, int iApiReqProcessCoun
 
     if (!m_pfnOnMessage) {
         LOG_ERROR("OnMessage callback function is not set.");
+        return false;
+    }
+
+    if (!m_pfnOnTcpInnerFunc) {
+        LOG_ERROR("m_pfnOnTcpInnerFunc callback function is not set.");
         return false;
     }
 
@@ -68,7 +74,7 @@ bool UteMessageManager::Init (const char* cstrUTESysName, int iApiReqProcessCoun
 
     ///锁文件相关初始化;
     // 初始化UTE进程的锁文件管理器;
-    if (!m_LockFileManager.Init(GetLockFileName(cstrUTESysName).c_str(), m_pfnOnEvent, 5)) {
+    if (!m_LockFileManager.Init(GetLockFileName(cstrUTESysName).c_str(), m_pfnOnEvent, m_iHeartbeatSec)) {
         LOG_ERROR("Init lock file {} manager failed.", cstrUTESysName);
         return false;
     }
@@ -112,6 +118,7 @@ bool UteMessageManager::WriteMsg(int iMsgID, const char* pMsgBuf, unsigned int i
 QueueManager* UteMessageManager::CreateStrategyRspQueue(unsigned long long ulStrategyKey) {
 
     if (m_mapRspQueue.find(ulStrategyKey)!= m_mapRspQueue.end()) {
+        LOG_WARN("ulStrategyKey:{} Has Been Created!", ulStrategyKey);
         return m_mapRspQueue[ulStrategyKey];
     }
 
@@ -131,6 +138,16 @@ QueueManager* UteMessageManager::CreateStrategyRspQueue(unsigned long long ulStr
     m_mapRspQueue[ulStrategyKey] = pStrategyRspQueue;
 
     m_LockFileManager.AddListenLockFile(ulStrategyKey); // 监听策略进程的锁文件;
+
+    // 写入新的batchID；    
+    std::ofstream oFile("StrategyKey.hist", std::ios::app);
+    if (!oFile.is_open()) {
+        LOG_WARN("write strategy batchid file failed: StrategyKey.hist");
+    } else {
+        oFile << SecTimeStr("%Y-%m-%d %H-%M-%S") << "    " << ulStrategyKey << "\n";
+        oFile.close();    
+    }
+
 
     return pStrategyRspQueue;
 }
@@ -156,11 +173,7 @@ void UteMessageManager::StartListenQueue() {
 
         while (bIsRunning_) {
 
-            // m_StrategyNonReqOrderQueue.TestCharValue();
-            
             /// 先尝试处理 策略请求队列 m_iStrategyReqProcessCount 个请求;
-
-            int iStrategyReqCount = 0;
             UteMsg uteMsg;
             TradeOrderReq reqOrder;
 
@@ -169,6 +182,7 @@ void UteMessageManager::StartListenQueue() {
                 
                 if (m_StrategyNonReqOrderQueue.TryPopShare(uteMsg)) {
                     if (SHARE_COMM_LIKELY(kPktStrategyInit != uteMsg.iMsgID)) {  
+                        LOG_DEBUG("NoOrderReq, iMsgID:{}, ulStrategyKey:{},len:{}",uteMsg.iMsgID, uteMsg.ulStrategyKey, uteMsg.iMsgLen); //todo 测试使用
                         m_pfnOnMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.ulStrategyKey);
                     } else {
                          // 只有某个策略进程初始化时会调用 - 创建对应回报共享内存以及相关无锁队列;
@@ -179,8 +193,9 @@ void UteMessageManager::StartListenQueue() {
                 } 
 
                 if (m_StrategyReqOrderQueue.TryPopReqOrder(reqOrder)) {
-                    if (reqOrder.ulStrategyKey == 0) continue; // todo 测试首单是否巨大延迟;
+                    // if (reqOrder.ulStrategyKey == 0) continue; // todo 测试首单是否巨大延迟;
 
+                    LOG_DEBUG("OrderReq,  ulStrategyKey:{} ", reqOrder.ulStrategyKey); //todo 测试使用
                     m_pfnOnMessage(kPktOrderReq, (char*)(&reqOrder), reqOrder.ulStrategyKey);
                     iCurDataCount++;
                     if (iCurDataCount++ >= m_iStrategyReqProcessCount) break;
@@ -191,23 +206,18 @@ void UteMessageManager::StartListenQueue() {
 
             /// 再尝试处理 API 和交易所回报 请求队列 m_iApiReqProcessCount 个请求;
             for (int i = 0; i < m_iApiReqProcessCount; i++) {
+                m_pfnOnTcpInnerFunc(); // 业务线程传进来的接口，处理TCP的请求和交易所的回报;
+
                 UteMsg uteMsg;
                 if (m_InnerMsgQueue.TryPop(uteMsg)) {
-                    LOG_DEBUG("Get api req msg, msgid:{}, src type:{},", uteMsg.iMsgID, uteMsg.iMsgSrcType);
-                    if (kUteFailed == uteMsg.iMsgID) {
-                        unsigned long long tmpUllStrategyKey = *((unsigned long long*)uteMsg.strMsgBuf);
-                        LOG_DEBUG("ulStrategyKey = {}, iMsgID = {} , iMsgLen = {} !", tmpUllStrategyKey, uteMsg.iMsgID, uteMsg.iMsgLen);
-                        // cout << "ulStrategyKey = " << tmpUllStrategyKey << endl;
-                    }                           
+                    LOG_DEBUG("InnerMsg, msgid:{}, src type:{},", uteMsg.iMsgID, uteMsg.iMsgSrcType);
                     m_pfnOnInnerMessage(uteMsg.iMsgID, uteMsg.strMsgBuf, uteMsg.iMsgLen, uteMsg.iMsgSrcType,  uteMsg.pMsgHander); // api 请求和交易所回报 过来的消息；                    
                 } else {
                     break; // 没有数据直接结束
                 }
             }
-
            
-
-            // sleep(6); //todo 测试专用;
+            // sleep(1); //todo 测试专用;
         }
 
         LOG_INFO("Listen Data Over");

@@ -49,18 +49,20 @@ bool StrategyMessageManager::Init(const char* cstrUTESysName, unsigned int uiStr
     }   
     m_iWaitUteSec = iWaitUteSec;
 
-    /// 锁文件相关初始化;
-    unsigned int uiBatchID = m_LockFileManager.GetSetStrategyBatchID(uiStrategySysID);
-    if (uiBatchID == 0) {
-        LOG_ERROR("Failed to get or set batch ID.");
-        return false;
-    }
+	    // 从19700101到当前的毫秒数;
+    unsigned long long  ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock().now().time_since_epoch()).count();
+
+    // 再取低32位，这32位的毫秒数，能表示一年多的时间;
+    unsigned long long low_part = 0x00000000FFFFFFFF & ms;
+
+
     unsigned long long high_part = static_cast<unsigned long long>(uiStrategySysID) << 32;
-    // 2. 低 32 位：将 low 转换为 64 位（自动填充高 32 位为 0）
-    unsigned long long low_part = static_cast<unsigned long long>(uiBatchID);
+
+
+    // 高32位为策略ID, 低32位为时间戳, 理论上能保证不重复;
     m_StrategyKey = (high_part | low_part);
 
-    LOG_INFO("uiStrategySysID={}, uiBatchID={}, m_StrategyKey={}", uiStrategySysID, uiBatchID, m_StrategyKey);
+    LOG_INFO("uiStrategySysID={}, uiBatchID={}, m_StrategyKey={}", uiStrategySysID, low_part, m_StrategyKey);
 
 
     long lStartWaitSec = SecTime();

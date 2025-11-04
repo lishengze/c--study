@@ -16,14 +16,17 @@
 
 using namespace share_common;
 
+#define UTE_MANAGER ThreadSafeSingleton<UteMessageManager>::DoubleCheckInstance()
+
 int gTestCount = 10000;
 int gTestIndex = 0;
 int gTestMode = 0; // 0-正常测试；1-压力性能测试;
 std::vector<unsigned long long> gTestTimeVec;
 
-UteMessageManager gUteMessageManager;
+// UteMessageManager gUteMessageManager;
 // JsonStructHelper  JSON_HELPER;
-std::string gStrSrcJsonFileName = "test_data.json";
+// std::string "test_data.json" = "test_data.json";
+
 JsonMeta          gJsonMeta;
 
 void SendLogAns(QueueManager* pQueueManager) {
@@ -36,7 +39,7 @@ void SendLogAns(QueueManager* pQueueManager) {
     // strcpy(stLogOnAns.trade_order_user.account_id, "XXXXXX");
     // strcpy(stLogOnAns.trade_order_user.cust_id, "LogInSucess");
 
-    // gUteMessageManager.
+    // UTE_MANAGER->
 
     pQueueManager->SendMsg(kPktLoginAns, (char*)&stLogOnAns, sizeof(LogOutAns));
 }
@@ -56,9 +59,6 @@ void SendOrderRsp(QueueManager* pQueueManager) {
 
 void UteOnEvent(int iMsgID, const char* pMsgBuf,  unsigned long long ulStrategyKey) {
     LOG_INFO("UteOnEvent: iMsgID={}, ulStrategyKey={}", iMsgID, ulStrategyKey);
-
-
-    gUteMessageManager.WriteMsg(kUteFailed, (char*)&ulStrategyKey, sizeof(unsigned long long), 99, nullptr);       
 }
 
 void AnaTestResult(std::vector<unsigned long long>& vecTime) {
@@ -102,12 +102,12 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
             {
                 LogOnReq* pStData = (LogOnReq*)(pMsgBuf);
                 LOG_INFO("LogOnReq: {}", JSON_HELPER->LogOnReqStr(*pStData));
-                QueueManager* pQueueManager = gUteMessageManager.GetStrategyRspQueue(ulStrategyKey);
+                QueueManager* pQueueManager = UTE_MANAGER->GetStrategyRspQueue(ulStrategyKey);
                 if (nullptr == pQueueManager) {
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     LogOnAns rsp;
-                    JSON_HELPER->ParseLogOnAns(rsp, gStrSrcJsonFileName);
+                    JSON_HELPER->ParseLogOnAns(rsp, "test_data.json");
                     LOG_INFO("LogOnAns: {}", JSON_HELPER->LogOnAnsStr(rsp));
                     pQueueManager->SendMsg(kPktLoginAns, (char*)(&rsp), sizeof(LogOnAns), ulStrategyKey);
                 }
@@ -119,12 +119,12 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
             {
                 LogOutReq* pStData = (LogOutReq*)(pMsgBuf);
                 LOG_INFO("LogOutReq: {}", JSON_HELPER->LogOutReqStr(*pStData));
-                QueueManager* pQueueManager = gUteMessageManager.GetStrategyRspQueue(ulStrategyKey);
+                QueueManager* pQueueManager = UTE_MANAGER->GetStrategyRspQueue(ulStrategyKey);
                 if (nullptr == pQueueManager) {
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     LogOutAns rsp;
-                    JSON_HELPER->ParseLogOutAns(rsp, gStrSrcJsonFileName);
+                    JSON_HELPER->ParseLogOutAns(rsp, "test_data.json");
                     pQueueManager->SendMsg(kPktLogoutAns, (char*)(&rsp), sizeof(LogOutAns), ulStrategyKey);
                 }
                                 
@@ -135,12 +135,12 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
             {
                 TradeOrderReq* pStData = (TradeOrderReq*)(pMsgBuf);
                 LOG_INFO("TradeOrderReq: {}", JSON_HELPER->TradeOrderReqStr(*pStData));
-                QueueManager* pQueueManager = gUteMessageManager.GetStrategyRspQueue(ulStrategyKey);
+                QueueManager* pQueueManager = UTE_MANAGER->GetStrategyRspQueue(ulStrategyKey);
                 if (nullptr == pQueueManager) {
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     TradeOrderER rsp;
-                    JSON_HELPER->ParseTradeOrderER(rsp, gStrSrcJsonFileName, "OrderReqRsp");
+                    JSON_HELPER->ParseTradeOrderER(rsp, "test_data.json", "OrderReqRsp");
                     pQueueManager->SendMsg(kPktOrderAns, (char*)(&rsp), sizeof(TradeOrderER), ulStrategyKey);
                 }
                                 
@@ -150,12 +150,12 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
             {
                 CancelOrderReq* pStData = (CancelOrderReq*)(pMsgBuf);
                 LOG_INFO("CancelOrderReq: {}", JSON_HELPER->CancelOrderReqStr(*pStData));
-                QueueManager* pQueueManager = gUteMessageManager.GetStrategyRspQueue(ulStrategyKey);
+                QueueManager* pQueueManager = UTE_MANAGER->GetStrategyRspQueue(ulStrategyKey);
                 if (nullptr == pQueueManager) {
                     LOG_ERROR("StrategyKey:{}, Get QueueManager Failed");
                 } else {
                     TradeOrderER rsp;
-                    JSON_HELPER->ParseTradeOrderER(rsp, gStrSrcJsonFileName, "CancelOrderReqRsp");
+                    JSON_HELPER->ParseTradeOrderER(rsp, "test_data.json", "CancelOrderReqRsp");
                     pQueueManager->SendMsg(kPktCancelOrderAns, (char*)(&rsp), sizeof(TradeOrderER), ulStrategyKey);
                 }
                                 
@@ -172,7 +172,7 @@ void UteOnMessage(int iMsgID, const char* pMsgBuf, unsigned long long ulStrategy
 
             // LOG_DEBUG("CustID: {}", pReq->trade_order_user.cust_id);
 
-            QueueManager* pQueueManager = gUteMessageManager.CreateStrategyRspQueue(ulStrategyKey);
+            QueueManager* pQueueManager = UTE_MANAGER->CreateStrategyRspQueue(ulStrategyKey);
 
             if (pQueueManager) {
                 SendLogAns(pQueueManager);
@@ -209,17 +209,10 @@ void UteOnInnerMessage(int iMsgID, const char* pMsgBuf, int iMsgLen, int iMsgSrc
         // LOG_DEBUG("From API Request CustID:{}", pLogOnAns->trade_order_user.cust_id);
     }
 
-    if (iMsgID == kUteFailed) {
-        size_t pStrategyKey = *((size_t*)pMsgBuf);
-        LOG_DEBUG("StrategyKey: {}", pStrategyKey);
-    }
-
-    // if (is_move_assignable)
-
 }
 
 void ApiMessageHandler() {
-    cout << "ApiMessageHandler" << endl;
+
 }
 
 void SendApiMessage() {
@@ -232,11 +225,13 @@ void SendApiMessage() {
     // strcpy(stLogOnAns.trade_order_user.account_id, "XXXXXX");
     // strcpy(stLogOnAns.trade_order_user.cust_id, "TestApiRequest");
 
-    // gUteMessageManager.
+    // UTE_MANAGER->
 
-    size_t ulStrategyKey = 999999999;
+    UTE_MANAGER->WriteMsg(kPktLoginAns, (char*)&stLogOnAns, sizeof(LogOutAns), 99, (void*)(&ApiMessageHandler));    
+}
 
-    gUteMessageManager.WriteMsg(kPktStrategyInit, (char*)&ulStrategyKey, sizeof(size_t), 99, (void*)(&ApiMessageHandler));    
+void TcpFunc() {
+    // LOG_INFO("TcpFunc");
 }
 
 void TestUteServer() {
@@ -253,11 +248,13 @@ void TestUteServer() {
 
     int iEventSleepSec = 5;
 
-    gUteMessageManager.SetOnEvent(iEventSleepSec, UteOnEvent);
-    gUteMessageManager.SetOnMessage(UteOnMessage);
-    gUteMessageManager.SetOnInnerMessage(UteOnInnerMessage);
+    UTE_MANAGER->SetOnEvent(iEventSleepSec, UteOnEvent);
+    UTE_MANAGER->SetOnMessage(UteOnMessage);
+    UTE_MANAGER->SetOnInnerMessage(UteOnInnerMessage);
+    UTE_MANAGER->SetOnTcpInnnerMessage(TcpFunc);
 
-    gUteMessageManager.Init(gJsonMeta.strUteName_.c_str(), gJsonMeta.uiApiProcessCount_, gJsonMeta.uiStrategyProcessCount_, 
+
+    UTE_MANAGER->Init(gJsonMeta.strUteName_.c_str(), gJsonMeta.uiApiProcessCount_, gJsonMeta.uiStrategyProcessCount_, 
                             gJsonMeta.uiReqQueueNum_, gJsonMeta.uiRspQueueNum_,gJsonMeta.uiApiQueueNum_);
 
 
@@ -350,8 +347,8 @@ __attribute__((destructor)) __attribute__((used)) void after_main() {
 }
 
 void TestUteMain() {
-    const string strSrcJsonFileName = "test_data.json";
-    JSON_HELPER->Init(strSrcJsonFileName);
+    // const string strSrcJsonFileName = "test_data.json";
+    // JSON_HELPER->Init(strSrcJsonFileName);
 
     std::string strMetaInfo = gJsonMeta.Init("meta_data.json");
     LOG_INFO("MetaInfo:\n{}", strMetaInfo);    
@@ -359,4 +356,8 @@ void TestUteMain() {
     // TestUteTime();
 
     TestUteServer();
+
+    while(true) {
+        sleep(10);
+    }
 }

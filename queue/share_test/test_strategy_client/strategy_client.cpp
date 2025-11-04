@@ -380,4 +380,9 @@ void TestStrategyMain() {
 
     TestJsonStrategyClient();
 
+
+    while(true) {
+        sleep(10);
+    }    
+
 }
