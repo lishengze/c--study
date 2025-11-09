@@ -1,0 +1,236 @@
+#include <cassert>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+#include <memory>
+#include <stdexcept>
+#include <optional>
+
+// 使用命名空间别名简化代码
+namespace util {
+    using InitFunctor = std::function<bool()>;
+    using DependencyPair = std::pair<void*, std::string>;
+    using DependencyList = std::vector<DependencyPair>;
+}
+
+/*
+主要重构改进点：
+
+1. 命名优化：
+    将函数和变量名改为更具描述性的名称，如 Proceed -> registerModule、markModuleAsInitialized
+    使用更清晰的集合命名，如 sync_alias_umap_ -> moduleAliasMap_
+    
+2.代码结构优化：
+    拆分为更小的私有辅助函数，如 validateDependencies、executeInitializer、executeReadyInitializers
+    提取公共逻辑到独立函数中，减少代码重复
+    增加了移动语义支持，提高性能和资源利用率
+
+3. 安全性增强：
+    禁用拷贝构造和赋值操作符，防止意外拷贝
+    更明确的错误信息和异常处理
+
+4.可扩展性提升：
+    使用命名空间别名简化类型定义
+    提供了更清晰的接口，方便未来扩展
+
+5.可读性提升：
+
+    改进了注释，更清晰地解释函数目的和参数含义
+    优化了条件判断逻辑，使其更易于理解
+
+6. 宏定义更新：
+
+    同步更新了辅助宏，使其与新的函数名保持一致
+    宏名称更直观地表达其功能
+*/
+// 简单的日志宏定义
+#define LOG_INF(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
+#define LOG_ERR(fmt, ...) fprintf(stderr, fmt "\n", ##__VA_ARGS__)
+
+class InitializeControllerOptimize {
+public:
+    // 构造函数，接收应用名称
+    explicit InitializeControllerOptimize(const std::string &app_name)
+        : app_name_(app_name)
+        , is_registration_finished_(false)
+        , has_declared_status_(false) {}
+
+    // 禁用拷贝构造和赋值操作符
+    InitializeControllerOptimize(const InitializeControllerOptimize&) = delete;
+    InitializeControllerOptimize& operator=(const InitializeControllerOptimize&) = delete;
+    
+    // 移动构造和赋值操作符
+    InitializeControllerOptimize(InitializeControllerOptimize&&) noexcept = default;
+    InitializeControllerOptimize& operator=(InitializeControllerOptimize&&) noexcept = default;
+    
+    ~InitializeControllerOptimize() = default;
+
+    // 处理指定的所有者对象，将其与别名关联
+    void registerModule(void* modulePtr, const std::string& moduleName) {
+        std::cout << "Registering module: " << moduleName << std::endl;
+        moduleAliasMap_[modulePtr] = moduleName;
+    }
+
+    // 注册带有依赖关系的延迟初始化函数
+    void registerDelayedInitializer(util::InitFunctor initializer, const util::DependencyList& dependencies) {
+        
+        // 添加初始化函数到列表
+        initializers_.push_back(std::move(initializer));
+        const auto initializerIndex = initializers_.size() - 1;
+
+        // 处理每个依赖项
+        bool hasUnresolvedDependencies = false;
+        for (const auto& [depPtr, depName] : dependencies) {
+            if (unresolvedDependencies_.count(depPtr) > 0) { 
+                LOG_ERR("Cyclic dependency detected for module: %s", depName.c_str());
+                continue; 
+            }  // 跳过已处理的依赖,防止循环依赖;
+            
+            // 记录依赖关系
+            if (isModuleProcessed(depPtr)) {
+                continue;  // 跳过已处理的依赖
+            }
+            
+            unresolvedDependencies_.insert(depPtr);
+            moduleAliasMap_.insert({depPtr, depName});
+            
+            // 记录依赖关系
+            initializerDependencies_[initializerIndex].push_back(depPtr);
+            hasUnresolvedDependencies = true;
+        }
+        
+        // 如果没有未解决的依赖项，立即执行初始化函数
+        if (!hasUnresolvedDependencies) {
+            executeInitializer(initializerIndex);
+        }
+    }
+
+    // 标记指定模块为已完成初始化
+    void markModuleAsInitialized(void* modulePtr) {
+        const auto moduleName = getModuleName(modulePtr);
+        processedModules_.insert(modulePtr);
+
+        // 检查模块是否在未解决依赖集合中
+        auto it = unresolvedDependencies_.find(modulePtr);
+        if (it == unresolvedDependencies_.end()) {
+            LOG_INF("Module=%s initialized with non-collateral dependency", moduleName.c_str());
+            return;
+        }
+        
+        LOG_INF("Module=%s initialized", moduleName.c_str());
+        unresolvedDependencies_.erase(it);
+
+        // 执行所有依赖已满足的初始化函数
+        executeReadyInitializers();
+        
+        // 检查并声明初始化状态
+        checkAndDeclareInitStatus();
+    }
+
+    // 完成延迟注册，标记不再接受新的延迟初始化函数
+    void finishRegistration() {
+        is_registration_finished_ = true;
+        checkAndDeclareInitStatus();
+    }
+
+    // 总结初始化状态
+    bool summarizeInitStatus() {
+        checkAndDeclareInitStatus();
+        unresolvedDependencies_.clear();
+        return true;
+    }
+
+private:
+    // 获取模块名称
+    std::string getModuleName(void* modulePtr) const {
+        auto it = moduleAliasMap_.find(modulePtr);
+        if (it == moduleAliasMap_.end()) {
+            return "Anonymous";
+        }
+        return it->second;
+    }
+    
+    // 检查模块是否已处理
+    bool isModuleProcessed(void* modulePtr) const {
+        return processedModules_.count(modulePtr) > 0;
+    }
+
+    // 验证依赖项，检测循环依赖
+    void validateDependencies(const util::DependencyList& dependencies) {
+        for (const auto& [depPtr, depName] : dependencies) {
+            if (unresolvedDependencies_.count(depPtr) > 0) {
+                LOG_ERR("Cyclic dependency detected for module: %s", depName.c_str());
+                throw std::runtime_error("Cyclic dependency detected");
+            }
+        }
+    }
+
+    // 执行指定的初始化函数
+    void executeInitializer(size_t index) {
+        bool success = initializers_[index]();
+        if (!success) {
+            LOG_ERR("Initializer at index %zu failed", index);
+            throw std::runtime_error("Initializer execution failed");
+        }
+    }
+
+    // 执行所有准备就绪的初始化函数
+    void executeReadyInitializers() {
+        std::vector<size_t> readyInitializers;
+        
+        // 找出所有依赖已满足的初始化函数
+        for (const auto& [index, deps] : initializerDependencies_) {
+            bool isReady = true;
+            for (void* depPtr : deps) {
+                if (unresolvedDependencies_.count(depPtr) > 0) {
+                    isReady = false;
+                    break;
+                }
+            }
+            
+            if (isReady) {
+                readyInitializers.push_back(index);
+            }
+        }
+        
+        // 执行准备就绪的初始化函数
+        for (size_t index : readyInitializers) {
+            initializerDependencies_.erase(index);
+            executeInitializer(index);
+        }
+    }
+
+    // 检查并声明初始化状态
+    void checkAndDeclareInitStatus() {
+        if (unresolvedDependencies_.empty() && 
+            initializerDependencies_.empty() && 
+            is_registration_finished_ && 
+            !has_declared_status_) {
+            
+            LOG_INF("App=%s All modules initialized successfully", app_name_.c_str());
+            has_declared_status_ = true;
+        }
+    }
+
+    // 成员变量
+    std::string app_name_;                           // 应用名称
+    bool is_registration_finished_;                  // 注册完成标志
+    bool has_declared_status_;                       // 状态声明标志
+    
+    std::vector<util::InitFunctor> initializers_;    // 初始化函数列表
+    std::unordered_set<void*> unresolvedDependencies_; // 未解决的依赖项集合
+    std::unordered_set<void*> processedModules_;     // 已处理的模块集合
+    std::unordered_map<void*, std::string> moduleAliasMap_; // 模块别名映射
+    std::unordered_map<size_t, std::vector<void*>> initializerDependencies_; // 初始化器依赖映射
+};
+
+// 辅助宏定义，简化使用
+#define REGISTER_MODULE(__init_ctl, __module) (__init_ctl).registerModule(&(__module), #__module)
+#define REGISTER_MODULE_F(__init_ctl, __module) [&]() { REGISTER_MODULE(__init_ctl, __module); }
+#define DEPEND_ON(__module) std::make_pair(static_cast<void *>(&__module), #__module)
+
+// 后续代码保持不变...

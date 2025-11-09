@@ -1,0 +1,508 @@
+#include <cassert>
+#include <functional>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+using namespace std;
+
+// 简单的日志宏定义，用于输出信息和错误
+#define LOG_INF(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)  // 信息日志宏
+#define LOG_ERR(fmt, ...) fprintf(stderr, fmt "\n", ##__VA_ARGS__)  // 错误日志宏
+
+// 初始化控制器类，用于管理模块间的初始化依赖关系
+class InitializeController {
+public:
+    using InitFunctor = std::function<bool()>;  // 定义初始化函数类型，返回bool表示初始化是否成功
+
+    // 构造函数，接收应用名称
+    explicit InitializeController(const std::string &app_name)
+        : app_name_(app_name)                // 初始化应用名称
+        , finish_delay_registration_(false)   // 延迟注册标志初始化为false
+        , declare_once_(false) {}             // 初始化状态声明标志初始化为false
+
+    // Proceed函数重载版本，用于将指定的所有者对象与别名关联
+    // 参数：
+    // - owner: 所有者对象指针
+    // - alias: 别名字符串
+    void Proceed(void *owner, const std::string &alias) {
+        std::cout << "Proceed " << alias << std::endl;  // 输出处理信息
+        sync_alias_umap_[owner] = alias;  // 存储对象指针与别名的映射关系
+    }
+
+    // DelayInitAfter函数，用于注册带有依赖关系的延迟初始化函数
+    // 参数：
+    // - init_functor: 初始化函数对象
+    // - ctl_dep: 依赖的控制器对象列表
+    void DelayInitAfter(const InitFunctor &init_functor, std::vector<std::pair<void *, std::string>> ctl_dep) {
+        
+        // 添加初始化函数到列表
+        init_functor_list_.push_back(init_functor);
+        auto functor_idx = init_functor_list_.size() - 1;  // 获取初始化函数的索引
+
+        // 处理每个依赖项
+        for (auto &[sync_ctl_ptr, alias_str] : ctl_dep) {
+            if (IsCyclicDependency(sync_ctl_ptr)) { continue; }  // 跳过循环依赖项
+            auto proceeded_itr = proceeded_sync_set_.find(sync_ctl_ptr);
+            if (proceeded_itr != proceeded_sync_set_.end()) {
+                continue;  // 跳过已处理的依赖
+            }
+            
+            // 记录未初始化的同步对象
+            init_sync_set_.insert(sync_ctl_ptr);
+            // 存储对象指针与别名的映射
+            sync_alias_umap_.insert({sync_ctl_ptr, alias_str});
+            
+            // 将依赖关系添加到映射中
+            auto itr = functor_dep_map_.find(functor_idx);
+            if (itr == functor_dep_map_.end()) {
+                itr = functor_dep_map_.insert({functor_idx, {}}).first;
+            }
+            itr->second.push_back(sync_ctl_ptr);
+        }
+        
+        // 如果没有依赖项，立即执行初始化函数
+        if (functor_dep_map_.count(functor_idx) == 0) {
+            auto b_ret = init_functor_list_[functor_idx]();
+            if (!b_ret) {
+                LOG_ERR("Anonymous init function returned false");  // 记录初始化失败
+                throw std::runtime_error("Anonymous init function returned false");  // 抛出异常
+            }
+        }
+    }
+
+    // 检测循环依赖的函数
+    // 参数：
+    // - ctl_dep: 要检测的控制器依赖指针
+    // 返回值：
+    // - true: 存在循环依赖
+    // - false: 不存在循环依赖
+    bool IsCyclicDependency(void *ctl_dep) {
+        // 简单的检测逻辑：检查依赖项是否已经在初始化同步集合中
+        return init_sync_set_.find(ctl_dep) != init_sync_set_.end();
+    }
+
+    // Proceed函数重载版本，用于处理指定的控制器依赖
+    // 参数：
+    // - ctl_dep: 控制器依赖指针
+    void Proceed(void *ctl_dep) {
+        auto itr       = init_sync_set_.find(ctl_dep);
+        auto dep_alias = GetCtlDepAlias(ctl_dep);  // 获取依赖项的别名
+        proceeded_sync_set_.insert(ctl_dep);  // 将依赖项添加到已处理集合
+
+        // 检查依赖项是否在初始化同步集合中
+        if (itr == init_sync_set_.end()) {
+            LOG_INF("Module=%s init finished with non collateral dependency", dep_alias.c_str());
+            return;
+        } else {
+            LOG_INF("Module=%s init finished", dep_alias.c_str());
+            init_sync_set_.erase(itr);  // 从初始化同步集合中移除已完成的依赖项
+        }
+
+        // 找出所有依赖已满足的初始化函数
+        std::vector<std::size_t> called_init_vec;
+        for (const auto &[functor_idx, sync_ctrl_vec] : functor_dep_map_) {
+            bool no_block = true;
+            for (const auto &sync_ctl_ptr : sync_ctrl_vec) {
+                if (init_sync_set_.count(sync_ctl_ptr) != 0) {
+                    no_block = false;  // 存在未完成的依赖项
+                    break;
+                }
+            }
+            if (no_block) {
+                called_init_vec.push_back(functor_idx);  // 添加可以调用的初始化函数索引
+            }
+        }
+
+        // 调用所有依赖已满足的初始化函数
+        for (auto functor_idx : called_init_vec) {
+            functor_dep_map_.erase(functor_idx);  // 从依赖映射中移除
+            auto b_ret = init_functor_list_[functor_idx]();  // 执行初始化函数
+            if (!b_ret) {
+                LOG_ERR("Lambda init function returned false");  // 记录初始化失败
+                throw std::runtime_error("Lambda init function returned false");  // 抛出异常
+            }
+        }
+        DeclareInitStatus();  // 声明初始化状态
+    }
+
+    // 完成延迟注册，标记不再接受新的延迟初始化函数
+    void FinishDelayRegistration() {
+        finish_delay_registration_ = true;
+        DeclareInitStatus();  // 声明初始化状态
+    }
+
+    // 总结初始化状态
+    // 返回值：
+    // - true: 初始化成功
+    bool SumUpInitStatus() {
+        DeclareInitStatus();  // 声明初始化状态
+        init_sync_set_.clear();  // 清空初始化同步集合
+        return true;  // 返回成功
+    }
+
+private:
+    // 获取控制器依赖项的别名
+    // 参数：
+    // - ctl_dep: 控制器依赖指针
+    // 返回值：
+    // - 依赖项的别名，如果不存在则返回"Anonymous"
+    std::string GetCtlDepAlias(void *ctl_dep) {
+        auto itr = sync_alias_umap_.find(ctl_dep);
+        if (itr == sync_alias_umap_.end()) {
+            return "Anonymous";
+        }
+        return itr->second;
+    }
+
+    // 声明初始化状态
+    void DeclareInitStatus() {
+        // 检查是否所有初始化都已完成，且延迟注册已完成，且尚未声明过
+        if (init_sync_set_.empty() && functor_dep_map_.empty() && finish_delay_registration_ &&
+            !declare_once_) {
+            LOG_INF("App=%s All modules initialized successfully", app_name_.c_str());  // 记录成功信息
+            declare_once_ = true;  // 标记为已声明
+        }
+    }
+
+    std::string app_name_;  // 应用名称
+    bool finish_delay_registration_;  // 延迟注册完成标志
+    bool declare_once_;  // 初始化状态声明标志
+    std::vector<InitFunctor> init_functor_list_;  // 初始化函数列表
+    std::unordered_set<void *> init_sync_set_;  // 初始化同步集合，存储未初始化完成的依赖项
+    std::unordered_set<void *> proceeded_sync_set_;  // 已处理同步集合，存储已处理的依赖项
+    std::unordered_map<void *, std::string> sync_alias_umap_;  // 同步对象别名映射
+    std::unordered_map<std::size_t, std::vector<void *>> functor_dep_map_;  // 初始化函数依赖映射
+};
+
+// 辅助宏定义，简化使用
+#define PROCEED(__module) init_ctl.Proceed(&(__module), #__module)  // 处理指定模块
+#define PROCEED_F(__module) [&]() { PROCEED(__module); }  // 返回处理指定模块的函数对象
+#define INIT_DEPEND(__module) std::make_pair(static_cast<void *>(&__module), #__module)  // 创建依赖项对
+
+// 基本事件接口
+class IEvent {
+public:
+    virtual ~IEvent()           = default;  // 虚析构函数
+    virtual void ProcessEvent() = 0;  // 纯虚函数，处理事件
+};
+
+// 基于事件循环的框架类
+class EventCore {
+public:
+    // 注册事件到事件核心
+    // 参数：
+    // - event: 要注册的事件对象引用
+    void RegisterEvent(IEvent &event) {
+        // 检查事件是否已注册，避免重复注册
+        for (auto &e : event_list_) {
+            if (e == &event) {
+                return;
+            }
+        }
+        event_list_.push_back(&event);  // 添加到事件列表
+    }
+
+    // 运行事件循环指定的周期数
+    // 参数：
+    // - cycles: 要运行的周期数
+    void Run(unsigned int cycles) {
+        for (unsigned int i = 0; i < cycles; ++i) {
+            ProcessEvents();  // 处理所有事件
+        }
+    }
+
+private:
+    // 处理所有注册的事件
+    void ProcessEvents() {
+        for (auto &event : event_list_) {
+            event->ProcessEvent();  // 调用每个事件的处理函数
+        }
+    }
+
+private:
+    std::vector<IEvent *> event_list_;  // 事件列表
+};
+
+// 初始化事件类，继承自IEvent
+class InitEvent : public IEvent {
+public:
+    // 构造函数
+    // 参数：
+    // - event_core: 事件核心引用
+    // - event_name: 事件名称
+    InitEvent(EventCore &event_core, const std::string &event_name)
+        : event_name_(event_name)
+        , event_core_(event_core)
+        , event_cycle_(0)  // 事件周期初始化为0
+        , init_cycle_required_(0)  // 所需初始化周期初始化为0
+        , proceed_cb_(nullptr) {  // 回调函数初始化为空
+        event_core_.RegisterEvent(*this);  // 注册到事件核心
+    }
+
+    // 注册初始化周期和回调函数
+    // 参数：
+    // - async_cycle: 异步周期数，0表示同步初始化
+    // - proceed_cb: 回调函数
+    void RegisterInitCycle(unsigned int async_cycle, std::function<void()> proceed_cb) {
+        if (async_cycle == 0) {
+            proceed_cb();  // 同步初始化，立即执行回调
+            return;
+        }
+        init_cycle_required_ = async_cycle;  // 设置所需的初始化周期数
+        proceed_cb_          = proceed_cb;  // 设置回调函数
+    }
+    
+    // 获取初始化调用次数
+    // 返回值：
+    // - 初始化调用次数
+    bool GetInitInvokeCount() const { return init_invoke_count_; }
+
+private:
+    // 处理事件，实现IEvent接口
+    void ProcessEvent() override {
+        if (proceed_cb_) {  // 如果回调函数存在
+            ++event_cycle_;  // 增加事件周期计数
+            if (event_cycle_ >= init_cycle_required_) {  // 如果达到所需的初始化周期数
+                proceed_cb_();  // 执行回调函数
+                proceed_cb_ = nullptr;  // 清空回调函数
+            }
+        }
+    }
+
+protected:
+    unsigned int init_invoke_count_ = 0;  // 初始化调用次数
+    std::string event_name_;  // 事件名称
+
+private:
+    EventCore &event_core_;  // 事件核心引用
+    unsigned int event_cycle_;  // 当前事件周期数
+    unsigned int init_cycle_required_;  // 所需的初始化周期数
+    std::function<void()> proceed_cb_;  // 回调函数
+};
+
+// 基础模块类，用于简单测试
+class ModuleA : public InitEvent {
+public:
+    // 构造函数
+    // 参数：
+    // - event_core: 事件核心引用
+    // - event_name: 事件名称
+    ModuleA(EventCore &event_core, const std::string &event_name)
+        : InitEvent(event_core, event_name) {}
+
+    // 初始化函数
+    // 参数：
+    // - init_cycle: 初始化周期数
+    // - proceed_cb: 回调函数
+    // 返回值：
+    // - true: 初始化成功
+    bool Init(unsigned int init_cycle, std::function<void()> proceed_cb) {
+        init_invoke_count_++;  // 增加初始化调用计数
+        LOG_INF(
+            "ModuleA initializing for %u cycle%s, init_count=%u, event_name=%s", init_cycle,
+            (init_cycle > 1 ? "s" : ""), init_invoke_count_, event_name_.c_str());
+        RegisterInitCycle(init_cycle, proceed_cb);  // 注册初始化周期和回调
+        return true;  // 返回成功
+    }
+};
+
+// 基础模块类B，类似ModuleA
+class ModuleB : public InitEvent {
+public:
+    ModuleB(EventCore &event_core, const std::string &event_name)
+        : InitEvent(event_core, event_name) {}
+    
+    bool Init(unsigned int init_cycle, std::function<void()> proceed_cb) {
+        init_invoke_count_++;
+        LOG_INF(
+            "ModuleB initializing for %u cycle%s, init_count=%u, event_name=%s", init_cycle,
+            (init_cycle > 1 ? "s" : ""), init_invoke_count_, event_name_.c_str());
+        RegisterInitCycle(init_cycle, proceed_cb);
+        return true;
+    }
+};
+
+// 基础模块类C，类似ModuleA
+class ModuleC : public InitEvent {
+public:
+    ModuleC(EventCore &event_core, const std::string &event_name)
+        : InitEvent(event_core, event_name) {}
+    
+    bool Init(unsigned int init_cycle, std::function<void()> proceed_cb) {
+        init_invoke_count_++;
+        LOG_INF(
+            "ModuleC initializing for %u cycle%s, init_count=%u, event_name=%s", init_cycle,
+            (init_cycle > 1 ? "s" : ""), init_invoke_count_, event_name_.c_str());
+        RegisterInitCycle(init_cycle, proceed_cb);
+        return true;
+    }
+};
+
+// 基本测试用例，展示简单用法
+// 参数：
+// - event_cycles: 事件循环周期数
+// 返回值：
+// - true: 测试成功
+bool RunBasicTest(unsigned int event_cycles) {
+    InitializeController init_ctl("BasicDemo");  // 创建初始化控制器
+
+    EventCore event_core;  // 创建事件核心
+    ModuleA module_a(event_core, "module_a");  // 创建模块A
+    ModuleB module_b(event_core, "module_b");  // 创建模块B
+    ModuleC module_c(event_core, "module_c");  // 创建模块C
+
+    // 设置每个模块的初始化周期，用于基于事件循环的异步初始化
+    unsigned int a_init_cycle = 0;
+    unsigned int b_init_cycle = 0;
+    unsigned int c_init_cycle = 0;
+
+    // 独立初始化ModuleA
+    if (!module_a.Init(a_init_cycle, PROCEED_F(module_a))) {
+        LOG_ERR("ModuleA init failed");
+        return false;
+    }
+
+    // 初始化ModuleB，依赖ModuleC
+    init_ctl.DelayInitAfter(
+        [&]() -> bool { return module_b.Init(b_init_cycle, PROCEED_F(module_b)); },
+        {INIT_DEPEND(module_c)});
+
+    // 初始化ModuleC，依赖ModuleA
+    init_ctl.DelayInitAfter(
+        [&]() -> bool { return module_c.Init(c_init_cycle, PROCEED_F(module_c)); },
+        {INIT_DEPEND(module_a)});
+
+    init_ctl.FinishDelayRegistration();  // 完成延迟注册
+    event_core.Run(event_cycles);  // 运行事件循环
+    return init_ctl.SumUpInitStatus();  // 总结初始化状态
+}
+
+// 多重初始化测试
+// 参数：
+// - event_cycles: 事件循环周期数
+// 返回值：
+// - true: 测试成功
+bool RunMultiInitTest(unsigned int event_cycles) {
+    EventCore event_core;
+    // 模块依赖关系：module_a -> module_b -> module_b1
+    //              \-> module_c -> module_c1
+    ModuleA module_a(event_core, "module_a");
+    ModuleB module_b(event_core, "module_b");
+    ModuleB module_b1(event_core, "module_b1");
+    ModuleC module_c(event_core, "module_c");
+    ModuleC module_c1(event_core, "module_c1");
+    unsigned int a_init_cycle = 0;
+    unsigned int b_init_cycle = 0;
+    unsigned int c_init_cycle = 0;
+
+    InitializeController init_ctl("test");
+    // module_c1依赖module_c
+    init_ctl.DelayInitAfter(
+        [&]() -> bool { return module_c1.Init(c_init_cycle, PROCEED_F(module_c1)); },
+        {INIT_DEPEND(module_c)});
+    // module_b1依赖module_b
+    init_ctl.DelayInitAfter(
+        [&]() -> bool { return module_b1.Init(b_init_cycle, PROCEED_F(module_b1)); },
+        {INIT_DEPEND(module_b)});
+    // module_b依赖module_a
+    init_ctl.DelayInitAfter(
+        [&]() -> bool { return module_b.Init(b_init_cycle, PROCEED_F(module_b)); },
+        {INIT_DEPEND(module_a)});
+    // module_c依赖module_a
+    init_ctl.DelayInitAfter(
+        [&]() -> bool { return module_c.Init(c_init_cycle, PROCEED_F(module_c)); },
+        {INIT_DEPEND(module_a)});
+    // 初始化module_a
+    if (!module_a.Init(a_init_cycle, PROCEED_F(module_a))) {
+        LOG_ERR("ModuleA init failed");
+        return false;
+    }
+
+    event_core.Run(event_cycles);  // 运行事件循环
+
+    // 验证所有模块都只被初始化一次
+    return module_a.GetInitInvokeCount() == 1 && module_b.GetInitInvokeCount() == 1 &&
+           module_b1.GetInitInvokeCount() == 1 && module_c.GetInitInvokeCount() == 1 &&
+           module_c1.GetInitInvokeCount() == 1;
+}
+
+// 循环依赖测试
+// 参数：
+// - event_cycles: 事件循环周期数
+// 返回值：
+// - true: 测试成功（检测到循环依赖）
+bool RunLoopTest(unsigned int event_cycles) {
+    InitializeController init_ctl("BasicDemo");
+
+    EventCore event_core;
+    // 故意创建循环依赖：module_a -> module_b -> module_c -> module_a
+    ModuleA module_a(event_core, "module_a");
+    ModuleB module_b(event_core, "module_b");
+    ModuleC module_c(event_core, "module_c");
+
+    // 设置每个模块的初始化周期
+    unsigned int a_init_cycle = 1;
+    unsigned int b_init_cycle = 2;
+    unsigned int c_init_cycle = 3;
+
+    // module_a依赖module_b
+    init_ctl.DelayInitAfter(
+        [&]() -> bool { return module_a.Init(a_init_cycle, PROCEED_F(module_a)); },
+        {INIT_DEPEND(module_b)});
+
+    // module_b依赖module_c
+    init_ctl.DelayInitAfter(
+        [&]() -> bool { return module_b.Init(b_init_cycle, PROCEED_F(module_b)); },
+        {INIT_DEPEND(module_c)});
+
+    // module_c依赖module_a（形成循环依赖）
+    init_ctl.DelayInitAfter(
+        [&]() -> bool { return module_c.Init(c_init_cycle, PROCEED_F(module_c)); },
+        {INIT_DEPEND(module_a)});
+
+    init_ctl.FinishDelayRegistration();
+    event_core.Run(event_cycles);
+    return !init_ctl.SumUpInitStatus();  // 应该返回false，表示初始化失败（检测到循环依赖）
+}
+
+// 主测试函数
+int test_event_main() {
+    try {
+        unsigned int event_cycles = 100;
+        bool test_successs    = RunBasicTest(event_cycles);
+        if (!test_successs) {
+            std::cout << "Basic initialization failed\n";
+        } else {
+            std::cout << "Basic test completed successfully\n";
+        }
+    } catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    try {
+        unsigned int event_cycles = 100;
+        bool test_successs    = RunMultiInitTest(event_cycles);
+        if (!test_successs) {
+            std::cout << "Multi initialization failed\n";
+        } else {
+            std::cout << "Multi initialization test completed successfully\n";
+        }
+    } catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    try {
+        unsigned int event_cycles = 100;
+        bool test_successs    = RunLoopTest(event_cycles);
+        if (!test_successs) {
+            std::cout << "Loop initialization failed\n";
+        } else {
+            std::cout << "Loop initialization test completed successfully\n";
+        }
+    } catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    return 0;
+}
