@@ -4,12 +4,12 @@
 # update-date:
 #   2019-01-04  init version
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(boost_study)
+cmake_minimum_required(VERSION 3.12)
+project(boost_study)
 
-SET("BIN_NAME" boost_study)
+set("BIN_NAME" boost_study)
 set(CMAKE_CXX_STANDARD 17)
-# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "----- This is a Windows system. ----")
@@ -27,7 +27,7 @@ else()
     message(STATUS "------This is not a Windows system.-----")
     # 在这里添加针对非Windows系统的特定设置或操作
     set(BOOST_ROOT /usr/local/boost_1_73)
-    FIND_PACKAGE(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
+    find_package(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 endif()
 
 
@@ -41,13 +41,13 @@ INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
 
 
-AUX_SOURCE_DIRECTORY(. MAIN_SRC)
+aux_source_directory(. MAIN_SRC)
 ###############################################################################################
 INCLUDE_DIRECTORIES(".")
 INCLUDE_DIRECTORIES("../component")
 
-ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC})
+add_executable(${BIN_NAME} ${MAIN_SRC})
 
-TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(${LIB_NAME} Threads::Threads)
+target_link_libraries(${BIN_NAME} ${Boost_LIBRARIES})
+target_link_libraries(${LIB_NAME} Threads::Threads)
 

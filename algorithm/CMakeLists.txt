@@ -4,12 +4,12 @@
 # update-date:
 #   2019-01-04  init version
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(algo)
+cmake_minimum_required(VERSION 3.12)
+project(algo)
 
-SET("BIN_NAME" algo)
+set("BIN_NAME" algo)
 set(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "----- This is a Windows system. ----")
@@ -24,7 +24,7 @@ else()
     message(STATUS "------This is not a Windows system.-----")
     # 在这里添加针对非Windows系统的特定设置或操作
     set(BOOST_ROOT /usr/local/boost_1_68)
-    FIND_PACKAGE(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
+    find_package(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 endif()
 
 message("******* BOOST_INCLUDEDIR: ${BOOST_INCLUDEDIR}")
@@ -32,20 +32,20 @@ message("******* BOOST_INCLUDEDIR: ${BOOST_INCLUDEDIR}")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-AUX_SOURCE_DIRECTORY(. MAIN_SRC)
-AUX_SOURCE_DIRECTORY(algo ALGO_SRC)
-AUX_SOURCE_DIRECTORY(hash HASH_SRC)
-AUX_SOURCE_DIRECTORY(map  MAP_SRC)
-AUX_SOURCE_DIRECTORY(sort SORT_SRC)
-AUX_SOURCE_DIRECTORY(tree TREE_SRC)
-AUX_SOURCE_DIRECTORY(stack_list STACK_LIST_SRC)
+aux_source_directory(. MAIN_SRC)
+aux_source_directory(algo ALGO_SRC)
+aux_source_directory(hash HASH_SRC)
+aux_source_directory(map  MAP_SRC)
+aux_source_directory(sort SORT_SRC)
+aux_source_directory(tree TREE_SRC)
+aux_source_directory(stack_list STACK_LIST_SRC)
 
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
 
-ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC} ${ALGO_SRC} ${HASH_SRC} ${MAP_SRC} ${SORT_SRC} ${TREE_SRC} ${STACK_LIST_SRC})
+add_executable(${BIN_NAME} ${MAIN_SRC} ${ALGO_SRC} ${HASH_SRC} ${MAP_SRC} ${SORT_SRC} ${TREE_SRC} ${STACK_LIST_SRC})
 
 
-TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(${BIN_NAME} Threads::Threads)
+target_link_libraries(${BIN_NAME} ${Boost_LIBRARIES})
+target_link_libraries(${BIN_NAME} Threads::Threads)
 

@@ -4,26 +4,26 @@
 # update-date:
 #   2019-01-04  init version
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(testg)
+cmake_minimum_required(VERSION 3.12)
+project(testg)
 
-SET("PROJECT_NAME" testg)
+set("PROJECT_NAME" testg)
 set(CMAKE_CXX_STANDARD 14)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread  -flto -O3 -ggdb -g")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
-# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pthread  -flto -O3 -ggdb -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
 
-AUX_SOURCE_DIRECTORY(. MAIN_SRC)
+aux_source_directory(. MAIN_SRC)
 
-SET(ALL_SRC ${MAIN_SRC})
+set(ALL_SRC ${MAIN_SRC})
 
 # generate bin
-ADD_EXECUTABLE(${PROJECT_NAME} ${ALL_SRC})
+add_executable(${PROJECT_NAME} ${ALL_SRC})
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} gtest gmock)
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} gcov)
+target_link_libraries(${PROJECT_NAME} gtest gmock)
+target_link_libraries(${PROJECT_NAME} gcov)
 
 # 将我们下载好的gcov对应的cmake包引入项目中
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/build)

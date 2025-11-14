@@ -2,10 +2,10 @@
 # Author: lishengze
 
 # Version Require
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
+cmake_minimum_required(VERSION 3.12)
 
-SET("BIN_DIR" ./bin)
-SET("BIN_NAME" asio_study)
+set("BIN_DIR" ./bin)
+set("BIN_NAME" asio_study)
 
 message("CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}, WIN32: ${WIN32}")
 set(CMAKE_CXX_STANDARD 11)
@@ -24,7 +24,7 @@ if (${WIN32})
     set(CMAKE_CXX_COMPILER "C:/dev/cplus/w64devkit/bin/g++.exe")
     set(CMAKE_LINKER "C:/dev/cplus/w64devkit/bin/ld.exe")
 
-    PROJECT(asio_study LANGUAGES CXX)
+    project(asio_study LANGUAGES CXX)
 
     if(POLICY CMP0167)
     cmake_policy(SET CMP0167 OLD)
@@ -57,9 +57,9 @@ if (${WIN32})
     #cmake -G"MinGW Makefiles" ../       
 else()
     message(STATUS "------This is not a Windows system.-----")
-    PROJECT(asio_study LANGUAGES CXX)    
+    project(asio_study LANGUAGES CXX)    
     set(BOOST_ROOT /usr/local/boost_1_73)
-    FIND_PACKAGE(Boost  COMPONENTS  filesystem system thread  REQUIRED)
+    find_package(Boost  COMPONENTS  filesystem system thread  REQUIRED)
 
     set (LIB_LIST boost_system
                 boost_thread
@@ -105,7 +105,7 @@ endif()
 add_executable(${BIN_NAME} ${SRC_FILES})
 
 # Link Lib
-TARGET_LINK_LIBRARIES(${BIN_NAME} ${LIB_LIST})
+target_link_libraries(${BIN_NAME} ${LIB_LIST})
 
 
 

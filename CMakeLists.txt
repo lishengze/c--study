@@ -77,6 +77,12 @@ add_subdirectory(standard)
 add_subdirectory(queue/testque)
 add_subdirectory(queue/share_test)
 add_subdirectory(queue/study)
+
+add_subdirectory(memory/cpp)
+add_subdirectory(perf)
+
+# add_subdirectory(queue/study)
+
 message("整个工程当前 共编译 ${BUILD_SUM_COUNT} 个文件")
 
 message("\n+++++++++++++++++++++++++ MAIN CMake [END] +++++++++++++++++++++++++")

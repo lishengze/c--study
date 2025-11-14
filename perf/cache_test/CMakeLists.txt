@@ -1,21 +1,21 @@
 # author: lishengze
-# description: æµ‹è¯•æ— é”é˜Ÿåˆ—
+# description: ²âÊÔÎŞËø¶ÓÁĞ
 # update-date:
 #   2025-09-08
 ##############################################################################################
 cmake_minimum_required(VERSION 3.12)
-project(test_queue)
+project(cache_test)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -pthread  -flto")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g -pthread")
 
 include_directories(include)
 # link_directories(dev_lib)
 
 
 
-######################  ç»Ÿè®¡ç¼–è¯‘æ–‡ä»¶æ•°ç›®  ######################
-file(GLOB_RECURSE SRC_FILES "./*.cpp") #æ·»åŠ SRCå­ç›®å½•ä¸‹å…¨éƒ¨æºä»£ç æ–‡ä»¶ï¼Œæ’é™¤ç‰¹å®šæ–‡ä»¶;
+######################  Í³¼Æ±àÒëÎÄ¼şÊıÄ¿  ######################
+file(GLOB_RECURSE SRC_FILES "./*.cpp") #Ìí¼ÓSRC×ÓÄ¿Â¼ÏÂÈ«²¿Ô´´úÂëÎÄ¼ş£¬ÅÅ³ıÌØ¶¨ÎÄ¼ş;
 list(FILTER SRC_FILES EXCLUDE REGEX "./CMakeFiles/.*")
 
 foreach(FILE ${SRC_FILES})
@@ -26,14 +26,14 @@ endforeach()
 list(SORT DIR_STATS)
 list(REMOVE_DUPLICATES DIR_STATS)
 
-message(STATUS "${PROJECT_NAME}æŒ‰ç›®å½•ç»Ÿè®¡çš„ç¼–è¯‘çš„ CPP æ–‡ä»¶æ•°ç›®:")
+message(STATUS "${PROJECT_NAME}°´Ä¿Â¼Í³¼ÆµÄ±àÒëµÄ CPP ÎÄ¼şÊıÄ¿:")
 foreach(DIR ${DIR_STATS})
     file(GLOB DIR_FILES "${DIR}/*.cpp")
     list(LENGTH DIR_FILES DIR_COUNT)
-    message(STATUS "  ${DIR}: ${DIR_COUNT} ä¸ªæ–‡ä»¶")
+    message(STATUS "  ${DIR}: ${DIR_COUNT} ¸öÎÄ¼ş")
 endforeach()
 list(LENGTH SRC_FILES SOURCE_COUNT)
-message(STATUS "${PROJECT_NAME}åˆè®¡ç¼–è¯‘çš„ CPP æ–‡ä»¶æ•°ç›®: ${SOURCE_COUNT}\n")
+message(STATUS "${PROJECT_NAME}ºÏ¼Æ±àÒëµÄ CPP ÎÄ¼şÊıÄ¿: ${SOURCE_COUNT}\n")
 if ( DEFINED BUILD_SUM_COUNT)
     math(EXPR BUILD_SUM_COUNT "${BUILD_SUM_COUNT} + ${SOURCE_COUNT}")
     set(BUILD_SUM_COUNT ${BUILD_SUM_COUNT} PARENT_SCOPE)

@@ -3,11 +3,11 @@
 # update-date:
 #   2025-09-08
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(study_queue)
+cmake_minimum_required(VERSION 3.12)
+project(study_queue)
 
 set(CMAKE_CXX_STANDARD 14)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -pthread  -flto")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -pthread  -flto")
 
 include_directories(include)
 # link_directories(dev_lib)
@@ -39,7 +39,7 @@ if ( DEFINED BUILD_SUM_COUNT)
     set(BUILD_SUM_COUNT ${BUILD_SUM_COUNT} PARENT_SCOPE)
 endif()
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_FILES} )
+add_executable(${PROJECT_NAME} ${SRC_FILES} )
 
 target_link_libraries(${PROJECT_NAME} -lrt -pthread)
 

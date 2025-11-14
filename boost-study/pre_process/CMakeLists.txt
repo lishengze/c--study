@@ -4,12 +4,12 @@
 # update-date:
 #   2019-01-04  init version
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(preprocess_study)
+cmake_minimum_required(VERSION 3.12)
+project(preprocess_study)
 
-SET("BIN_NAME" preprocess_study)
+set("BIN_NAME" preprocess_study)
 set(CMAKE_CXX_STANDARD 17)
-# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "----- This is a Windows system. ----")
@@ -29,7 +29,7 @@ else()
     set(BOOST_ROOT /usr/local/boost_1_73)
     set(BOOST_INCLUDEDIR ${BOOST_ROOT}/include)
     set(BOOST_LIBRARYDIR ${BOOST_ROOT}/lib)    
-    FIND_PACKAGE(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
+    find_package(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 endif()
 
 
@@ -43,7 +43,7 @@ INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
 
 
-AUX_SOURCE_DIRECTORY(. MAIN_SRC)
+aux_source_directory(. MAIN_SRC)
 
 # set(SOURCE_FILES business_processor.cpp)
 # foreach(source_file ${SOURCE_FILES})
@@ -56,7 +56,7 @@ AUX_SOURCE_DIRECTORY(. MAIN_SRC)
 #     )
 # endforeach()
 
-# ADD_EXECUTABLE(${BIN_NAME} ${MAIN_SRC})
+# add_executable(${BIN_NAME} ${MAIN_SRC})
 
 # # 添加预处理构建配置
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -E")  # -E 选项仅预处理不编译
@@ -66,8 +66,8 @@ AUX_SOURCE_DIRECTORY(. MAIN_SRC)
 #     COMMENT "Generating preprocessed files..."
 # )
 
-# TARGET_LINK_LIBRARIES(${BIN_NAME} ${Boost_LIBRARIES})
-# TARGET_LINK_LIBRARIES(${LIB_NAME} Threads::Threads)
+# target_link_libraries(${BIN_NAME} ${Boost_LIBRARIES})
+# target_link_libraries(${LIB_NAME} Threads::Threads)
 
 
 # CMakeLists.txt

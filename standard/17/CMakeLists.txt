@@ -3,8 +3,8 @@
 # update-date: 2021-09-25
 # update-author: <李晟泽>
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
-PROJECT(test_17)
+cmake_minimum_required(VERSION 3.20)
+project(test_17)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,7 +24,7 @@ else()
     message(STATUS "------This is not a Windows system.-----")
     # 在这里添加针对非Windows系统的特定设置或操作
     set(BOOST_ROOT /usr/local/boost_1_73)
-    FIND_PACKAGE(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
+    find_package(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 endif()
 
 
@@ -33,8 +33,8 @@ message("******* BOOST_INCLUDEDIR: ${boost_INCLUDE_DIRS}")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-AUX_SOURCE_DIRECTORY(. SRC_FILES)
-# AUX_SOURCE_DIRECTORY(coroutine coroutine_SRC)
+aux_source_directory(. SRC_FILES)
+# aux_source_directory(coroutine coroutine_SRC)
 
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
@@ -61,5 +61,5 @@ if ( DEFINED BUILD_SUM_COUNT)
 endif()
 
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_FILES})
+add_executable(${PROJECT_NAME} ${SRC_FILES})
 

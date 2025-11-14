@@ -3,11 +3,11 @@
 # update-date:
 #   2025-09-08
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(client_strategy_test)
+cmake_minimum_required(VERSION 3.12)
+project(client_strategy_test)
 
 set(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g -pthread  -flto=8 ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g -pthread  -flto=8 ")
 
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -18,16 +18,16 @@ include_directories(${WORK_MAIN_DIR}/share_comm/include)
 include_directories(${WORK_MAIN_DIR}/share_comm)
 
 
-AUX_SOURCE_DIRECTORY(${CMAKE_CURRENT_SOURCE_DIR} STRAGY_MAIN_SRC)
-AUX_SOURCE_DIRECTORY(${WORK_MAIN_DIR}/share_comm STRAGY_LIB_SRC)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} STRAGY_MAIN_SRC)
+aux_source_directory(${WORK_MAIN_DIR}/share_comm STRAGY_LIB_SRC)
 
 # message(${STRAGY_MAIN_SRC})
 # message(${STRAGY_LIB_SRC})
 
 
-SET(STRATEGY_ALL_SRC ${STRAGY_MAIN_SRC} ${STRAGY_LIB_SRC})
+set(STRATEGY_ALL_SRC ${STRAGY_MAIN_SRC} ${STRAGY_LIB_SRC})
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${STRATEGY_ALL_SRC} )
+add_executable(${PROJECT_NAME} ${STRATEGY_ALL_SRC} )
 
 target_link_libraries(${PROJECT_NAME} rt)
 

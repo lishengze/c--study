@@ -2,11 +2,11 @@
 # description: 测试
 # update-date: 2025-08-26
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(hide_refre)
+cmake_minimum_required(VERSION 3.12)
+project(hide_refre)
 
 set(CMAKE_CXX_STANDARD 17)
-# SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "----- This is a Windows system. ----")
@@ -27,7 +27,7 @@ else()
     set(BOOST_INCLUDEDIR ${BOOST_ROOT}/include)
     set(BOOST_LIBRARYDIR ${BOOST_ROOT}/lib)    
 
-    FIND_PACKAGE(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
+    find_package(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
@@ -38,13 +38,13 @@ INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
 
 
-AUX_SOURCE_DIRECTORY(. MAIN_SRC)
+aux_source_directory(. MAIN_SRC)
 ###############################################################################################
 add_library(${PROJECT_NAME} SHARED ${MAIN_SRC})
 
-# TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${BOOST_LIBRARYDIR}/libboost_filesystem.a)
+# target_link_libraries(${PROJECT_NAME} ${BOOST_LIBRARYDIR}/libboost_filesystem.a)
 
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PRIVATE boost_filesystem Boost::algorithm)
+target_link_libraries(${PROJECT_NAME} PRIVATE boost_filesystem Boost::algorithm)
 
 

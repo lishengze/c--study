@@ -1,6 +1,6 @@
 #####################################################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(sql)
+cmake_minimum_required(VERSION 3.12)
+project(sql)
 
 set(BOOST_ROOT /usr/local/boost_1_68)
 
@@ -9,27 +9,27 @@ INCLUDE_DIRECTORIES("../component")
 LINK_DIRECTORIES("/opt/utrade/console/lib/quark")
 LINK_DIRECTORIES("/opt/utrade/console/lib/pandora")
 
-SET(CMAKE_BUILD_TYPE "Debug")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -Wall -pthread")
+set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -Wall -pthread")
 
 ###############################################################################################################
-FIND_PACKAGE(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
+find_package(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
 INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
 LINK_DIRECTORIES(${BOOST_INCLUDEDIR})
 
 #####################################################################################################################
-SET("BIN_NAME" sql)
+set("BIN_NAME" sql)
 
-AUX_SOURCE_DIRECTORY(. OPU_SRC)
+aux_source_directory(. OPU_SRC)
 
 
 #####################################################################################################################
-ADD_EXECUTABLE(${BIN_NAME} ${OPU_SRC})
+add_executable(${BIN_NAME} ${OPU_SRC})
 
-#TARGET_LINK_LIBRARIES(${BIN_NAME} zmq quark pandora log4cplus comm SQLiteCpp sqlite3 dl mysqlcppconn ${Boost_LIBRARIES} prometheus-cpp-pull prometheus-cpp-core lz)
-TARGET_LINK_LIBRARIES(${BIN_NAME} quark pandora )
-TARGET_LINK_LIBRARIES(${BIN_NAME} mysqlcppconn ${Boost_LIBRARIES})
+#target_link_libraries(${BIN_NAME} zmq quark pandora log4cplus comm SQLiteCpp sqlite3 dl mysqlcppconn ${Boost_LIBRARIES} prometheus-cpp-pull prometheus-cpp-core lz)
+target_link_libraries(${BIN_NAME} quark pandora )
+target_link_libraries(${BIN_NAME} mysqlcppconn ${Boost_LIBRARIES})
 
 
-#TARGET_LINK_LIBRARIES(${BIN_NAME} zmq quark pandora log4cplus comm SQLiteCpp sqlite3 dl ${Boost_LIBRARIES})
+#target_link_libraries(${BIN_NAME} zmq quark pandora log4cplus comm SQLiteCpp sqlite3 dl ${Boost_LIBRARIES})
 

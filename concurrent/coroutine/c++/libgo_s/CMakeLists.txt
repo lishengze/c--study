@@ -3,18 +3,18 @@
 # update-date:
 #   2021-11-12  init version
 ##############################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-PROJECT(go_study)
+cmake_minimum_required(VERSION 3.12)
+project(go_study)
 
 set(CMAKE_CXX_STANDARD 11)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread  -flto -O3")
 
 set(usr_install_root /home/lsz/dev/code/install_dev)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-AUX_SOURCE_DIRECTORY(. MAIN_SRC)
+aux_source_directory(. MAIN_SRC)
 
 ######################  统计编译文件数目  ######################
 file(GLOB_RECURSE SRC_FILES "./*.cpp") #添加SRC子目录下全部源代码文件，排除特定文件;
@@ -44,9 +44,9 @@ endif()
 INCLUDE_DIRECTORIES(${usr_install_root}/libgo/include)
 LINK_DIRECTORIES(${usr_install_root}/libgo/lib)
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_FILES} )
+add_executable(${PROJECT_NAME} ${SRC_FILES} )
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} libgo)
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} dl)
+target_link_libraries(${PROJECT_NAME} libgo)
+target_link_libraries(${PROJECT_NAME} dl)
 
 
