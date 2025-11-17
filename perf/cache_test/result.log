@@ -1,0 +1,68 @@
+// GLOBAL
+
+        cache size         128 KB
+        cache line size     64 bytes
+        cache lines per tag 8
+
+valgrind --tool=cachegrind ./cache_test
+==88973== 
+==88973== I   refs:      3,248,165
+==88973== I1  misses:        2,071
+==88973== LLi misses:        1,973
+==88973== I1  miss rate:      0.06%
+==88973== LLi miss rate:      0.06%
+==88973== 
+==88973== D   refs:      1,263,543  (962,842 rd   + 300,701 wr)
+==88973== D1  misses:       22,369  ( 13,620 rd   +   8,749 wr)
+==88973== LLd misses:       15,542  (  7,695 rd   +   7,847 wr)
+==88973== D1  miss rate:       1.8% (    1.4%     +     2.9%  )
+==88973== LLd miss rate:       1.2% (    0.8%     +     2.6%  )
+==88973== 
+==88973== LL refs:          24,440  ( 15,691 rd   +   8,749 wr)
+==88973== LL misses:        17,515  (  9,668 rd   +   7,847 wr)
+==88973== LL miss rate:        0.4% (    0.2%     +     2.6%  )
+
+
+perf record -e cache-references,cache-misses ./cache_test
+
+ Performance counter stats for './cache_test':
+
+         2,140,039      L1-dcache-loads                                                       
+            52,108      L1-dcache-load-misses            #    2.43% of all L1-dcache accesses 
+
+       0.004621344 seconds time elapsed
+
+       0.000939000 seconds user
+       0.003759000 seconds sys
+
+
+
+// LOCAL
+Hello, World!
+TestTimePart
+==145229== 
+==145229== I   refs:      11,148,167
+==145229== I1  misses:         2,071
+==145229== LLi misses:         1,973
+==145229== I1  miss rate:       0.02%
+==145229== LLi miss rate:       0.02%
+==145229== 
+==145229== D   refs:       5,563,544  (4,562,842 rd   + 1,000,702 wr)
+==145229== D1  misses:        66,119  (   13,620 rd   +    52,499 wr)
+==145229== LLd misses:        59,292  (    7,695 rd   +    51,597 wr)
+==145229== D1  miss rate:        1.2% (      0.3%     +       5.2%  )
+==145229== LLd miss rate:        1.1% (      0.2%     +       5.2%  )
+==145229== 
+==145229== LL refs:           68,190  (   15,691 rd   +    52,499 wr)
+==145229== LL misses:         61,265  (    9,668 rd   +    51,597 wr)
+==145229== LL miss rate:         0.4% (      0.1%     +       5.2%  )
+
+ Performance counter stats for './cache_test':
+
+         5,153,940      L1-dcache-loads                                                       
+           155,640      L1-dcache-load-misses            #    3.02% of all L1-dcache accesses 
+
+       0.007086200 seconds time elapsed
+
+       0.003077000 seconds user
+       0.004102000 seconds sys
