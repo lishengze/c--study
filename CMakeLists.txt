@@ -81,6 +81,7 @@ add_subdirectory(queue/study)
 add_subdirectory(memory/cpp)
 add_subdirectory(perf)
 add_subdirectory(perf/cache_test)
+add_subdirectory(algorithm)
 
 # add_subdirectory(queue/study)
 

@@ -33,14 +33,14 @@ find_package(Boost 1.68.0 COMPONENTS date_time filesystem system thread serializ
 
 # message( BOOST_INCLUDEDIR)
                                      
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-INCLUDE_DIRECTORIES("../include")
+include_directories(${BOOST_INCLUDEDIR})
+include_directories("../include")
 
-INCLUDE_DIRECTORIES("../../component/pandora")
-INCLUDE_DIRECTORIES("../../component")
-INCLUDE_DIRECTORIES("/usr/local/boost_1_68/include")
-LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
-LINK_DIRECTORIES("/opt/utrade/console/lib/pandora/")
+include_directories("../../component/pandora")
+include_directories("../../component")
+include_directories("/usr/local/boost_1_68/include")
+link_directories("/usr/local/boost_1_68/lib")
+link_directories("/opt/utrade/console/lib/pandora/")
 
 
 # set(ALL_SRC ${MAIN_SRC})

@@ -37,14 +37,14 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
+include_directories(${BOOST_INCLUDEDIR})
+link_directories(${BOOST_LIBRARYDIR})
 
 
 aux_source_directory(. MAIN_SRC)
 ###############################################################################################
-INCLUDE_DIRECTORIES(".")
-INCLUDE_DIRECTORIES("../component")
+include_directories(".")
+include_directories("../component")
 
 add_executable(${BIN_NAME} ${MAIN_SRC})
 

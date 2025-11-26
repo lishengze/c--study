@@ -37,8 +37,8 @@ find_package(Threads REQUIRED)
 aux_source_directory(. MAIN_SRC)
 aux_source_directory(coroutine coroutine_SRC)
 
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
+include_directories(${BOOST_INCLUDEDIR})
+link_directories(${BOOST_LIBRARYDIR})
 
 set(SRC_FILES ${MAIN_SRC} ${coroutine_SRC})
 

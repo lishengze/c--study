@@ -18,15 +18,15 @@ find_package(Threads REQUIRED)
 
 aux_source_directory(. MAIN_SRC)
 ###############################################################################################
-INCLUDE_DIRECTORIES(".")
-INCLUDE_DIRECTORIES("../component")
-INCLUDE_DIRECTORIES("../cpp/include")
+include_directories(".")
+include_directories("../component")
+include_directories("../cpp/include")
 
 # find_package(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
-# INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
+# include_directories(${BOOST_INCLUDEDIR})
 
 
-# LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
+# link_directories("/usr/local/boost_1_68/lib")
 
 
 add_executable(${BIN_NAME} ${MAIN_SRC})

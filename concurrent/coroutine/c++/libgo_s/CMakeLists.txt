@@ -41,8 +41,8 @@ if ( DEFINED BUILD_SUM_COUNT)
 endif()
 
 
-INCLUDE_DIRECTORIES(${usr_install_root}/libgo/include)
-LINK_DIRECTORIES(${usr_install_root}/libgo/lib)
+include_directories(${usr_install_root}/libgo/include)
+link_directories(${usr_install_root}/libgo/lib)
 
 add_executable(${PROJECT_NAME} ${SRC_FILES} )
 

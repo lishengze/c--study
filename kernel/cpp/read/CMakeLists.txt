@@ -16,14 +16,14 @@ find_package(Threads REQUIRED)
 aux_source_directory(. MAIN_SRC)
 
 
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-INCLUDE_DIRECTORIES("../include")
+include_directories(${BOOST_INCLUDEDIR})
+include_directories("../include")
 
-INCLUDE_DIRECTORIES("../../../component/pandora")
-INCLUDE_DIRECTORIES("../../../component")
+include_directories("../../../component/pandora")
+include_directories("../../../component")
 
 
-LINK_DIRECTORIES("/opt/utrade/console/lib/pandora/")
+link_directories("/opt/utrade/console/lib/pandora/")
 
 
 set(ALL_SRC ${MAIN_SRC})

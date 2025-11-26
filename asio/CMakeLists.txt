@@ -69,11 +69,11 @@ else()
 endif()
 
 # Include DIR
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-INCLUDE_DIRECTORIES(asio-1.12.2/include)
+include_directories(${BOOST_INCLUDEDIR})
+include_directories(asio-1.12.2/include)
 
 # Lib DIR
-LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
+link_directories(${BOOST_LIBRARYDIR})
 
 # SRC DIR
 aux_source_directory(src SRC_FILES)

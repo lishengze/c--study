@@ -34,8 +34,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines
 
 message("******* BOOST_INCLUDEDIR: ${BOOST_INCLUDEDIR}")
 
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
+include_directories(${BOOST_INCLUDEDIR})
+link_directories(${BOOST_LIBRARYDIR})
 
 
 aux_source_directory(. MAIN_SRC)

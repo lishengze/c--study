@@ -49,8 +49,8 @@ find_package(Threads REQUIRED)
 
 aux_source_directory(. SRC_FILES)
 
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
+include_directories(${BOOST_INCLUDEDIR})
+link_directories(${BOOST_LIBRARYDIR})
 
 foreach(FILE ${SRC_FILES})
     get_filename_component(PARENT_DIR ${FILE} DIRECTORY)

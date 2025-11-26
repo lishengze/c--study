@@ -21,17 +21,17 @@ aux_source_directory(../../proto/cpp PROTO_SRC)
 
 find_package(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 
                                      chrono regex program_options unit_test_framework locale REQUIRED)
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
+include_directories(${BOOST_INCLUDEDIR})
 
-# INCLUDE_DIRECTORIES("../../../component/pandora")
-INCLUDE_DIRECTORIES("../server")
-INCLUDE_DIRECTORIES("../include")
-INCLUDE_DIRECTORIES("../../proto")
+# include_directories("../../../component/pandora")
+include_directories("../server")
+include_directories("../include")
+include_directories("../../proto")
 
 
 
-LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
-LINK_DIRECTORIES("../lib/")
+link_directories("/usr/local/boost_1_68/lib")
+link_directories("../lib/")
 
 
 set(ALL_SRC ${MESSAGER_SRC}  ${MAIN_SRC} ${TEST_SRC})

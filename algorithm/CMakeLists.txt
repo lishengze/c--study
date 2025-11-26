@@ -13,18 +13,20 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -pthread")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "----- This is a Windows system. ----")
-    # ÔÚÕâÀïÌí¼ÓÕë¶ÔWindowsÏµÍ³µÄÌØ¶¨ÉèÖÃ»ò²Ù×÷
+    # åœ¨è¿™é‡Œæ·»åŠ é’ˆå¯¹Windowsç³»ç»Ÿçš„ç‰¹å®šè®¾ç½®æˆ–æ“ä½œ
     set(BOOST_ROOT D:/dev/boost/build/1_72)
-    set(Boost_COMPILER "-mgw142")  # ÕâÀï¸ù¾İÊµ¼ÊÇé¿öÉèÖÃºÏÊÊµÄÖµ
+    set(Boost_COMPILER "-mgw142")  # è¿™é‡Œæ ¹æ®å®é™…æƒ…å†µè®¾ç½®åˆé€‚çš„å€¼
     find_package(Boost COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)    
 
     set(BOOST_INCLUDEDIR ${BOOST_ROOT}/include/boost-1_72)
     set(BOOST_LIBRARYDIR ${BOOST_ROOT}/lib)
 else()
     message(STATUS "------This is not a Windows system.-----")
-    # ÔÚÕâÀïÌí¼ÓÕë¶Ô·ÇWindowsÏµÍ³µÄÌØ¶¨ÉèÖÃ»ò²Ù×÷
-    set(BOOST_ROOT /usr/local/boost_1_68)
+    # åœ¨è¿™é‡Œæ·»åŠ é’ˆå¯¹éWindowsç³»ç»Ÿçš„ç‰¹å®šè®¾ç½®æˆ–æ“ä½œ
+    set(BOOST_ROOT /usr/local/boost_1_73)
     find_package(Boost  COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
+
+    set(BOOST_INCLUDEDIR ${BOOST_ROOT}/include)
 endif()
 
 message("******* BOOST_INCLUDEDIR: ${BOOST_INCLUDEDIR}")
@@ -40,10 +42,36 @@ aux_source_directory(sort SORT_SRC)
 aux_source_directory(tree TREE_SRC)
 aux_source_directory(stack_list STACK_LIST_SRC)
 
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-LINK_DIRECTORIES(${BOOST_LIBRARYDIR})
 
-add_executable(${BIN_NAME} ${MAIN_SRC} ${ALGO_SRC} ${HASH_SRC} ${MAP_SRC} ${SORT_SRC} ${TREE_SRC} ${STACK_LIST_SRC})
+include_directories(${BOOST_INCLUDEDIR})
+link_directories(${BOOST_LIBRARYDIR})
+
+set(SRC_FILES ${MAIN_SRC} ${ALGO_SRC} ${HASH_SRC} ${MAP_SRC} ${SORT_SRC} ${TREE_SRC} ${STACK_LIST_SRC})
+
+
+
+add_executable(${BIN_NAME} ${SRC_FILES})
+
+foreach(FILE ${SRC_FILES})
+    get_filename_component(PARENT_DIR ${FILE} DIRECTORY)
+    set(DIR_STATS "${DIR_STATS};${PARENT_DIR}")
+endforeach()
+
+list(SORT DIR_STATS)
+list(REMOVE_DUPLICATES DIR_STATS)
+
+message(STATUS "${PROJECT_NAME} æŒ‰ç›®å½•ç»Ÿè®¡çš„ç¼–è¯‘çš„ CPP æ–‡ä»¶æ•°ç›®:")
+foreach(DIR ${DIR_STATS})
+    file(GLOB DIR_FILES "${DIR}/*.cpp")
+    list(LENGTH DIR_FILES DIR_COUNT)
+    message(STATUS "  ${DIR}: ${DIR_COUNT} ä¸ªæ–‡ä»¶")
+endforeach()
+list(LENGTH SRC_FILES SOURCE_COUNT)
+message(STATUS "${PROJECT_NAME}  åˆè®¡ç¼–è¯‘çš„ CPP æ–‡ä»¶æ•°ç›®: ${SOURCE_COUNT}\n")
+if ( DEFINED BUILD_SUM_COUNT)
+    math(EXPR BUILD_SUM_COUNT "${BUILD_SUM_COUNT} + ${SOURCE_COUNT}")
+    set(BUILD_SUM_COUNT ${BUILD_SUM_COUNT} PARENT_SCOPE)
+endif()
 
 
 target_link_libraries(${BIN_NAME} ${Boost_LIBRARIES})

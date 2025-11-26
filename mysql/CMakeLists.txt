@@ -4,18 +4,18 @@ project(sql)
 
 set(BOOST_ROOT /usr/local/boost_1_68)
 
-INCLUDE_DIRECTORIES("../component")
+include_directories("../component")
 
-LINK_DIRECTORIES("/opt/utrade/console/lib/quark")
-LINK_DIRECTORIES("/opt/utrade/console/lib/pandora")
+link_directories("/opt/utrade/console/lib/quark")
+link_directories("/opt/utrade/console/lib/pandora")
 
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3 -Wall -pthread")
 
 ###############################################################################################################
 find_package(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
-LINK_DIRECTORIES(${BOOST_INCLUDEDIR})
+include_directories(${BOOST_INCLUDEDIR})
+link_directories(${BOOST_INCLUDEDIR})
 
 #####################################################################################################################
 set("BIN_NAME" sql)

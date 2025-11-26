@@ -20,11 +20,11 @@ aux_source_directory(. MAIN_SRC)
 aux_source_directory(../Log LOG_SRC)
 
 find_package(Boost 1.68.0 COMPONENTS date_time filesystem system thread serialization math_tr1 chrono regex program_options unit_test_framework locale REQUIRED)
-INCLUDE_DIRECTORIES(${BOOST_INCLUDEDIR})
+include_directories(${BOOST_INCLUDEDIR})
 
-INCLUDE_DIRECTORIES("../../component")
+include_directories("../../component")
 
-LINK_DIRECTORIES("/usr/local/boost_1_68/lib")
+link_directories("/usr/local/boost_1_68/lib")
 
 add_executable(${BIN_NAME} ${MAIN_SRC} ${LOG_SRC})
 
