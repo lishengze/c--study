@@ -6,15 +6,20 @@
 
 #include "algo/test_algo.h"
 
+#include "array/array.h"
+
+
 int main()
 {
-    cout << "\n****** Study *****\n" << endl;
+    cout << "\n****** Study Algorithm *****\n" << endl;
 
     // TestSort();
 
-    TestTree();
+    // TestTree();
 
     // TestAlgo();
+
+    TestArray();
 
     cout << "\n" << endl;
 

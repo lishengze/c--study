@@ -1,6 +1,11 @@
 #pragma once
 
-#include "../global_declare.h"
+#include <iostream>
+#include <string>
+#include <vector>
+using std::vector;
+
+
 
 template<class T>
 void quick_sort(T* data, int left, int right)

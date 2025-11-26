@@ -304,6 +304,8 @@ bool RBTree::insert_simple_with_height(TreeNodePtr& parent, TreeNodePtr node)
     {
         std::cerr <<"\n[E] insert_simple " << e.what() << '\n';
     }    
+
+    return false;
 }
 
 /*
@@ -716,7 +718,7 @@ TreeNodePtr RBTree::delete_node(TreeNodePtr& target_node)
     {
         std::cerr << e.what() << '\n';
     }
-
+    return nullptr;
 }
 
 TreeNodePtr RBTree::delete_node_one_child(TreeNodePtr& node, bool is_lchild)
@@ -754,6 +756,7 @@ TreeNodePtr RBTree::delete_node_one_child(TreeNodePtr& node, bool is_lchild)
     {
         std::cerr << e.what() << '\n';
     }    
+    return nullptr;
 }
 
 void RBTree::delete_node_fix_color(TreeNodePtr node)

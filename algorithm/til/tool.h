@@ -1,6 +1,14 @@
 #pragma once
 
-#include "../global_declare.h"
+#include <iostream>
+#include <string>
+#include <vector>
+
+using std::string;
+using std::cout;
+using std::endl;
+using std::vector;
+
 
 template<class T>
 void PrintData(T* data, int left, int right, string intro="")

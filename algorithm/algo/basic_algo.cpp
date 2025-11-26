@@ -68,6 +68,8 @@ int KMP::get_pos(const string& ori_data, const string& des_substr)
         std::cerr << "\n[E] KMP::get_pos " << e.what() << '\n';
     }
 
+    return -3;
+
 }
 
 /*

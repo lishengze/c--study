@@ -36,19 +36,16 @@ find_package(Threads REQUIRED)
 
 aux_source_directory(. MAIN_SRC)
 aux_source_directory(algo ALGO_SRC)
-aux_source_directory(hash HASH_SRC)
 aux_source_directory(map  MAP_SRC)
 aux_source_directory(sort SORT_SRC)
 aux_source_directory(tree TREE_SRC)
-aux_source_directory(stack_list STACK_LIST_SRC)
+aux_source_directory(array ARRAY_SRC)
 
 
 include_directories(${BOOST_INCLUDEDIR})
 link_directories(${BOOST_LIBRARYDIR})
 
-set(SRC_FILES ${MAIN_SRC} ${ALGO_SRC} ${HASH_SRC} ${MAP_SRC} ${SORT_SRC} ${TREE_SRC} ${STACK_LIST_SRC})
-
-
+set(SRC_FILES ${MAIN_SRC} ${ALGO_SRC} ${MAP_SRC} ${SORT_SRC} ${TREE_SRC} ${ARRAY_SRC})
 
 add_executable(${BIN_NAME} ${SRC_FILES})
 
