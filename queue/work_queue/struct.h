@@ -47,6 +47,7 @@ enum class TestType {
     Both = 0,   // 读写都测;
     Write = 1,   // 压测写入;
     Read = 2,   // 压测读取;
+    Detail = 3, // 读写都测，并且都输出读写所有细节;
 };
 
 template<typename T>
@@ -266,36 +267,45 @@ struct TestOutput {
     }        
 
 
-    TestOutput(unsigned int iBlockCount, unsigned int iWorkSecs) {
+    TestOutput(unsigned int iBlockCount, unsigned int iWorkSecs, unsigned int uiSleepUs = 0) {
         Init(iBlockCount, iWorkSecs);      
     }
 
-    void Init(unsigned int iBlockCount, unsigned int iWorkSecs) {
+    void Init(unsigned int iBlockCount, unsigned int iWorkSecs, unsigned int uiSleepUs = 0) {
 
         iBlockCount_ = iBlockCount;
         iWorkSecs_ = iWorkSecs;
 
-        if (iWorkSecs == 0) {
-            
-            vecWriteBeforePushTimeList.reserve(iBlockCount);
-            vecWriteAfterPushTimeList.reserve(iBlockCount);
-            vecReadBeforePopTimeList.reserve(iBlockCount);
-            vecReadAfterPopTimeList.reserve(iBlockCount);
-            vecCostTime.reserve(iBlockCount);
+        unsigned int uiRealBlockCount = iBlockCount;
 
-            vecWriteSlotList.reserve(iBlockCount);
-            vecReadSlotList.reserve(iBlockCount);
-
-            for (int i = 0; i < iBlockCount; ++i) {
-                vecWriteBeforePushTimeList.push_back(0);
-                vecWriteAfterPushTimeList.push_back(0);
-                vecReadBeforePopTimeList.push_back(0);
-                vecReadAfterPopTimeList.push_back(0);
-                vecCostTime.push_back(0);
-            }
+        if (iWorkSecs > 0 && uiSleepUs > 0) {
+            uiRealBlockCount = iWorkSecs * 1000000 / uiRealBlockCount * 1.2;
         }
 
+        if (uiRealBlockCount > 0) {
+            vecWriteBeforePushTimeList.reserve(uiRealBlockCount);
+            vecWriteAfterPushTimeList.reserve(uiRealBlockCount);
+            vecReadBeforePopTimeList.reserve(uiRealBlockCount);
+            vecReadAfterPopTimeList.reserve(uiRealBlockCount);
+            vecCostTime.reserve(uiRealBlockCount);
 
+            vecWriteSlotList.reserve(uiRealBlockCount);
+            vecReadSlotList.reserve(uiRealBlockCount);
+
+            if (iBlockCount > 0 && iWorkSecs == 0) {
+                for (int i = 0; i < uiRealBlockCount; ++i) {
+                    vecWriteBeforePushTimeList.push_back(0);
+                    vecWriteAfterPushTimeList.push_back(0);
+                    vecReadBeforePopTimeList.push_back(0);
+                    vecReadAfterPopTimeList.push_back(0);
+                    vecCostTime.push_back(0);
+                } 
+            }
+        }
+       
+
+        iWriteCount_ = 0;
+        iReadCount_ = 0;
         ulWriteStartTime = 0;
         ulWriteEndTime = 0;
         ulReadStartTime = 0;
@@ -311,13 +321,15 @@ struct DataBlockFixed {
     unsigned long long push_time_; // 数据块开始时间
     unsigned long long pop_time_; // 数据块开始时间
     unsigned int  size_; // 数据块大小
-    unsigned char data_[104]; // 数据块指针
+    unsigned char data_[100]; // 数据块指针
     unsigned int  array_size_; // 数据块数组大小
+    unsigned int  index_;
     DataBlockFixed() {
+        index_ = 0;
         push_time_ = 0;
         size_ = 0;
-        array_size_ = 104;
-        for (int i = 0; i < 104; ++i) {
+        array_size_ = 100;
+        for (int i = 0; i < array_size_; ++i) {
             data_[i] = i % 128;
         }
     }
@@ -328,6 +340,7 @@ struct DataBlockFixed {
         pop_time_ = other.pop_time_;
         size_ = other.size_;
         array_size_ = other.array_size_;
+        index_ = other.index_;
         memcpy(data_, other.data_, array_size_);
     }    
 
@@ -337,6 +350,7 @@ struct DataBlockFixed {
         pop_time_ = other.pop_time_;
         size_ = other.size_;
         array_size_ = other.array_size_;
+        index_ = other.index_;
         memcpy(data_, other.data_, array_size_);
         return *this;
     }    
@@ -665,17 +679,32 @@ std::string GetAnaRst(std::vector<unsigned long long>& vecTime, MetaData metaDat
 
 std::string GetAnaRst(std::vector<unsigned long long>& vecTime, MetaData metaData, unsigned long long ulStartTime, unsigned long long ulEndTime,  std::string sQueueName="");
 
+std::string GetAnaTestOutputRstSimple(TestOutput& testOutput);
 
-std::string GetAnaTestOutputRst(TestOutput& testOutput);
+std::string GetAnaTestOutputTimeRst(TestOutput& testOutput, int iTestType, int iTestTypeReal);
 
-std::string GetAnaTestOutputTimeRst(TestOutput& testOutput, int iTestType);
-
-std::string GetAnaTestOutputRst(std::vector<TestOutput>& vecWriteTestOutput, int iTestType);
+std::string GetAnaTestOutputRst(std::vector<TestOutput>& vecWriteTestOutput, std::vector<TestOutput>& vecReadTestOutput, int iTestType);
 
 void GetPushPopDelayVecCostTime(std::vector<TestOutput>& vecReadOutput, std::vector<unsigned long long >& vecCostTime);
 
 void GetStartEndTimeFromWriteRead(std::vector<TestOutput>& vecWriteTestOutput, std::vector<TestOutput>& vecReadOutput,
                                    unsigned long long& ulStartTime, unsigned long long& ulEndTime);
+
+
+// =============================================
+// 获取当前时间的单调时钟（纳秒级），使用 clock_gettime
+// 返回：uint64_t，纳秒时间戳
+// =============================================
+inline unsigned long long  get_monotonic_ns() {
+    timespec ts;
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
+            perror("clock_gettime failed");
+            return 0;
+    }
+    return static_cast<unsigned long long >(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
+
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
 
 
 

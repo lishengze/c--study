@@ -18,24 +18,24 @@
     },
     "CaseList": 
     [
-            {
-                "iMemMBSize":2,
-                "iWriteThreadCount":1,
-                "iReadThreadCount":1,
-                "iSleepTimeUs":0,
-                "iReadType":0,
-                "iWorkSecs":0,
-                "iCheckDetailValue":0,                
-                "iWriteBlockCount":10000,
-                "iFixedBlock":1,
-                "iQueueType":0,
-                "iNumaNode":0,
-                "vecWriteCpuList":[8, 9,10,11,12,13,14,15],
-                "vecReadCpuList":[7],
-                "iTestType":2,
-                "iTestCount":4
-            }                                     
+        {
+            "iMemMBSize":2,
+            "iWriteThreadCount":1,
+            "iReadThreadCount":1,
+            "iSleepTimeUs":10,
+            "iReadType":0,
+            "iWorkSecs":0,
+            "iCheckDetailValue":0,                                
+            "iFixedBlock":1,
+            "iNumaNode":0,
+            "vecWriteCpuList":[8,9,10,11,12,13,14,15],
+            "vecReadCpuList":[7],
 
+            "iWriteBlockCount":10000,
+            "iQueueType":2,
+            "iTestType":0,
+            "iTestCount":1
+        }                              
         ]    
 }
 

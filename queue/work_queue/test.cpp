@@ -237,13 +237,7 @@ int test_quant(MetaData& metaData) {
 
     LOG_RST(string("\n***************** Test Result Quant Queue ****************\n") + metaData.str() );
 
-    std::string strTestoutputStr = "";
-    if (metaData.iTestType != (int)TestType::Read) {        
-        strTestoutputStr +=  GetAnaTestOutputRst (vecWriteTestOutput,1);
-    }
-    if (metaData.iTestType != (int)TestType::Write) {
-        strTestoutputStr +=  GetAnaTestOutputRst (vecReadTestOutput, 2);
-    }
+    std::string strTestoutputStr = GetAnaTestOutputRst (vecWriteTestOutput,vecReadTestOutput, metaData.iTestType);
     LOG_RST(strTestoutputStr);
 
     unsigned long long ulStartTime = 0;
@@ -251,7 +245,7 @@ int test_quant(MetaData& metaData) {
     unsigned long long ulCostTime = 0;
     GetStartEndTimeFromWriteRead(vecWriteTestOutput, vecReadTestOutput, ulStartTime, ulEndTime);
 
-    if (metaData.iTestType == (int)TestType::Both) {
+    if (metaData.iTestType == (int)TestType::Both || metaData.iTestType == (int)TestType::Detail) {
         std::vector<unsigned long long> vecCostTime;
         GetPushPopDelayVecCostTime(vecReadTestOutput, vecCostTime);        
         std::string strAnaStr = GetAnaRst(vecCostTime,metaData, ulStartTime, ulEndTime, "Quant_Queue");
@@ -284,18 +278,6 @@ int test_mpmc(MetaData& metaData) {
 
     std::vector<threadPtr> vecReadTheads;
     vecReadTheads.reserve(metaData.iReadThreadCount);   
-    
-    // std::vector<unsigned long long> vecCostTime;
-    // vecCostTime.reserve(metaData.iWriteBlockCount);
-
-    // for (int i = 0; i < metaData.iWriteBlockCount; ++i) {
-    //     vecCostTime.push_back(0);
-    // }    
-    // std::vector<unsigned long long> vecStartTime;
-    // vecStartTime.reserve(metaData.iWriteThreadCount + metaData.iReadThreadCount);
-
-    // std::vector<unsigned long long> vecEndTime;
-    // vecEndTime.reserve(metaData.iWriteThreadCount + metaData.iReadThreadCount);   
 
     std::vector<TestOutput> vecWriteTestOutput;
     vecWriteTestOutput.reserve(metaData.iWriteThreadCount);
@@ -329,8 +311,8 @@ int test_mpmc(MetaData& metaData) {
 
     // TEST_LOG_DETAIL("MPMC QUEUE SIZE: " + std::to_string(uiQueueSize));
 
-    share_common::mpmc_queue<DataBlockFixed> dataBlockFixedQueue;
-    share_common::mpmc_queue<unsigned long long> ulQueue;
+    tech::mpmc_queue<DataBlockFixed> dataBlockFixedQueue;
+    tech::mpmc_queue<unsigned long long> ulQueue;
 
     std::mutex LogMutex;
 
@@ -467,32 +449,23 @@ int test_mpmc(MetaData& metaData) {
     // unsigned long long ulEndNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     // unsigned long long costNanosecs = ulEndNanosecs - ulStartNanosecs;
 
+    // LOG_RST(string("\n***************** Test Result MPMC Queue ****************\n") + metaData.str() );
+    // std::string strTestoutputStr = GetAnaTestOutputRst (vecWriteTestOutput, vecReadTestOutput, metaData.iTestType);
+    // LOG_RST(strTestoutputStr);
 
-    LOG_RST(string("\n***************** Test Result MPMC Queue ****************\n") + metaData.str() );
+    // if (metaData.iTestType == (int)TestType::Both || metaData.iTestType == (int)TestType::Detail) {
+    //     unsigned long long ulStartTime = 0;
+    //     unsigned long long ulEndTime = 0;
+    //     GetStartEndTimeFromWriteRead(vecWriteTestOutput, vecReadTestOutput, ulStartTime, ulEndTime);
 
-    std::string strTestoutputStr = "";
-    if (metaData.iTestType != (int)TestType::Read) {
-        strTestoutputStr +=  GetAnaTestOutputRst (vecWriteTestOutput,1);
-    }
-    if (metaData.iTestType != (int)TestType::Write) {
-        strTestoutputStr +=  GetAnaTestOutputRst (vecReadTestOutput, 2);
-    }
-    LOG_RST(strTestoutputStr);
-
-    unsigned long long ulStartTime = 0;
-    unsigned long long ulEndTime = 0;
-    unsigned long long ulCostTime = 0;
-    GetStartEndTimeFromWriteRead(vecWriteTestOutput, vecReadTestOutput, ulStartTime, ulEndTime);
-
-    if (metaData.iTestType == (int)TestType::Both) {
-        std::vector<unsigned long long> vecCostTime;
-        GetPushPopDelayVecCostTime(vecReadTestOutput, vecCostTime);
-        std::string strAnaStr = GetAnaRst(vecCostTime,metaData, ulStartTime, ulEndTime, "MPMC_Queue");
-        LOG_RST(strAnaStr);    
-    }
+    //     std::vector<unsigned long long> vecCostTime;
+    //     GetPushPopDelayVecCostTime(vecReadTestOutput, vecCostTime);
+    //     std::string strAnaStr = GetAnaRst(vecCostTime,metaData, ulStartTime, ulEndTime, "MPMC_Queue");
+    //     LOG_RST(strAnaStr);    
+    // }
 
 
-    TEST_LOG_DETAIL("[END] "+ NanoToMicroString(ulEndTime) +" MPMC Thread All \n");    
+    TEST_LOG_DETAIL("[END] MPMC Thread All \n");    
 
     return 1;
 }
@@ -507,18 +480,18 @@ struct Data {
 
 static_assert(sizeof(Data) == 128, "Data struct must be exactly 128 bytes");
 
-// =============================================
-// 获取当前时间的单调时钟（纳秒级），使用 clock_gettime
-// 返回：uint64_t，纳秒时间戳
-// =============================================
-inline uint64_t get_monotonic_ns() {
-        timespec ts;
-        if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
-                perror("clock_gettime failed");
-                return 0;
-        }
-        return static_cast<uint64_t>(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
-}
+// // =============================================
+// // 获取当前时间的单调时钟（纳秒级），使用 clock_gettime
+// // 返回：uint64_t，纳秒时间戳
+// // =============================================
+// inline uint64_t get_monotonic_ns() {
+//         timespec ts;
+//         if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
+//                 perror("clock_gettime failed");
+//                 return 0;
+//         }
+//         return static_cast<uint64_t>(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
+// }
 
 // =============================================
 // 设置当前线程的 CPU 亲和性（绑定到某个逻辑 CPU）
@@ -664,6 +637,7 @@ void test_mpmc_queue_with_affinity()
     LOG_RST(tmp);
 
 }
+
 
 
 void TestMain() {

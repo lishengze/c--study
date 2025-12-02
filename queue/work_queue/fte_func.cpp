@@ -17,7 +17,7 @@ using namespace std;
 /// @param ulStartWriteTimeNanosecs 写入开始时间
 /// @return true 写入结束
 /// @return false 写入未结束
-bool IsFteWriteEnd(ProcessStatus& eProcStatus, MetaData& metaData, int& iCurCount) {
+bool IsFteWriteEnd(ProcessStatus& eProcStatus, MetaData& metaData, int iCurCount) {
     if (ProcessStatus::Running != eProcStatus) return true;
 
     if (metaData.iWorkSecs == 0 && metaData.iWriteBlockCount > 0 && iCurCount >= metaData.iWriteBlockCount/metaData.iWriteThreadCount ) return true;
@@ -43,7 +43,7 @@ bool IsFteReadEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& u
 
 
 template <>
-void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_common::mpmc_queue<DataBlockFixed>& queue, 
+void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
                                             std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount,
                                             TestOutput& testOutput, int iCpuID, 
                                             std::mutex& LogMutex, MetaData& metaData) {
@@ -55,20 +55,22 @@ void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_co
     }
 
     testOutput.ulWriteStartTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    TEST_LOG_DETAIL_THREADS("MPMC Write  "+ NanoToMicroString(testOutput.ulWriteStartTime ) +" Working ***********************\n", LogMutex);
+    TEST_LOG_DEBUG_THREADS("MPMC Write  "+ NanoToMicroString(testOutput.ulWriteStartTime ) +" Working ***********************\n", LogMutex);
 
-    int iCurCount = 0;
+    testOutput.iWriteCount_ = 0;
     unsigned long long ulPushedFailedCount = 0;
 
     unsigned long long ulBeforePushTimes = 0;
     unsigned long long ulAfterPushTimes = 0;
+    DataBlockFixed dataBlock;
+    dataBlock.size_ = sizeof(DataBlockFixed);
 
-    while(!IsFteWriteEnd(eProcStatus, metaData, iCurCount)) {
-            DataBlockFixed dataBlock;
-            dataBlock.size_ = sizeof(DataBlockFixed);
+    while(!IsFteWriteEnd(eProcStatus, metaData, testOutput.iWriteCount_)) {
+            
+            
             dataBlock.push_time_  = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
             
-            if (metaData.iTestType == (int)(TestType::Write)
+            if (metaData.iTestType == (int)(TestType::Write) || metaData.iTestType == (int)TestType::Detail
             // || true
             ) {
                 ulBeforePushTimes = dataBlock.push_time_;
@@ -76,16 +78,16 @@ void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_co
         
             queue.push(dataBlock);
 
-            if (metaData.iTestType == (int)(TestType::Write)
+            if (metaData.iTestType == (int)(TestType::Write) || metaData.iTestType == (int)TestType::Detail
             // || true            
             ) {
                 ulAfterPushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-                testOutput.vecWriteAfterPushTimeList[iCurCount] = (ulAfterPushTimes);    
-                testOutput.vecWriteBeforePushTimeList[iCurCount] = (ulBeforePushTimes); 
+                testOutput.vecWriteAfterPushTimeList[testOutput.iWriteCount_] = (ulAfterPushTimes);    
+                testOutput.vecWriteBeforePushTimeList[testOutput.iWriteCount_] = (ulBeforePushTimes); 
             }     
 
             ulAtoWriteCount++;
-            iCurCount++;
+            testOutput.iWriteCount_++;
 
             // if (!queue.trypush(dataBlock) ) {
             //     ulPushedFailedCount++;
@@ -107,6 +109,10 @@ void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_co
         eProcStatus = ProcessStatus::WriteEnd;
     } 
 
+    TEST_LOG_DEBUG_THREADS("testOutput.iWriteCount_: " + std::to_string(testOutput.iWriteCount_)
+    + ", fristtime: " + NanoToMicroString(testOutput.vecWriteBeforePushTimeList[0])
+    + ", lasttime: " + NanoToMicroString(testOutput.vecWriteBeforePushTimeList[testOutput.iWriteCount_-1]), LogMutex);
+
     // TEST_LOG_DEBUG_THREADS("TryPush Failed Counts: " + std::to_string(ulPushedFailedCount), LogMutex)
 
     TEST_LOG_DETAIL_THREADS("[END] MPMC Write ulAtoWriteCount: "
@@ -118,7 +124,7 @@ void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_co
 
 
 template <>
-void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_common::mpmc_queue<DataBlockFixed>& queue, 
+void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
                                             std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
                                             TestOutput& testOutput, int iCpuID, 
                                             std::mutex& LogMutex,  MetaData& metaData) {
@@ -131,7 +137,8 @@ void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_com
     unsigned long long ulAfterPopTimes = 0;
 
     unsigned long long ulWaitCount = 1;
-    while(eProcStatus == ProcessStatus::Initing || (metaData.iTestType == (int)(TestType::Read) && eProcStatus != ProcessStatus::WriteEnd)) {
+    while(eProcStatus == ProcessStatus::Initing 
+    || (metaData.iTestType == (int)(TestType::Read) && eProcStatus != ProcessStatus::WriteEnd)) {
         if (ulWaitCount++%1000000 == 0) {
             TEST_LOG_DETAIL_THREADS("MPMC Read Waiting ProcStatus: "+ std::to_string(int(eProcStatus)) +" ***********************\n", LogMutex);
         }
@@ -139,11 +146,13 @@ void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_com
 
     
     testOutput.ulReadStartTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    TEST_LOG_DETAIL_THREADS("MPMC Read Working "+ NanoToMicroString(testOutput.ulReadStartTime ) +" ***********************\n", LogMutex);
+    TEST_LOG_DEBUG_THREADS("MPMC Read Working "+ NanoToMicroString(testOutput.ulReadStartTime ) +" ***********************\n", LogMutex);
+
+    // TEST_LOG_DEBUG_THREADS("testOutput.iReadCount_: " + std::to_string(testOutput.iReadCount_), LogMutex);
 
     while(!IsFteReadEnd(eProcStatus, ulAtoReadCount, metaData) ) {
                 
-        if (metaData.iTestType == (int)TestType::Read 
+        if (metaData.iTestType == (int)TestType::Read || metaData.iTestType == (int)TestType::Detail 
             // || true
         ) {
             ulBeforePopTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
@@ -162,7 +171,7 @@ void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_com
                 testOutput.iReadCount_++;
             }
 
-            if (metaData.iTestType == (int)TestType::Read 
+            if (metaData.iTestType == (int)TestType::Read || metaData.iTestType == (int)TestType::Detail 
                 // || true
             ) {
                 testOutput.vecReadAfterPopTimeList[ulAtoReadCount] = (ulAfterPopTimes);  
@@ -180,9 +189,18 @@ void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_com
         } else {
             ++ulPopFailCount;
         }
+
+        queue.pop(dataBlock);
+        ulAtoReadCount++;
+
     }
 
+    // TEST_LOG_DEBUG_THREADS("testOutput.iReadCount_: " + std::to_string(testOutput.iReadCount_), LogMutex);
+
     testOutput.ulReadEndTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+    LOG_RST("\n\nTest Pop Ana Start: " + NanoToMicroString(testOutput.ulReadStartTime)  + ", endTime:" + NanoToMicroString(testOutput.ulReadEndTime) 
+                        + ",ave: " + std::to_string( (testOutput.ulReadEndTime - testOutput.ulReadStartTime)/ ulAtoReadCount )  )
 
     TEST_LOG_DETAIL_THREADS("[END] MPMC Read  ulAtoReadCount: "
                     + std::to_string(ulAtoReadCount)
@@ -192,14 +210,14 @@ void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_com
 }
 
 template <>
-void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, share_common::mpmc_queue<unsigned long long>& queue, 
+void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech::mpmc_queue<unsigned long long>& queue, 
                                                 std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoWriteCount, 
                                                 TestOutput& testOutput,int iCpuID,  
                                                 std::mutex& LogMutex, MetaData& metaData) {
 
     TEST_LOG_DEBUG_THREADS("MPMC Write  Initing ***********************\n", LogMutex);
     BindCpuID(iCpuID, metaData.iNumaNode, "MPMC Write ");
-    int iCurCount = 0;
+    testOutput.iWriteCount_ = 0;
     unsigned long long ulPushedFailedCount = 0;
 
     while(eProcStatus == ProcessStatus::Initing ) {
@@ -217,7 +235,7 @@ void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, shar
 
         int index = queue.push(ulCurTimeNanosecs);
         ulAtoWriteCount++;
-        iCurCount++;
+        testOutput.iWriteCount_++;
 
         ulCurTimeNanosecs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
@@ -234,7 +252,7 @@ void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, shar
         if (metaData.iSleepTimeUs > 0) {
             std::this_thread::sleep_for(std::chrono::microseconds(metaData.iSleepTimeUs));
         }
-    }  while(!IsFteWriteEnd(eProcStatus, metaData, iCurCount));
+    }  while(!IsFteWriteEnd(eProcStatus, metaData, testOutput.iWriteCount_));
 
     std::lock_guard<std::mutex> lock(mtx);
 
@@ -257,7 +275,7 @@ void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, shar
 
 
 template <>
-void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, share_common::mpmc_queue<unsigned long long>& queue, 
+void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech::mpmc_queue<unsigned long long>& queue, 
                                                 std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
                                                 TestOutput& testOutput,int iCpuID, 
                                                 std::mutex& LogMutex, MetaData& metaData) {
@@ -282,7 +300,7 @@ void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, share
                 +"***********************\n", LogMutex);
 
     do {
-        if (metaData.iTestType == (int)TestType::Read) {
+        if (metaData.iTestType == (int)TestType::Read || metaData.iTestType == (int)TestType::Detail) {
             ulBeforePopTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
         }
 
@@ -297,7 +315,7 @@ void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, share
                 testOutput.iReadCount_++;
             }
             
-            if (metaData.iTestType == (int)(TestType::Read)) {
+            if (metaData.iTestType == (int)(TestType::Read) || metaData.iTestType == (int)(TestType::Detail)) {
                 testOutput.vecReadAfterPopTimeList[ulAtoReadCount] = (ulAfterPopTimes);  
                 testOutput.vecReadBeforePopTimeList[ulAtoReadCount] = (ulBeforePopTimes);
             }

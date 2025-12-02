@@ -286,7 +286,7 @@ void BindCpuID(int iCpuID, int iNumaNode, string strMetaInfo) {
     // }
 
     // std::cout << "Thread: " << tid  << " Start Running, Try Bind: " << iCpuID << std::endl;
-    TEST_LOG_DETAIL(strMetaInfo + " Thread: " + std::to_string(tid) + ",  Try Bind CPU: " + std::to_string(iCpuID));
+    // TEST_LOG_DETAIL(strMetaInfo + " Thread: " + std::to_string(tid) + ",  Try Bind CPU: " + std::to_string(iCpuID));
 
     cpu_set_t mask;
     CPU_ZERO(&mask);
@@ -423,14 +423,14 @@ std::string GetAnaRst(std::vector<unsigned long long>& vecTime, MetaData metaDat
                 + " KB";      
     }
 
-    std::string strMsg =  "\nPush To Pop Delay Time: \n" + sDelayTimeInfo + "\n" + sThroughput + "\n\n";                                
+    std::string strMsg =  "Push To Pop Delay Time: \n" + sDelayTimeInfo + "\n" + sThroughput + "\n\n";                                
 
     return strMsg;
 }
 
 
 
-std::string GetAnaTestOutputRst(TestOutput& testOutput, int iTestType) {
+std::string GetAnaTestOutputRstSimple(TestOutput& testOutput, int iTestType) {
     std::vector<unsigned long long> vecPushIntervelList;
     std::vector<unsigned long long> vecPopIntervelList;
 
@@ -466,7 +466,7 @@ std::string GetSimpleTimeData(std::vector<unsigned long long>& vecTime) {
     unsigned long long ul75 = vecTime[std::floor(vecTime.size()*75/100)];
     unsigned long long ul90 = vecTime[std::floor(vecTime.size()*9/10)];
 
-    std::string sDelayTimeInfo = ",dataCount: " + NanoStr(vecTime.size()) 
+    std::string sDelayTimeInfo = "dataCount: " + NanoStr(vecTime.size()) 
                         +  ", min=" + NanoStr(ulMin) + ", max=" + NanoStr(ulMax)
                         + ", 25%=" + NanoStr(ul25) + ", 50%=" + NanoStr(ul50) 
                         + ", 75%=" + NanoStr(ul75) + ", 90%=" + NanoStr(ul90)
@@ -475,9 +475,15 @@ std::string GetSimpleTimeData(std::vector<unsigned long long>& vecTime) {
         
 }
 
-std::string GetAnaTestOutputTimeRst(TestOutput& testOutput, int iTestType) {
+std::string GetAnaTestOutputTimeRst(TestOutput& testOutput, int iTestType, int iTestTypeReal) {
     std::string sRst = "";
+    
+    // TEST_LOG_WARN("-------------- iTestType: " + std::to_string(iTestType));
 
+
+    // cout << "iTestType:  " << iTestType << endl;
+
+    // 记录写入的详细信息;
     if (iTestType != (int)TestType::Read) {
         std::vector<unsigned long long > vecPushCostTime;
         vecPushCostTime.reserve(testOutput.vecWriteBeforePushTimeList.size());
@@ -492,17 +498,17 @@ std::string GetAnaTestOutputTimeRst(TestOutput& testOutput, int iTestType) {
 
         unsigned long long costNano = testOutput.ulWriteEndTime - testOutput.ulWriteStartTime;
 
-        std::string sTest="";
-        int testCount = std::min(10, (int)(testOutput.vecWriteBeforePushTimeList.size()));
-        // for (int i = 0; i < testCount; ++i) {
-        //     sTest += NanoToMicroString(testOutput.vecWriteBeforePushTimeList[i]) + ", " + NanoToMicroString(testOutput.vecWriteAfterPushTimeList[i]) + "\n";
-        // }        
-
-
-
+        std::string sTest="";        
+        if (iTestTypeReal != (int)TestType::Both) {
+            int testCount = std::min(10, (int)(testOutput.vecWriteBeforePushTimeList.size()));
+            for (int i = 0; i < testCount; ++i) {
+                sTest += NanoToMicroString(testOutput.vecWriteBeforePushTimeList[i]) + ", " + NanoToMicroString(testOutput.vecWriteAfterPushTimeList[i]) + "\n";
+            }   
+        }
         return std::string("costNano: ") + NanoStr(costNano)  + ", "+  GetSimpleTimeData(vecPushCostTime) + sTest;
     }
 
+    // 记录读取的详细信息;
     if (iTestType != (int)TestType::Write) {
         std::vector<unsigned long long > vecPopCostTime;
         vecPopCostTime.reserve(testOutput.vecReadBeforePopTimeList.size());
@@ -517,73 +523,92 @@ std::string GetAnaTestOutputTimeRst(TestOutput& testOutput, int iTestType) {
 
         unsigned long long costNano = testOutput.ulReadEndTime - testOutput.ulReadStartTime;
 
-        std::string sTest="";
-        int testCount = std::min(10, (int)(testOutput.vecReadBeforePopTimeList.size()));
-        // for (int i = 0; i < testCount; ++i) {
-        //     sTest += NanoToMicroString(testOutput.vecReadBeforePopTimeList[i]) + ", " + NanoToMicroString(testOutput.vecReadAfterPopTimeList[i]) + "\n";
-        // }        
+        // TEST_LOG_WARN("-------------- ulReadEndTime: " + std::to_string(testOutput.ulReadEndTime) + ", ulReadStartTime: " + std::to_string(testOutput.ulReadStartTime));
 
+        std::string sTest="";                
+        if (iTestTypeReal != (int)TestType::Both) {
+            int testCount = std::min(10, (int)(testOutput.vecReadBeforePopTimeList.size()));
+            for (int i = 0; i < testCount; ++i) {
+                sTest += NanoToMicroString(testOutput.vecReadBeforePopTimeList[i]) + ", " + NanoToMicroString(testOutput.vecReadAfterPopTimeList[i]) + "\n";
+            }   
+        }
         return std::string("costNano: ") + NanoStr(costNano) + ", "+ GetSimpleTimeData(vecPopCostTime)+ sTest;
     }    
 }
 
-std::string GetAnaTestOutputRst(std::vector<TestOutput>& vecWriteTestOutput, int iTestType) {
+std::string GetAnaTestOutputRst(std::vector<TestOutput>& vecWriteTestOutput, std::vector<TestOutput>& vecReadTestOutput, int iTestType) {
     std::string sRst = "\n";
-    if (vecWriteTestOutput.size() > 0) {
 
-        unsigned long long ulReadStartTime =  vecWriteTestOutput[0].ulReadStartTime;
-        unsigned long long ulReadEndTime = vecWriteTestOutput[0].ulReadEndTime;
-        unsigned long long ulWriteStartTime = vecWriteTestOutput[0].ulWriteStartTime;
-        unsigned long long ulWriteEndTime = vecWriteTestOutput[0].ulWriteEndTime;
+    // cout << "iTestType: " << iTestType << endl;
 
-        if (iTestType == 1) {
-            sRst += "Write Push Time Ana: \n";
-        }else if (iTestType == 2) {
-            sRst += "Read Pop Time Ana: \n";
-        }        
-        
-        int iSumWriteDataCount = 0;
-        int iSumReadDataCount = 0;
+    if (iTestType != (int)(TestType::Read)) { // 获取写入的详细信息;
+        sRst += "\nWrite Push Time Ana: \n";
+        // cout << sRst << endl;
 
-        for(auto& tmp:vecWriteTestOutput) {
-            sRst += GetAnaTestOutputTimeRst(tmp, iTestType);
+        if (vecWriteTestOutput.size() > 0) {
+            unsigned long long ulWriteStartTime = vecWriteTestOutput[0].ulWriteStartTime;
+            unsigned long long ulWriteEndTime = vecWriteTestOutput[0].ulWriteEndTime;
+            unsigned long long iSumWriteDataCount = 0;
 
-            if (iTestType != (int)(TestType::Write)) {
-                ulReadStartTime = ulReadStartTime <= tmp.ulReadStartTime ? ulReadStartTime : tmp.ulReadStartTime;
-                ulReadEndTime = ulReadEndTime >= tmp.ulReadEndTime ? ulReadEndTime : tmp.ulReadEndTime;
-                iSumReadDataCount += tmp.iBlockCount_;
-            }
+            
+            for(auto& tmp:vecWriteTestOutput) {
 
+                if (iTestType == (int)(TestType::Write) || iTestType == (int)(TestType::Detail)) {
+                    sRst += GetAnaTestOutputTimeRst(tmp, (int)TestType::Write, iTestType);
+                }
 
-            if (iTestType != (int)(TestType::Read)) {
                 ulWriteStartTime = ulWriteStartTime <= tmp.ulWriteStartTime ? ulWriteStartTime : tmp.ulWriteStartTime;
                 ulWriteEndTime = ulWriteEndTime >= tmp.ulWriteEndTime ? ulWriteEndTime : tmp.ulWriteEndTime;  
-                iSumWriteDataCount += tmp.iBlockCount_;
-            }          
+                iSumWriteDataCount += tmp.iWriteCount_;  
+            }
+            
+            sRst += "WriteStart: " + NanoToMicroString(ulWriteStartTime) + ","
+                + "WriteEnd: " + NanoToMicroString(ulWriteEndTime) + ","
+                + "cost: " + NanoStr(ulWriteEndTime - ulWriteStartTime)
+                + ", ave: " + (iSumWriteDataCount > 0 ? NanoStr((ulWriteEndTime - ulWriteStartTime)/iSumWriteDataCount) : string("No Data"))
+                + "\n";                           
+        } else {
+            return "Write Info Emtpy!";
         }
 
-        // sRst +="\n";
-
-        if (iTestType != (int)(TestType::Write)) {
-            sRst += "ReadStart: " + NanoToMicroString(ulReadStartTime) + ","
-                 + "ReadEnd: " + NanoToMicroString(ulReadEndTime) + ","
-                 + ", cost: " + NanoStr(ulReadEndTime - ulReadStartTime) 
-                 + ", ave: " + NanoStr((ulReadEndTime - ulReadStartTime)/iSumReadDataCount)
-                 
-                 + "\n";
-        }   
-
-        if (iTestType != (int)(TestType::Read)) {
-            sRst += "WriteStart: " + NanoToMicroString(ulWriteStartTime) + ","
-                 + "WriteEnd: " + NanoToMicroString(ulWriteEndTime) + ","
-                 + "cost: " + NanoStr(ulWriteEndTime - ulWriteStartTime)
-                 + ", ave: " + NanoStr((ulWriteEndTime - ulWriteStartTime)/iSumWriteDataCount)
-                 + "\n";
-        }                              
-
-    } else {
-        sRst += "Empty!";
     }
+
+    // 获取读取的详细信息;
+    if (iTestType != (int)(TestType::Write)) {
+        sRst += "\nRead Pop Time Ana: \n";
+        if (vecReadTestOutput.size() > 0) {
+
+            unsigned long long ulReadStartTime =  vecReadTestOutput[0].ulReadStartTime;
+            unsigned long long ulReadEndTime = vecReadTestOutput[0].ulReadEndTime;
+            unsigned long long iSumReadDataCount = 0;
+
+            
+            for(auto& tmp:vecReadTestOutput) {
+                if (iTestType == (int)(TestType::Read) || iTestType == (int)(TestType::Detail)) {
+                    sRst += GetAnaTestOutputTimeRst(tmp, (int)TestType::Read, iTestType);
+                }
+
+                ulReadStartTime = ulReadStartTime <= tmp.ulReadStartTime ? ulReadStartTime : tmp.ulReadStartTime;
+                ulReadEndTime = ulReadEndTime >= tmp.ulReadEndTime ? ulReadEndTime : tmp.ulReadEndTime;
+                iSumReadDataCount += tmp.iReadCount_;      
+
+                // TEST_LOG_WARN("iReadCount_: " + std::to_string(tmp.iReadCount_));  
+            }
+
+            // TEST_LOG_WARN("iSumReadDataCount: " + std::to_string(iSumReadDataCount));
+
+            sRst += "ReadStart: " + NanoToMicroString(ulReadStartTime) + ","
+                + "ReadEnd: " + NanoToMicroString(ulReadEndTime) + ","
+                + ", cost: " + NanoStr(ulReadEndTime - ulReadStartTime) 
+                + ", ave: " + (iSumReadDataCount > 0 ? NanoStr((ulReadEndTime - ulReadStartTime)/iSumReadDataCount) : string("NO Data") )
+                + "\n";                            
+        } else {
+            return "Read Info Emtpy!";            
+        }
+
+    } 
+    
+
 
     sRst += "\n";
     return sRst;
@@ -602,7 +627,6 @@ void GetStartEndTimeFromWriteRead(std::vector<TestOutput>& vecWriteTestOutput, s
 
         // cout << "ulReadEndTime: "  << ulReadEndTime << ", ulWriteEndTime: " << ulWriteEndTime << endl;
            
-
         for(auto& tmp:vecWriteTestOutput) {
             ulWriteStartTime = ulReadStartTime <= tmp.ulWriteStartTime ? ulWriteStartTime : tmp.ulWriteStartTime;
             ulWriteEndTime = ulWriteEndTime >= tmp.ulWriteEndTime ? ulWriteEndTime : tmp.ulWriteEndTime;       
@@ -612,8 +636,6 @@ void GetStartEndTimeFromWriteRead(std::vector<TestOutput>& vecWriteTestOutput, s
             ulReadStartTime = ulReadStartTime <= tmp.ulReadStartTime ? ulReadStartTime : tmp.ulReadStartTime;
             ulReadEndTime = ulReadEndTime >= tmp.ulReadEndTime ? ulReadEndTime : tmp.ulReadEndTime;     
         }        
-
-        
 
         ulStartTime = std::min(ulReadStartTime, ulWriteStartTime);
         ulEndTime = std::max(ulReadEndTime, ulWriteEndTime);
@@ -632,19 +654,16 @@ void GetPushPopDelayVecCostTime(std::vector<TestOutput>& vecReadOutput, std::vec
         //  TEST_LOG_WARN("ReadCount: " + std::to_string(tmp.vecCostTime.size()) + ", firstTime: " + std::to_string(tmp.vecCostTime[0]));
         for (auto& time:tmp.vecCostTime) {
             if (time > 0) {
-                // i++;
                 vecCostTime.push_back(time);
             }
         }
     }
-
-    // cout << "------ I: " << i << endl;
 }
 
 std::string GetAnaRst(std::vector<unsigned long long>& vecTime, MetaData metaData, 
                     unsigned long long ulStartTime, unsigned long long ulEndTime, 
                     std::string sQueueName) {
-    TEST_LOG_DETAIL("Start Ana Result: "+ sQueueName + ", ReadCount: " + std::to_string(vecTime.size()));
+    TEST_LOG_DETAIL("Start Ana Result: "+ sQueueName + ", ReadCount: " + std::to_string(vecTime.size()) + "\n");
 
     if (vecTime.size() == 0) return "";
 
@@ -653,9 +672,17 @@ std::string GetAnaRst(std::vector<unsigned long long>& vecTime, MetaData metaDat
     unsigned long long ulMax = 0;
     unsigned long long ulAve = 0;
     std::sort(vecTime.begin(), vecTime.end());
-
+    
     ulMin = vecTime[0];
     ulMax = vecTime[vecTime.size()-1];
+
+    double dSumTime = 0;
+
+    for(auto cost:vecTime) {
+        dSumTime+= cost/10;
+    }
+
+    unsigned long long ave2 = dSumTime / vecTime.size() * 10;
 
     unsigned long long ul25 = vecTime[std::floor(vecTime.size()*25/100)];
     unsigned long long ul50 = vecTime[std::floor(vecTime.size()/2)];
@@ -665,11 +692,13 @@ std::string GetAnaRst(std::vector<unsigned long long>& vecTime, MetaData metaDat
     std::string sDelayTimeInfo = "Start: " + NanoToMicroString(ulStartTime) 
                         + ", End: " + NanoToMicroString(ulEndTime)
                         + ", cost: " + NanoStr((ulEndTime - ulStartTime))
-                        + ", ave: " + NanoStr((ulEndTime - ulStartTime) / vecTime.size()) + "\n"
-                        + "dataCount: " + std::to_string(vecTime.size()) 
-                        +  ", min=" + NanoStr(ulMin) + ", max=" + NanoStr(ulMax)
+                        + ", dataCount: " + std::to_string(vecTime.size()) 
+                        + ", ave1: " + NanoStr((ulEndTime - ulStartTime) / vecTime.size()) 
+                        + "\n"                        
+                        +  "min=" + NanoStr(ulMin) + ", max=" + NanoStr(ulMax)
                         + ", 25%=" + NanoStr(ul25) + ", 50%=" + NanoStr(ul50) 
-                        + ", 75%=" + NanoStr(ul75) + ", 90%=" + NanoStr(ul90);
+                        + ", 75%=" + NanoStr(ul75) + ", 90%=" + NanoStr(ul90) 
+                        + ", ave2=" + NanoStr(ave2);
     
     std::string sThroughput = "";
     unsigned long long  costNanosecs = ulEndTime - ulStartTime;
@@ -686,13 +715,14 @@ std::string GetAnaRst(std::vector<unsigned long long>& vecTime, MetaData metaDat
         }
         unsigned long long dBytesPerSecs = dBlockPerSecs * BlockSize;
 
-        sThroughput +=  ", dBlockPerSecs: " 
+        sThroughput +=  "dBlockPerSecs: " 
                 
                 + std::to_string(dBlockPerSecs) + ", KB/S: " + std::to_string(dBytesPerSecs/1024) 
                 + " KB";      
     }
 
-    std::string strMsg =  "\nPush To Pop Delay Time: \n" + sDelayTimeInfo + "\n" + sThroughput + "\n\n";                                
+    std::string strMsg =  sQueueName + " Push To Pop Time Ana: \n" + sDelayTimeInfo  + "\n\n";                                
 
     return strMsg;
 }
+

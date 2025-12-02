@@ -2,7 +2,7 @@
 #include "struct.h"
 
 
-bool IsQuantWriteEnd(MetaData& metaData, ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoWriteCount, int64& iCurCount) {
+bool IsQuantWriteEnd(MetaData& metaData, ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoWriteCount, unsigned int  iCurCount) {
     if (eProcStatus != ProcessStatus::Running) return true;
 
     if (metaData.iWorkSecs == 0 && metaData.iWriteBlockCount > 0 && iCurCount >= metaData.iWriteBlockCount/metaData.iWriteThreadCount ) return true;
@@ -40,9 +40,9 @@ void *read_thread_func_quant_pos(ProcessStatus& eProcStatus, int64& readPos, que
         // std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
 
-    TEST_LOG_DETAIL_THREADS("[START] Quant Queue Pos Read thread Working  \n", LogMutex);
+    TEST_LOG_DEBUG_THREADS("[START] Quant Queue Pos Read thread Working  \n", LogMutex);
     char tc;                       // 用于验证数据一致性的字符
-    int64 count = 0;               // 读取计数器
+    testOutput.iReadCount_ = 0;               // 读取计数器
     int32 len = 0;                 // 单次读取长度
     char *pbuf;                    // 指向队列数据的指针
     readPos = workQueue.get_read_pos();  // 初始化读取位置
@@ -97,7 +97,7 @@ void *read_thread_func_quant_pos(ProcessStatus& eProcStatus, int64& readPos, que
             }
 
 
-            if (metaData.iTestType == (int)TestType::Read) {
+            if (metaData.iTestType == (int)TestType::Read || metaData.iTestType == (int)TestType::Detail) {
                 testOutput.vecReadAfterPopTimeList[ulAtoReadCount] = (ulAfterPopTime);  
                 testOutput.vecReadBeforePopTimeList[ulAtoReadCount] = (ulBeforePopTime);
             }              
@@ -106,7 +106,7 @@ void *read_thread_func_quant_pos(ProcessStatus& eProcStatus, int64& readPos, que
             if(metaData.iReadThreadCount == 1)
                 workQueue.read_cmt_pos(readPos);  // 提交读取位置（单消费者模式）
             
-            count++;
+            testOutput.iReadCount_++;
             ulAtoReadCount++;
         }
         
@@ -115,7 +115,7 @@ void *read_thread_func_quant_pos(ProcessStatus& eProcStatus, int64& readPos, que
 
     testOutput.ulReadEndTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     
-    TEST_LOG_DETAIL_THREADS("[END] POS Read thread end,count="+std::to_string(count) 
+    TEST_LOG_DETAIL_THREADS("[END] POS Read thread end,count="+std::to_string(testOutput.iReadCount_) 
                 + ", ulAtoReadCount="+std::to_string(ulAtoReadCount) + ", eProcStatus: " + std::to_string((int)(eProcStatus))
                 + ", workQueue.get_used()="+std::to_string(workQueue.get_used())+ ", endTime:" + NanoToMicroString(testOutput.ulReadEndTime ) , LogMutex);
     
@@ -143,7 +143,7 @@ void *read_thread_func_quant_cmt(ProcessStatus& eProcStatus, que_proc_buf& workQ
         std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
     
-    TEST_LOG_DETAIL_THREADS("[Start] Quant Queue CMT Read thread Working\n", LogMutex);
+    TEST_LOG_DEBUG_THREADS("[Start] Quant Queue CMT Read thread Working\n", LogMutex);
     
     int32 i= 0;
     int64 tpos = 0;
@@ -195,7 +195,7 @@ void write_thread_func_quant2(ProcessStatus& eProcStatus, que_proc_buf& workQueu
 
 
     testOutput.ulWriteStartTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    TEST_LOG_DETAIL_THREADS("[START] Quant Queue Write thread Working \n", LogMutex);
+    TEST_LOG_DEBUG_THREADS("[START] Quant Queue Write thread Working \n", LogMutex);
 
 
     while(!IsQuantWriteEnd(metaData,eProcStatus, ulAtoWriteCount, count)) {
@@ -224,7 +224,7 @@ void write_thread_func_quant2(ProcessStatus& eProcStatus, que_proc_buf& workQueu
             // 单生产者模式 - 使用普通写入接口
             do{
 
-                if (metaData.iTestType == (int)TestType::Write) {
+                if (metaData.iTestType == (int)TestType::Write|| metaData.iTestType == (int)TestType::Detail) {
                     ulBeforePushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();                    
                 }
                 // 获取写入位置和缓冲区指针
@@ -263,7 +263,7 @@ void write_thread_func_quant2(ProcessStatus& eProcStatus, que_proc_buf& workQueu
                 
                 workQueue.write_cmt(tpos,iBufferSize);  // 提交写入
 
-                if (metaData.iTestType == (int)TestType::Write) {
+                if (metaData.iTestType == (int)TestType::Write|| metaData.iTestType == (int)TestType::Detail) {
                     ulAfterPushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
                     testOutput.vecWriteAfterPushTimeList[count] = (ulAfterPushTimes);  
                     testOutput.vecWriteBeforePushTimeList[count] = (ulBeforePushTimes);
@@ -281,7 +281,7 @@ void write_thread_func_quant2(ProcessStatus& eProcStatus, que_proc_buf& workQueu
 
             do{
                 // 获取写入位置和缓冲区指针（多线程安全版本）
-                if (metaData.iTestType == (int)TestType::Write) {
+                if (metaData.iTestType == (int)TestType::Write|| metaData.iTestType == (int)TestType::Detail) {
                     ulBeforePushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
                 }
 
@@ -318,7 +318,7 @@ void write_thread_func_quant2(ProcessStatus& eProcStatus, que_proc_buf& workQueu
                 }
                 workQueue.write_cmt_mth(tpos,iBufferSize);  // 提交写入（多线程安全版本）
 
-                if (metaData.iTestType == (int)TestType::Write) {
+                if (metaData.iTestType == (int)TestType::Write|| metaData.iTestType == (int)TestType::Detail) {
                     ulAfterPushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
                     testOutput.vecWriteAfterPushTimeList[count] = (ulAfterPushTimes);  
                     testOutput.vecWriteBeforePushTimeList[count] = (ulBeforePushTimes);
@@ -359,9 +359,8 @@ void write_thread_func_quant(ProcessStatus& eProcStatus, que_proc_buf& workQueue
     while(eProcStatus == ProcessStatus::Initing ) {
         // std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
-    
-        
-    int64 count = 0;  // 当前线程, 写入计数器
+            
+    testOutput.iWriteCount_ = 0;  // 当前线程, 写入计数器
     char *pbuf;       // 指向队列缓冲区的指针
     int64 tpos;       // 写入位置
 
@@ -376,42 +375,41 @@ void write_thread_func_quant(ProcessStatus& eProcStatus, que_proc_buf& workQueue
     if (metaData.iFixedBlock == 1) {
         pFixedBlock = GetDataBlockFixed();
         iBufferSize = pFixedBlock->size_;
-        pSrcBuffer = (char*)pFixedBlock.get();
+        pSrcBuffer = (char*)(pFixedBlock.get());
     } else if (metaData.iFixedBlock == 2) {
         iBufferSize = 8;
         pSrcBuffer = (char*)(&ulBeforePushTimes);
     }else {
         pVirtualBlock = GetRandomDataBlock();
         if(pVirtualBlock == nullptr){
+            return;
         }        
         iBufferSize = pVirtualBlock->size_;
     }
 
     testOutput.ulWriteStartTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    TEST_LOG_DETAIL_THREADS("[START] Quant Queue Write thread Working \n", LogMutex);
+    TEST_LOG_DEBUG_THREADS("[START] Quant Queue Write thread Working "+ NanoToMicroString(testOutput.ulWriteStartTime)  +"\n", LogMutex);
 
+    while(!IsQuantWriteEnd(metaData,eProcStatus, ulAtoWriteCount, testOutput.iWriteCount_)) {
 
-    while(!IsQuantWriteEnd(metaData,eProcStatus, ulAtoWriteCount, count)) {
-
-        ulBeforePushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        ulBeforePushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();                    
 
         if (metaData.iFixedBlock == (int)(BlockType::FixedStruct)) {
-            //POD类型的数据，可以直接拷贝;
             pFixedBlock->push_time_ = ulBeforePushTimes;
         } 
-
-        if (metaData.iWriteThreadCount == 1) {
+   
+        if(metaData.iWriteThreadCount == 1) {
             workQueue.write(pSrcBuffer,iBufferSize);  // 提交写入
         } else {
-            workQueue.write_mth(pSrcBuffer,iBufferSize);  // 提交写入（多线程安全版本）
+            workQueue.write_mth(pSrcBuffer,iBufferSize);  // 提交写入
         }
         
-        if (metaData.iTestType == (int)TestType::Write) {
+        if (metaData.iTestType == (int)TestType::Write|| metaData.iTestType == (int)TestType::Detail) {
             ulAfterPushTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-            testOutput.vecWriteAfterPushTimeList[count] = (ulAfterPushTimes);  
-            testOutput.vecWriteBeforePushTimeList[count] = (ulBeforePushTimes);
+            testOutput.vecWriteAfterPushTimeList[testOutput.iWriteCount_] = (ulAfterPushTimes);  
+            testOutput.vecWriteBeforePushTimeList[testOutput.iWriteCount_] = (ulBeforePushTimes);
         }                
-        ++count; 
+        ++testOutput.iWriteCount_; 
         ++ulAtoWriteCount;
         
         if (metaData.iSleepTimeUs > 0) {
@@ -427,7 +425,7 @@ void write_thread_func_quant(ProcessStatus& eProcStatus, que_proc_buf& workQueue
     testOutput.ulWriteEndTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
     TEST_LOG_DETAIL_THREADS( "[END] Quant Write Thread ulAtoWriteCount=" + std::to_string(ulAtoWriteCount) 
-                + ", count=" + std::to_string(count) + ", eProcStatus: " + std::to_string((int)(eProcStatus)) 
+                + ", count=" + std::to_string(testOutput.iWriteCount_) + ", eProcStatus: " + std::to_string((int)(eProcStatus)) 
                 + ", workQueue.get_used(): " + std::to_string(workQueue.get_used()) 
                 + ", endTime:" + NanoToMicroString(testOutput.ulWriteEndTime ) + "\n", LogMutex);
 }
@@ -451,7 +449,7 @@ void read_thread_func_quant_simple(ProcessStatus& eProcStatus, que_proc_buf& wor
 
     char tcache[4096];  // 读取数据缓冲区
     char tc;             // 用于验证数据一致性的字符
-    int64 count = 0;     // 读取计数器
+    testOutput.iReadCount_ = 0;     // 读取计数器
     int32 len = 0;       // 单次读取长度
     char *pbuf;          // 指向队列数据的指针
     
@@ -464,7 +462,7 @@ void read_thread_func_quant_simple(ProcessStatus& eProcStatus, que_proc_buf& wor
 
     testOutput.ulReadStartTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
-    TEST_LOG_DETAIL_THREADS("Quant Queue Simple Read Thread Working "
+    TEST_LOG_DEBUG_THREADS("Quant Queue Simple Read Thread Working "
                             + NanoToMicroString(testOutput.ulReadStartTime) +"\n", LogMutex);
 
     while(!IsQuantReadEnd(workQueue, metaData, eProcStatus, ulAtoReadCount)) {
@@ -472,7 +470,7 @@ void read_thread_func_quant_simple(ProcessStatus& eProcStatus, que_proc_buf& wor
         if(metaData.iReadThreadCount == 1){
             // 单消费者模式 - 直接读取并提交
 
-            if (metaData.iTestType == (int)TestType::Read) {
+            if (metaData.iTestType == (int)TestType::Read || metaData.iTestType == (int)TestType::Detail) {
                 ulBeforePopTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
             }
 
@@ -513,13 +511,13 @@ void read_thread_func_quant_simple(ProcessStatus& eProcStatus, que_proc_buf& wor
             
                 workQueue.read_cmt();  // 提交读取（单消费者模式）
 
-                if (metaData.iTestType == (int)TestType::Read) {
+                if (metaData.iTestType == (int)TestType::Read || metaData.iTestType == (int)TestType::Detail) {
                     ulAfterPopTimes = ulPopTime;
                     testOutput.vecReadAfterPopTimeList[ulAtoReadCount] = (ulAfterPopTimes);
                     testOutput.vecReadBeforePopTimeList[ulAtoReadCount] = (ulBeforePopTimes);
                 }   
 
-                count++;
+                testOutput.iReadCount_++;
                 ulAtoReadCount++;
 
                 if (IsQuantReadEnd(workQueue, metaData, eProcStatus, ulAtoReadCount)) break;
@@ -527,7 +525,7 @@ void read_thread_func_quant_simple(ProcessStatus& eProcStatus, que_proc_buf& wor
         }
         else{
             // 多消费者模式 - 使用弹出接口
-            if (metaData.iTestType == (int)TestType::Read) {
+            if (metaData.iTestType == (int)TestType::Read || metaData.iTestType == (int)TestType::Detail) {
                 ulBeforePopTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();                
             }
 
@@ -557,7 +555,7 @@ void read_thread_func_quant_simple(ProcessStatus& eProcStatus, que_proc_buf& wor
                     ulPushTime = pBlock->push_time_;
                 }   
 
-                if (metaData.iTestType == (int)TestType::Read) {
+                if (metaData.iTestType == (int)TestType::Read || metaData.iTestType == (int)TestType::Detail) {
                     ulAfterPopTimes = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
                     testOutput.vecReadAfterPopTimeList.push_back(ulAfterPopTimes);
                     testOutput.vecReadBeforePopTimeList.push_back(ulBeforePopTimes);
@@ -569,7 +567,7 @@ void read_thread_func_quant_simple(ProcessStatus& eProcStatus, que_proc_buf& wor
                     testOutput.vecCostTime.push_back(ulPopTime - ulPushTime);
                 }
 
-                count++;
+                testOutput.iReadCount_++;
                 
                 ulAtoReadCount++;
 
@@ -580,11 +578,10 @@ void read_thread_func_quant_simple(ProcessStatus& eProcStatus, que_proc_buf& wor
         // comm_utils::sleep_us(metaData.iSleepTimeUs);  // 可选：控制读取速率
         
     }
-    testOutput.iReadCount_ = count;
     testOutput.ulReadEndTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
     TEST_LOG_DETAIL_THREADS("[END] Simple Read Thread ulAtoReadCount: " + std::to_string(ulAtoReadCount) 
-                + ",count: " + std::to_string(count) + ", eProcStatus: " + std::to_string((int)(eProcStatus))
+                + ",count: " + std::to_string(testOutput.iReadCount_) + ", eProcStatus: " + std::to_string((int)(eProcStatus))
                 + ", workQueue.get_used(): " + std::to_string(workQueue.get_used()) 
                 + ", dataCount: " +  std::to_string(testOutput.vecCostTime.size())
                 + ", endTime:" + NanoToMicroString(testOutput.ulReadEndTime) + "\n", LogMutex);

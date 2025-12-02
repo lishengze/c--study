@@ -102,11 +102,10 @@ void pro_func(int id, T& queue, std::atomic<uint32_t>& pro_count, uint32_t max_c
 /// @param ulStartWriteTimeNanosecs 写入开始时间
 /// @return true 写入结束
 /// @return false 写入未结束
-bool IsFteWriteEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoWriteCount, 
-                    MetaData& metaData, unsigned long long& ulStartWriteTimeNanosecs);
+bool IsFteWriteEnd(ProcessStatus& eProcStatus, MetaData& metaData, int ulAtoWriteCount );
 
 template <typename T>
-void write_thread_func_mpmc(ProcessStatus& eProcStatus, share_common::mpmc_queue<T>& queue, std::mutex& mtx, 
+void write_thread_func_mpmc(ProcessStatus& eProcStatus, tech::mpmc_queue<T>& queue, std::mutex& mtx, 
                             std::atomic<unsigned long long>& ulAtoWriteCount, 
                             TestOutput& testOutput, int iCpuID,  
                             std::mutex& LogMutex, MetaData& metaData) {
@@ -114,12 +113,12 @@ void write_thread_func_mpmc(ProcessStatus& eProcStatus, share_common::mpmc_queue
 }
 
 template <>
-void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_common::mpmc_queue<DataBlockFixed>& queue, 
+void write_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
                                             std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount, 
                                             TestOutput& testOutput, int iCpuID,  
                                             std::mutex& LogMutex, MetaData& metaData) ;
 template <>
-void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, share_common::mpmc_queue<unsigned long long>& queue,
+void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech::mpmc_queue<unsigned long long>& queue,
                                                 std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount, 
                                                 TestOutput& testOutput, int iCpuID, 
                                                 std::mutex& LogMutex, MetaData& metaData) ;
@@ -131,7 +130,7 @@ void write_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, shar
 /// @return true 写入结束
 /// @return false 写入未结束
 bool IsFteReadEnd(ProcessStatus& eProcStatus, std::atomic<unsigned long long>& ulAtoReadCount, 
-                    MetaData& metaData, unsigned long long& ulStartReadTimeNanosecs);
+                    MetaData& metaData);
 
 /*
 template <typename T>
@@ -159,7 +158,7 @@ void con_func(int id, vector<uint32_t>& vec, T& queue, std::atomic<uint32_t>& co
 }
 */
 template <typename T>
-void read_thread_func_mpmc(ProcessStatus& eProcStatus, share_common::mpmc_queue<T>& queue, 
+void read_thread_func_mpmc(ProcessStatus& eProcStatus, tech::mpmc_queue<T>& queue, 
                             std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
                             TestOutput& testOutput, int iCpuID, 
                             std::mutex& LogMutex, MetaData& metaData) {
@@ -167,13 +166,51 @@ void read_thread_func_mpmc(ProcessStatus& eProcStatus, share_common::mpmc_queue<
 }
 
 template <>
-void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, share_common::mpmc_queue<DataBlockFixed>& queue, 
+void read_thread_func_mpmc<DataBlockFixed>(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
                                             std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
                                             TestOutput& testOutput,int iCpuID,
                                             std::mutex& LogMutex, MetaData& metaData);
 
 template <>
-void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, share_common::mpmc_queue<unsigned long long>& queue, 
+void read_thread_func_mpmc<unsigned long long>(ProcessStatus& eProcStatus, tech::mpmc_queue<unsigned long long>& queue, 
                                                 std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
                                                 TestOutput& testOutput, int iCpuID, 
                                                 std::mutex& LogMutex, MetaData& metaData);
+
+
+// 记录压入时间,用于测试 写入-取出延迟 - 中间无延迟;
+void write_mpmc_spsc_no_sleep(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+                                            std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount,
+                                            TestOutput& testOutput, int iCpuID, 
+                                            std::mutex& LogMutex, MetaData& metaData);
+
+// 记录压入时间,用于测试 写入-取出延迟, 中间有睡眠;
+void write_mpmc_spsc_with_sleep(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+                                            std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount,
+                                            TestOutput& testOutput, int iCpuID, 
+                                            std::mutex& LogMutex, MetaData& metaData);
+
+
+// 只测试压入的平均耗时 - 压入过程中不记录每个数据块的入队时间;
+void write_mpmc_push(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+                                            std::mutex& mtx, std::atomic<unsigned long long>& ulAtoWriteCount,
+                                            TestOutput& testOutput, int iCpuID, 
+                                            std::mutex& LogMutex, MetaData& metaData) ;
+
+/// 测试-固定写入数量场景, 入队到出队的 延迟表现， 在每次出队时记录出队时间,并记录时间差;
+void read_mpmc_spsc_no_sleep(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+                    std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
+                    TestOutput& testOutput, int iCpuID, 
+                    std::mutex& LogMutex,  MetaData& metaData);                                                
+
+// 记录压入时间,用于测试 写入-取出延迟, 中间有睡眠;
+void read_mpmc_spsc_with_sleep(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+                    std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
+                    TestOutput& testOutput, int iCpuID, 
+                    std::mutex& LogMutex,  MetaData& metaData);
+
+/// 只测试队列取出的性能表现, 记录取出开始结束时间，计算平均耗时;
+void read_mpmc_pop(ProcessStatus& eProcStatus, tech::mpmc_queue<DataBlockFixed>& queue, 
+                    std::mutex& mtx,  std::atomic<unsigned long long>& ulAtoReadCount, 
+                    TestOutput& testOutput, int iCpuID, 
+                    std::mutex& LogMutex,  MetaData& metaData);                    

@@ -98,7 +98,7 @@ public:
         mask_ = size - 1;
         bit_mask_ = __builtin_ctz((uint64_t)size);
         // 步长值，用于哈希计算索引，减少冲突
-        stride_ = 1;
+        stride_ = 5;
         // 初始化生产者和消费者ticket
         push_ticket_ = 0;
         pop_ticket_ = 0;
@@ -306,13 +306,16 @@ element_slot():current_turn_(0){}
     template <class... Args>
     void enqueue(uint32_t turn, Args&&... args)
     {
-        auto cur_turn = current_turn_.load(std::memory_order_acquire);  
-
+        // printf("++++++ enqueue , turn: %d\n", turn);
+        auto cur_turn = current_turn_.load(std::memory_order_acquire);        
+        // 等待直到可以入队
+        // printf("++++++ enqueue , cur_turn: %d\n", cur_turn);
         while (cur_turn != (turn << 1))
         {
             cur_turn = current_turn_.load(std::memory_order_acquire);
         }
         // 在元素存储位置原地构造对象
+        // printf("++++++ enqueue , cur_turn: %d\n", cur_turn);
         new (&element_) T(std::forward<Args>(args)...);
         // 更新状态为已入队，使用release内存序
         current_turn_.store(cur_turn + 1, std::memory_order_release);

@@ -409,9 +409,11 @@ int main(int argc,char *argv[])
     TEST_LOG->Init();
     // test_struct();
 
-    TestMain();
+    // TestMain();
 
     // TestExampe();
+
+    TestSimple();
 
     return 0;
 }
