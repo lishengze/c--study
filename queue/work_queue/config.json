@@ -28,10 +28,10 @@
             "iCheckDetailValue":0,                                
             "iFixedBlock":1,
             "iNumaNode":0,
-            "vecWriteCpuList":[8,9,10,11,12,13,14,15],
-            "vecReadCpuList":[7],
+            "vecWriteCpuList":[12,13,14,15],
+            "vecReadCpuList":[11],
 
-            "iWriteBlockCount":10000,
+            "iWriteBlockCount":100000,
             "iQueueType":2,
             "iTestType":0,
             "iTestCount":1

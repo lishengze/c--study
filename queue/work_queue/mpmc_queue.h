@@ -98,7 +98,7 @@ public:
         mask_ = size - 1;
         bit_mask_ = __builtin_ctz((uint64_t)size);
         // 步长值，用于哈希计算索引，减少冲突
-        stride_ = 5;
+        stride_ = 1;
         // 初始化生产者和消费者ticket
         push_ticket_ = 0;
         pop_ticket_ = 0;
