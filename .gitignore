@@ -17,8 +17,9 @@ __pycache__/
 .vscode/
 
 # *.so
-.cache/*
+**/.cache/*
 .idea/*
+*.zip
 
 build/
 cmake_build/
