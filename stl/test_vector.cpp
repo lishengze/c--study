@@ -6,6 +6,11 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+/*
+问题:
+1. 什么时候调用 拷贝构造函数 ,什么时候调用 移动构造函数, 什么时候调用 拷贝赋值函数, 什么时候调用 移动赋值函数?
+*/
+
 void test_vector_size()
 {
     try
@@ -21,16 +26,22 @@ void test_vector_size()
                 a = other.a;
                 cout << "copy construct " << a << endl;
             }
-            Base(Base&& other) noexcept:a{std::move(other.a)}
-            {
-                cout << "move construct " << a << endl;
+            // Base(const Base&& other) noexcept:a{std::move(other.a)}
+            // {
+            //     cout << "move construct " << a << endl;
+            // }
+
+            Base& operator=(const Base& other) {
+                a = other.a;
+                cout << "copy assign " << a << endl;
+                return *this;
             }
 
             ~Base() {cout << "deconstruct " << a << endl;}
 
             int a;
-            int b;
-            int c;
+            // int b;
+            // int c;
         };
 
         vector<Base> vec;

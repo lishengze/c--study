@@ -74,7 +74,7 @@ add_subdirectory(concurrent/coroutine/c++/libgo_s)
 add_subdirectory(concurrent/multi_thread/cplus_thread)
 add_subdirectory(standard)
 # add_subdirectory(boost-study/hide_refre)
-add_subdirectory(queue/testque)
+add_subdirectory(queue/work_queue)
 add_subdirectory(queue/share_test)
 add_subdirectory(queue/study)
 
@@ -82,6 +82,8 @@ add_subdirectory(memory/cpp)
 add_subdirectory(perf)
 add_subdirectory(perf/cache_test)
 add_subdirectory(algorithm)
+
+add_subdirectory(stl)
 
 # add_subdirectory(queue/study)
 

@@ -1,5 +1,7 @@
 #include "test_vector.h"
-#include "global_declare.h"
+#include <iostream>
+using std::cout;
+using std::endl;
 
 int main()
 {
@@ -7,5 +9,5 @@ int main()
 
     TestVector();
 
-    return 1;
+    return 0;
 }
