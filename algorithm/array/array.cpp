@@ -69,6 +69,7 @@ void test_binary_search() {
     }
 }
 
+
 void TestArray() {
     test_binary_search();
 }

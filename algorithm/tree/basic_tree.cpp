@@ -96,3 +96,32 @@ void BaseTree::init_tree(int* data, int start, int end)
     }
     
 }
+
+void BaseTree::init_level_order_tree(const std::vector<int>& data) {
+
+}
+
+void BaseTree::init_pre_order_tree(const std::vector<int>& data) {
+    
+}
+
+void BaseTree::init_in_order_tree(const std::vector<int>& data) {
+
+}
+
+void BaseTree::init_post_order_tree(const std::vector<int>& data) {
+
+}
+
+
+void test_init_tree() {
+    std::vector<int> data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    BaseTree tree;
+
+    tree.init_level_order_tree(data);
+}
+
+void TestBaseTree() {
+
+}
