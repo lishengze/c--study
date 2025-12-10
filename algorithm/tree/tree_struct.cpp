@@ -181,6 +181,51 @@ void postorder_traversal(TreeNodePtr node)
     }    
 }
 
+void postorder_traversal_no_recu(TreeNodePtr node)
+{
+    cout << "------- postorder_traversal_no_recu -------" << endl;
+
+    std::stack<TreeNodePtr> stack;
+
+    TreeNodePtr ptrCurrNode = node;
+
+    while(nullptr != ptrCurrNode || !stack.empty()) {
+        // while(nullptr != ptrCurrNode) {
+        //     stack.push(ptrCurrNode);
+        //     ptrCurrNode = ptrCurrNode->lchild_;
+        // }
+
+        // if (!stack.empty()) {
+        //     TreeNodePtr parent = stack.top();
+        //     stack.pop();
+        //     cout << parent->get_info() << endl;
+        //     ptrCurrNode = parent->rchild_;
+        // }
+
+
+            while (ptrCurrNode)
+            {
+                stack.push(ptrCurrNode);
+                ptrCurrNode = ptrCurrNode->lchild_;
+            }
+
+            ptrCurrNode = stack.top();
+
+            // 左右子树都结束，输出当前节点;并且回溯上个中节点;
+            if (ptrCurrNode->rchild_ == nullptr) {
+                cout << ptrCurrNode->get_info() << endl;
+                stack.pop();
+                ptrCurrNode = stack.top();
+            } 
+
+            // 遍历右子树;
+            if (nullptr != ptrCurrNode) {
+                ptrCurrNode = ptrCurrNode->rchild_;
+            }
+    }
+
+}
+
 void level_traversal(TreeNodePtr node)
 {
     try
