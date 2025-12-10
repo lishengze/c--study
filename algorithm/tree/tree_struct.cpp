@@ -1,4 +1,6 @@
 #include "tree_struct.h"
+#include <stack>
+#include <queue>
 
 void set_height(TreeNodePtr node)
 {
@@ -38,6 +40,7 @@ void set_height(TreeNodePtr node)
 // 中 左 右
 void preoder_traversal(TreeNodePtr node)
 {
+    // cout << "------- preoder_traversal -------" << endl;
     try
     {
         if (node)
@@ -54,6 +57,10 @@ void preoder_traversal(TreeNodePtr node)
         std::cerr << e.what() << '\n';
     }
     
+}
+
+void preorder_traversal_no_recu(TreeNodePtr node) {
+
 }
 
 // 左 中 右
@@ -94,6 +101,61 @@ void inoder_traversal(TreeNodePtr node)
     }
 }
 
+// 左 中 右
+void inoder_traversal_no_recu(TreeNodePtr node)
+{
+    try
+    {
+        std::stack<TreeNodePtr> stack;
+        TreeNodePtr current = node;
+        cout << "------- inoder_traversal_no_recu -------" << endl;
+
+        while (current || !stack.empty())
+        {
+            while (current)
+            {
+                stack.push(current);
+                current = current->lchild_;
+            }
+
+            current = stack.top();
+            stack.pop();
+
+            cout << current->get_info() << endl;
+
+            current = current->rchild_;
+        }
+
+        cout << "-------------" << endl;
+        current = node;
+        while(nullptr != current || !stack.empty()) {
+            while(nullptr != current) {
+                stack.push(current);
+
+                if (nullptr == current->lchild_) {
+                    cout << current->get_info() << endl;
+                    stack.pop();
+                    
+                } 
+                current = current->lchild_;
+            }
+
+            if (!stack.empty()) {
+                TreeNodePtr parent = stack.top();
+                stack.pop();
+                cout << parent->get_info() << endl;
+                current = parent->rchild_;
+            }
+        }
+
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+}
+
+
 // 左 右 中
 void postorder_traversal(TreeNodePtr node)
 {
@@ -123,6 +185,7 @@ void level_traversal(TreeNodePtr node)
 {
     try
     {
+        cout << "------- level_traversal -------" << endl;
         if (!node) return;
 
         queue<TreeNodePtr> node_queue;
@@ -134,16 +197,14 @@ void level_traversal(TreeNodePtr node)
             TreeNodePtr tmp = node_queue.front();
             node_queue.pop();
 
-            cout << tmp->value_ << " ";
-            // if (tmp->height_ != 0)
-            // {
-            //     cout << tmp->height_ << endl;
-            // }
+            cout << tmp->get_info() << " ";
 
-            if (!tmp->lchild_) node_queue.push(tmp->lchild_);
+            if (nullptr != tmp->lchild_) node_queue.push(tmp->lchild_);
 
-            if (!tmp->rchild_) node_queue.push(tmp->rchild_);
+            if (nullptr != tmp->rchild_) node_queue.push(tmp->rchild_);
         }
+
+        cout << endl;
     }
     catch(const std::exception& e)
     {

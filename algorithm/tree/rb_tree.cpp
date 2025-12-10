@@ -149,7 +149,7 @@ void RBTree::insert_node(int value)
         // TreeNode* pnode = new TreeNode(value);
         // TreeNodePtr node = pnode->get_shared_ptr();
 
-        TreeNodePtr node = boost::make_shared<TreeNode>(value);
+        TreeNodePtr node = std::make_shared<TreeNode>(value);
 
         cout << node->get_info("+++++++ new node: ") << " use_count: " << node.use_count() << endl;
 

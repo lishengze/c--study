@@ -15,11 +15,11 @@ int main()
 
     // TestSort();
 
-    // TestTree();
+    TestTree();
 
     // TestAlgo();
 
-    TestArray();
+    // TestArray();
 
     cout << "\n" << endl;
 

@@ -1,5 +1,10 @@
 #pragma once
+
 #include "../global_declare.h"
+#include <memory>
+#include <iostream>
+#include <string>
+#include <vector>
 
 FORWARD_DECLARE_PTR(TreeNode);
 
@@ -10,10 +15,12 @@ enum COLOR_TYPE
     UNKNOWN
 };
 
-struct TreeNode:public boost::enable_shared_from_this<TreeNode>
+struct TreeNode:public std::enable_shared_from_this<TreeNode>
 {
 
-    TreeNode(int value) { value_ = value; }
+    explicit TreeNode(int value) 
+        : value_(value), height_(0), color_type_(COLOR_TYPE::UNKNOWN),
+          lchild_(nullptr), rchild_(nullptr), parent_(nullptr), is_lchild_(false) {}
     int value_{0};
 
     int height_{0};
@@ -76,13 +83,19 @@ struct TreeNode:public boost::enable_shared_from_this<TreeNode>
     
     string get_info(string intro="")
     {
-        string result = intro + " " + std::to_string(value_) + " " + get_color_type() + "; ";
+        string result;
+        if (intro.length() > 0) {
+            result = intro + " " + std::to_string(value_) + " " + get_color_type() + "; ";
+        } else {
+            result = std::to_string(value_) + " " + get_color_type() + "; ";
+        }
+        
         return result;
     }
 
     ~TreeNode()
     {
-        cout << "~TreeNode: " << value_ << endl;
+        // cout << "~TreeNode: " << value_ << endl;
     }
 };
 
@@ -92,7 +105,8 @@ void preoder_traversal(TreeNodePtr);
 
 void inoder_traversal(TreeNodePtr);
 
+void inoder_traversal_no_recu(TreeNodePtr node);
+
 void postorder_traversal(TreeNodePtr);
 
 void level_traversal(TreeNodePtr);
-

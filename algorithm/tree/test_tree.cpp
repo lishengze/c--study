@@ -39,7 +39,9 @@ void test_rb_tree()
 
 void TestTree()
 {
-    test_rb_tree();
+    // test_rb_tree();
 
     // test_tree_node();
+
+    TestBaseTree();
 }
