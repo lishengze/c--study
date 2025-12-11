@@ -59,12 +59,59 @@ void preoder_traversal(TreeNodePtr node)
     
 }
 
-void preorder_traversal_no_recu(TreeNodePtr node) {
+// 中 左 右
+// 非递归的方式实现树的前序遍历
+// 前序遍历 - 非递归实现 (中 -> 左 -> 右)
+void preorder_traversal_no_recu_doubao(TreeNodePtr node) {
+    cout << "------- preorder_traversal_no_recu doubao -------" << endl;
+    
+    if (!node) return;
+    
+    std::stack<TreeNodePtr> stack;
+    stack.push(node);
+    
+    while (!stack.empty()) {
+        // 1. 访问当前节点
+        TreeNodePtr current = stack.top();
+        stack.pop();
+        cout << current->get_info() << endl;
+        
+        // 2. 先压右子节点（栈后进先出，保证左子节点先访问）
+        if (current->rchild_) {
+            stack.push(current->rchild_);
+        }
+        
+        // 3. 后压左子节点
+        if (current->lchild_) {
+            stack.push(current->lchild_);
+        }
+    }
+    cout << "-----------------------------------" << endl;
+}
 
+void preorder_traversal_no_recu(TreeNodePtr node) {
+    cout << "------- preorder_traversal_no_recu -------" << endl;
+    
+    if (!node) return;
+    
+    std::stack<TreeNodePtr> stack;
+    
+    while (node || !stack.empty()) {
+        while (node) {
+            stack.push(node);
+            cout << node->get_info() << endl;
+            node = node->lchild_;
+        }
+
+        node = stack.top();
+        stack.pop();
+        node = node->rchild_; // 转向右子树， 一层是取父节点，一层是进入右子树；
+    }
+    cout << "-----------------------------------" << endl;
 }
 
 // 左 中 右
-void inoder_traversal(TreeNodePtr node)
+    void inoder_traversal(TreeNodePtr node)
 {
     try
     {
@@ -74,23 +121,6 @@ void inoder_traversal(TreeNodePtr node)
 
             cout << node->get_info() << endl;
 
-            // cout << node->value_ << " ";        
-
-            // if (node->height_)
-            // {
-            //     cout << node->height_ << " ";
-            // }                    
-
-            // if (node->color_type_ == COLOR_TYPE::BLACK)
-            // {
-            //     cout << "B  "; 
-            // }
-            // else if (node->color_type_ == COLOR_TYPE::RED)
-            // {
-            //     cout << "R ";
-            // }
-
-            // cout << endl;
 
             inoder_traversal(node->rchild_);
         }
@@ -123,7 +153,7 @@ void inoder_traversal_no_recu(TreeNodePtr node)
 
             cout << current->get_info() << endl;
 
-            current = current->rchild_;
+            current = current->rchild_; // 一层是取父节点，一层是进入右子树；
         }
 
         cout << "-------------" << endl;
@@ -181,6 +211,7 @@ void postorder_traversal(TreeNodePtr node)
     }    
 }
 
+// 以非递归的方式实现树的后序遍历
 void postorder_traversal_no_recu(TreeNodePtr node)
 {
     cout << "------- postorder_traversal_no_recu -------" << endl;
@@ -188,42 +219,62 @@ void postorder_traversal_no_recu(TreeNodePtr node)
     std::stack<TreeNodePtr> stack;
 
     TreeNodePtr ptrCurrNode = node;
-
-    while(nullptr != ptrCurrNode || !stack.empty()) {
-        // while(nullptr != ptrCurrNode) {
-        //     stack.push(ptrCurrNode);
-        //     ptrCurrNode = ptrCurrNode->lchild_;
-        // }
-
-        // if (!stack.empty()) {
-        //     TreeNodePtr parent = stack.top();
-        //     stack.pop();
-        //     cout << parent->get_info() << endl;
-        //     ptrCurrNode = parent->rchild_;
-        // }
+    TreeNodePtr lastVisited = nullptr;
 
 
-            while (ptrCurrNode)
-            {
-                stack.push(ptrCurrNode);
-                ptrCurrNode = ptrCurrNode->lchild_;
-            }
+    while (ptrCurrNode || !stack.empty()) {
+        while (ptrCurrNode) {
+            stack.push(ptrCurrNode);
+            ptrCurrNode = ptrCurrNode->lchild_;
+        }
 
-            ptrCurrNode = stack.top();
+        ptrCurrNode = stack.top();
 
-            // 左右子树都结束，输出当前节点;并且回溯上个中节点;
-            if (ptrCurrNode->rchild_ == nullptr) {
-                cout << ptrCurrNode->get_info() << endl;
-                stack.pop();
-                ptrCurrNode = stack.top();
-            } 
-
-            // 遍历右子树;
-            if (nullptr != ptrCurrNode) {
-                ptrCurrNode = ptrCurrNode->rchild_;
-            }
+        if (nullptr == ptrCurrNode->rchild_ || ptrCurrNode->rchild_ == lastVisited) {
+            cout << ptrCurrNode->get_info() << endl;
+            stack.pop();
+            lastVisited = ptrCurrNode; // 第一次是左，第二次是右;
+            ptrCurrNode = nullptr; // 防止重新进入左子树遍历 -- 取出父节点;
+        } else {
+            ptrCurrNode = ptrCurrNode->rchild_; // 转向右子树
+        }
+    
     }
 
+}
+
+// 后序遍历 - 非递归实现 (左 -> 右 -> 中)
+void postorder_traversal_no_recu_doubao(TreeNodePtr node) {
+    cout << "------- postorder_traversal_no_recu doubao -------" << endl;
+    
+    if (!node) return;
+    
+    std::stack<TreeNodePtr> stack;
+    TreeNodePtr current = node;
+    TreeNodePtr last_visited = nullptr;
+    
+    while (current || !stack.empty()) {
+        // 1. 遍历左子树，将所有左子节点入栈
+        while (current) {
+            stack.push(current);
+            current = current->lchild_;
+        }
+        
+        current = stack.top();
+        
+        // 2. 检查右子树是否存在且未被访问
+        if (!current->rchild_ || current->rchild_ == last_visited) {
+            // 3. 访问当前节点
+            cout << current->get_info() << endl;
+            stack.pop();
+            last_visited = current;
+            current = nullptr; // 防止重新进入左子树遍历
+        } else {
+            // 4. 转向右子树
+            current = current->rchild_;
+        }
+    }
+    cout << "-----------------------------------" << endl;
 }
 
 void level_traversal(TreeNodePtr node)

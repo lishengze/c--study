@@ -101,6 +101,10 @@ struct TreeNode:public std::enable_shared_from_this<TreeNode>
 
 void set_height(TreeNodePtr);
 
+void preorder_traversal_no_recu_doubao(TreeNodePtr node);
+
+void preorder_traversal_no_recu(TreeNodePtr node);
+
 void preoder_traversal(TreeNodePtr);
 
 void inoder_traversal(TreeNodePtr);
@@ -108,5 +112,9 @@ void inoder_traversal(TreeNodePtr);
 void inoder_traversal_no_recu(TreeNodePtr node);
 
 void postorder_traversal(TreeNodePtr);
+
+void postorder_traversal_no_recu(TreeNodePtr node);
+
+void postorder_traversal_no_recu_doubao(TreeNodePtr node);
 
 void level_traversal(TreeNodePtr);

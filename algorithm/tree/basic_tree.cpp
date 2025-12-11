@@ -173,14 +173,24 @@ void BaseTree::init_post_order_tree(const std::vector<int>& data) {
 
 
 void test_init_tree() {
-    std::vector<int> data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    std::vector<int> data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,15};
 
     BaseTree tree;
 
     tree.init_level_order_tree(data);
     level_traversal(tree.get_root());
+
+    cout << "preoder_traversal" << endl;
     preoder_traversal(tree.get_root());
+    cout << endl;
+
+    preorder_traversal_no_recu(tree.get_root());
+    preorder_traversal_no_recu_doubao(tree.get_root());
+
     inoder_traversal_no_recu(tree.get_root());
+    
+    postorder_traversal_no_recu(tree.get_root());
+    postorder_traversal_no_recu_doubao(tree.get_root());
 }
 
 void TestBaseTree() {
