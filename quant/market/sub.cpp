@@ -16,7 +16,7 @@
 #include <boost/asio/steady_timer.hpp>
 
 namespace asio = boost::asio;
-using namespace std::chrono_literals;
+using  std::chrono_literals;
 
 // ===================== 1. 定义行情数据结构 =====================
 struct MarketData {

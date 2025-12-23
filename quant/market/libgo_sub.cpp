@@ -76,7 +76,7 @@ public:
         // 遍历所有证券代码的订阅列表，移除对应订阅ID
         for (auto& [code, sub_list] : subs_) {
             auto it = find_if(sub_list.begin(), sub_list.end(),
-                [sub_id](const auto& pair) { return pair.first == sub_id; });
+                [sub_id](const pair<SubscriptionId, CallbackFunc>& pair) { return pair.first == sub_id; });
             if (it != sub_list.end()) {
                 sub_list.erase(it);
                 break; // 订阅ID唯一，找到后退出
@@ -93,24 +93,26 @@ public:
         mtx_.lock();
         // 1. 触发该证券代码的订阅回调
         if (subs_.count(data.stock_code)) {
-            for (auto& [sub_id, callback] : subs_[data.stock_code]) {
+            for (const pair<SubscriptionId, CallbackFunc>& pair : subs_[data.stock_code]) {
                 // libgo：启动新协程执行回调（无阻塞）
-                go [callback, data]() {
-                    callback(data);
+                CallbackFunc cbFunc = pair.second;
+                go [cbFunc, data]() {
+                    cbFunc(data);
                 };
             }
         }
         // 2. 触发全局订阅的回调（空字符串）
         if (subs_.count("")) {
-            for (auto& [sub_id, callback] : subs_[""]) {
-                go [callback, data]() {
-                    callback(data);
+            for (const pair<SubscriptionId, CallbackFunc>& pair : subs_[""]) {
+                CallbackFunc cbFunc = pair.second;
+                go [cbFunc, data]() {
+                    cbFunc(data);
                 };
             }
         }
     }
 
-private:
+private:    
     co_mutex mtx_; // libgo的协程互斥锁（适配协程的锁，避免线程阻塞）
     atomic<SubscriptionId> next_sub_id_; // 原子自增的订阅ID（线程安全）
     // 订阅关系：证券代码 → （订阅ID，回调函数）
