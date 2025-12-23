@@ -10,7 +10,7 @@
 
 // libgo协程库头文件
 #include <libgo/coroutine.h>
-#include <libgo/timer.h>
+#include <libgo/timer/timer.h>
 #include <libgo/sync/co_mutex.h>
 
 // 命名空间简化
@@ -49,7 +49,9 @@ public:
      * @return 订阅ID（用于取消订阅）
      */
     SubscriptionId subscribe(const string& stock_code, CallbackFunc callback) {
-        co_mutex::scoped_lock lock(mtx_); // libgo的协程锁（比std::mutex更高效，不阻塞线程）
+        // co_mutex::scoped_lock lock(mtx_); // libgo的协程锁（比std::mutex更高效，不阻塞线程）
+
+        mtx_.lock();
         SubscriptionId sub_id = next_sub_id_++;
         // 存储订阅关系：证券代码 → （订阅ID，回调函数）
         subs_[stock_code].emplace_back(sub_id, move(callback));
@@ -69,7 +71,8 @@ public:
      * @param sub_id 订阅ID
      */
     void unsubscribe(SubscriptionId sub_id) {
-        co_mutex::scoped_lock lock(mtx_);
+        // co_mutex::scoped_lock lock(mtx_);
+        mtx_.lock();
         // 遍历所有证券代码的订阅列表，移除对应订阅ID
         for (auto& [code, sub_list] : subs_) {
             auto it = find_if(sub_list.begin(), sub_list.end(),
@@ -86,7 +89,8 @@ public:
      * @param data 行情数据
      */
     void push_market_data(const MarketData& data) {
-        co_mutex::scoped_lock lock(mtx_);
+        // co_mutex::scoped_lock lock(mtx_);
+        mtx_.lock();
         // 1. 触发该证券代码的订阅回调
         if (subs_.count(data.stock_code)) {
             for (auto& [sub_id, callback] : subs_[data.stock_code]) {
@@ -138,7 +142,7 @@ void market_data_producer(SubscriptionManager& sub_mgr,
     uint64_t timestamp = 0;
     while (true) {
         // libgo定时器：等待interval_ms毫秒（协程挂起，不阻塞线程）
-        co_sleep(chrono::milliseconds(interval_ms));
+        std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms));
 
         // 生成时间戳（微秒）
         timestamp += interval_ms * 1000;
@@ -164,8 +168,8 @@ void market_data_producer(SubscriptionManager& sub_mgr,
  */
 void print_hs300_data(const MarketData& data) {
     cout << "[回调1] " << data << endl;
-    // 模拟回调处理耗时（比如写入内存数据库，使用co_sleep挂起协程，不阻塞线程）
-    co_sleep(chrono::milliseconds(10)); // 模拟10ms耗时
+    // 模拟回调处理耗时（比如写入内存数据库，使用std::this_thread::sleep_for挂起协程，不阻塞线程）
+    std::this_thread::sleep_for(chrono::milliseconds(10)); // 模拟10ms耗时
 }
 
 /**
@@ -180,7 +184,7 @@ void monitor_high_price(const MarketData& data) {
 // ===================== 主函数：启动整个系统 =====================
 int test_libgo() {
     // 1. 配置libgo调度器：绑定4个线程（多核并发，默认是单线程）
-    co_sched.GetOptions().worker_threads = 4;
+    co_sched.Start(4,0);
     // 启动libgo的事件循环（后台运行）
     co_sched.Start();
 
@@ -207,7 +211,7 @@ int test_libgo() {
     // 6. 再运行5秒后，停止libgo调度器并退出
     this_thread::sleep_for(chrono::seconds(5));
     co_sched.Stop(); // 停止协程调度器
-    co_sched.Join(); // 等待所有协程执行完毕
+    // co_sched.Join(); // 等待所有协程执行完毕
 
     return 0;
 }
