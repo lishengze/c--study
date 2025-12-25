@@ -28,8 +28,8 @@ add_executable(${PROJECT_NAME} ${ALL_SRC} )
 target_link_libraries(${PROJECT_NAME} rt)
 
 
-add_subdirectory(test_strategy_client)
+add_subdirectory(market_engine)
 
-add_subdirectory(test_ute_server)
+add_subdirectory(trade_engine)
 
 
