@@ -50,6 +50,9 @@ public:
      */
     SubscriptionId subscribe(const string& stock_code, CallbackFunc callback) {
         // co_mutex::scoped_lock lock(mtx_); // libgo的协程锁（比std::mutex更高效，不阻塞线程）
+        cout << "===== 订阅行情 =====" << endl;
+        cout << "stock_code: " << stock_code << endl;
+        cout << "callback: " << &callback << endl;
 
         mtx_.lock();
         SubscriptionId sub_id = next_sub_id_++;
@@ -129,6 +132,10 @@ private:
 void market_data_producer(SubscriptionManager& sub_mgr,
                           const vector<string>& stock_codes,
                           int interval_ms = 100) {
+    cout << "===== 启动行情数据生产协程 =====" << endl;
+    cout << "stock_codes.size(): " << stock_codes.size() << endl;
+    cout << "interval_ms: " << interval_ms << endl;
+
     // 随机数生成器：模拟价格波动
     random_device rd;
     mt19937 gen(rd());
@@ -183,12 +190,45 @@ void monitor_high_price(const MarketData& data) {
     }
 }
 
+void go_func0 () 
+{
+    // while(true)
+    // {
+    //     // co_sleep(3000);
+
+    //     std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    //     cout << "go_func0: " << std::this_thread::get_id()  << ", " << NanoTimeStr() <<  endl;
+    // }
+
+    cout << "***************** go_func0: " << std::this_thread::get_id() <<  endl;
+    
+}
+
+void go_func1 () 
+{
+    // while(true)
+    // {
+    //     // co_sleep(3000);
+
+    //     std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    //     cout << "go_func0: " << std::this_thread::get_id()  << ", " << NanoTimeStr() <<  endl;
+    // }
+
+    cout << "***************** go_func1: " << std::this_thread::get_id() <<  endl;
+    
+}
+
 // ===================== 主函数：启动整个系统 =====================
 int test_libgo() {
-    // 1. 配置libgo调度器：绑定4个线程（多核并发，默认是单线程）
-    co_sched.Start(4,0);
-    // 启动libgo的事件循环（后台运行）
-    co_sched.Start();
+
+
+    // go go_func0;
+
+    // go go_func1;
+
+    // cout << "===== 启动libgo协程调度器 =====" << endl;
 
     // 2. 创建订阅管理器
     SubscriptionManager sub_mgr;
@@ -199,21 +239,36 @@ int test_libgo() {
     // 订阅全部股票的行情，回调函数为monitor_high_price
     auto sub_id2 = sub_mgr.subscribe("", monitor_high_price);
 
-    // 4. 启动行情生产者协程（libgo的go关键字创建协程）
-    vector<string> stock_codes = {"000300", "600519", "000001"};
-    go [&sub_mgr, &stock_codes]() {
-        market_data_producer(sub_mgr, stock_codes, 100); // 每100ms推送一次行情
-    };
+    cout << "--订阅结束--" << endl;
 
-    // 5. 运行5秒后，取消订阅sub_id1
-    this_thread::sleep_for(chrono::seconds(5));
-    cout << "\n===== 取消订阅sub_id1 =====" << endl;
-    sub_mgr.unsubscribe(sub_id1);
+    // // 4. 启动行情生产者协程（libgo的go关键字创建协程）
+    // vector<string> stock_codes = {"000300", "600519", "000001"};
+    // go [&sub_mgr, &stock_codes]() {
+    //     cout << "===== 启动行情数据生产协程 =====" << endl;
+    //     market_data_producer(sub_mgr, stock_codes, 100); // 每100ms推送一次行情
+    // };
 
-    // 6. 再运行5秒后，停止libgo调度器并退出
-    this_thread::sleep_for(chrono::seconds(5));
-    co_sched.Stop(); // 停止协程调度器
-    // co_sched.Join(); // 等待所有协程执行完毕
+    // // // 5. 运行5秒后，取消订阅sub_id1
+    // this_thread::sleep_for(chrono::seconds(5));
+    // cout << "\n===== 取消订阅sub_id1 =====" << endl;
+    // sub_mgr.unsubscribe(sub_id1);
 
+        // 1. 配置libgo调度器：绑定4个线程（多核并发，默认是单线程）
+    // co_sched.Start(4,0);
+    // 启动libgo的事件循环（后台运行）
+    // co_sched.Start(4);
+
+    // // 6. 再运行5秒后，停止libgo调度器并退出
+    // this_thread::sleep_for(chrono::seconds(5));
+    // co_sched.Stop(); // 停止协程调度器
+    // // co_sched.Join(); // 等待所有协程执行完毕
+
+    return 0;
+}
+
+
+
+int main() {        
+    test_libgo();
     return 0;
 }
