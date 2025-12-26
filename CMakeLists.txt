@@ -69,7 +69,7 @@ project(WORK_MAIN)
 
 
 # #添加子项目 - 按照顺序;
-add_subdirectory(asio)  
+# add_subdirectory(asio)  
 add_subdirectory(concurrent/coroutine/c++/libgo_s)
 add_subdirectory(concurrent/multi_thread/cplus_thread)
 add_subdirectory(standard)
@@ -77,8 +77,9 @@ add_subdirectory(standard)
 add_subdirectory(queue/work_queue)
 add_subdirectory(queue/share_test)
 add_subdirectory(queue/study)
+add_subdirectory(queue/trade)
 
-add_subdirectory(memory/cpp)
+# add_subdirectory(memory/cpp)
 add_subdirectory(perf)
 add_subdirectory(perf/cache_test)
 add_subdirectory(algorithm)

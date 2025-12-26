@@ -262,6 +262,17 @@ struct StrategyKey {
     unsigned long long ulStrategyKey; //策略ID
 };
 
+struct MarketData {
+        char exchange[3]; // 交易所（SH/SZ）
+        char stock_code[10]; // 证券代码
+        double open; // 开盘价
+        double high; // 最高价
+        double low; // 最低价
+        double close; // 收盘价
+        double volume; // 成交量
+        unsigned long long timestamp; // 时间戳（纳秒）
+};
+
 /// @brief 通用请求消息结构体
 struct UteMsg {
     UteMsg() : iMsgID(0), iMsgSrcType(0), pMsgHander(nullptr), iMsgLen(0), ulStrategyKey(0) {

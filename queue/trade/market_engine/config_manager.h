@@ -3,6 +3,7 @@
 
 class ConfigManager {
 public:
+    void Init();
 };
 
 
