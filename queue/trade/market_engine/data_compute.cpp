@@ -8,7 +8,7 @@ bool DataCompute::Start() {
     return true;
 }
 
-void DataCompute::OnMarketData(const MarketData& market_data) {
+void DataCompute::OnMarketSrcData(const MarketData& market_data) {
 
 }
 

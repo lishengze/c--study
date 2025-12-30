@@ -5,8 +5,8 @@
 #include <functional>
 #include <algorithm>
 
-namespace share_common 
-{
+// namespace share_common 
+// {
 
 template <size_t Size>
 inline void CopyToArray(const char* buf,
@@ -366,6 +366,9 @@ using StrategyGetRspCallbackEventFuncType = std::function<void(int , const char*
 using StrategyGetRspCallbackMessageFuncType = std::function<void(int , const char*, const int)>;
 
 
+using MarketDataCallbackFuncType = std::function<void(const MarketData&)>;
+
+
 #ifdef __GNUC__
 /**
  * @brief      生成有利于分支预测的代码,告知编译器条件表达式"x"为false的概率较高
@@ -379,6 +382,6 @@ using StrategyGetRspCallbackMessageFuncType = std::function<void(int , const cha
 #define SHARE_COMM_LIKELY(x) (x)
 #endif
 
-} // namespace share_common
+// } // namespace share_common
 
 #pragma pack(pop)

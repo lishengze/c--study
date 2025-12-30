@@ -4,10 +4,10 @@ bool MarketReceiver::Init() {
     return true;
 }
 
-bool Start() {
+bool MarketReceiver::Start() {
     return true;
 }
 
-bool Stop() {
+bool MarketReceiver::Stop() {
     return true;
 }

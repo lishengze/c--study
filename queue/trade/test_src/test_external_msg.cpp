@@ -1,7 +1,7 @@
 #include "test_external_msg.h"
 #include "share_comm_external_message.h"
 
-using namespace share_common;
+// using namespace share_common;
 
 void test_external_msg() {
     // TODO: Implement test_external_msg()

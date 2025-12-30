@@ -24,14 +24,18 @@ public:
 
     bool InitSrcMarketDataQueue() ;
 
-    bool InitShareMarketDataQueue() ;
-
     bool Start();
+
+    /// @brief 启动监听源市场数据队列
+    /// @return 
+    bool StartListenSrcMarketData();
 
 
 
     ~MarketManager() {
-        
+        if (shptrGetSrcMarketDataThread_->joinable()) {
+            shptrGetSrcMarketDataThread_->join();
+        }
     }
 
 private:
@@ -39,12 +43,9 @@ private:
     MarketOutput market_output_;
     MarketReceiver market_receiver_;
 
-    shared_ptr<mpmc_queue<MarketData>> ptr_src_market_data_queue_;  // 源市场行情数据队列
-    shared_ptr<mpmc_queue<MarketData>> ptr_share_market_data_queue_;  // 处理后的市场数据队列
-    element_slot<MarketData, false>*  ptr_share_market_data_queue_slot_;  // 无锁队列存储真正数据元素的起始地址 -- 用于共享内存映射无锁队列时使用；
+    mpmc_queue<MarketData>* ptr_src_market_data_queue_;  // 源市场行情数据队列
 
-    int iQueueSize_;  // 队列大小
-    string strSharedMemName_;  // 共享内存名称
 
     std::shared_ptr<std::thread>  shptrGetSrcMarketDataThread_;           // 消费者线程;
+    bool bIsRunning_;  // 线程运行标志位
 };
