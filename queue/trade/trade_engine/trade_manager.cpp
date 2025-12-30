@@ -16,11 +16,11 @@
 using namespace share_common;
 using std::shared_ptr;
 
-MarketManager::MarketManager():ptr_src_market_data_queue_{nullptr}, iQueueSize_{0} {
-    iQueueSize_ = CONFIG_MANAGER_INSTANCE->GetIntValue("MarketManager", "QueueSize", 10000);
+TradeManager::TradeManager():ptr_src_market_data_queue_{nullptr}, iQueueSize_{0} {
+    iQueueSize_ = CONFIG_MANAGER_INSTANCE->GetIntValue("TradeManager", "QueueSize", 10000);
 }
 
-bool MarketManager::Init() {
+bool TradeManager::Init() {
 
     CONFIG_MANAGER_INSTANCE->Init();
 
@@ -36,7 +36,7 @@ bool MarketManager::Init() {
     return true;
 }
 
-bool MarketManager::InitSrcMarketDataQueue() {
+bool TradeManager::InitSrcMarketDataQueue() {
 
     ptr_src_market_data_queue_ = new mpmc_queue<MarketData>();
 
@@ -49,7 +49,7 @@ bool MarketManager::InitSrcMarketDataQueue() {
 }
 
 
-bool MarketManager::Start() { 
+bool TradeManager::Start() { 
 
     if (!market_receiver_.Start()) return false;
 
@@ -68,7 +68,7 @@ bool MarketManager::Start() {
 
 }
 
-bool MarketManager::StartListenSrcMarketData() {
+bool TradeManager::StartListenSrcMarketData() {
 
     shptrGetSrcMarketDataThread_ = std::make_shared<std::thread>([this]() {
         while (bIsRunning_) {

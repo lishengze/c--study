@@ -13,7 +13,8 @@
 
 #include "logger.h"
 
-
+using namespace share_common;
+using std::shared_ptr;
 
 bool MarketOutput::Init() {
 
@@ -76,7 +77,7 @@ bool MarketOutput::InitShareMarketDataQueue() {
 
 
     // 在共享内存中构造队列对象
-    ptr_share_market_data_queue_ = new mpmc_queue<MarketData>(addr);
+    ptr_share_market_data_queue_ = new (addr)mpmc_queue<MarketData>();
     if (!ptr_share_market_data_queue_) {
         LOG_ERROR("new pMarketDataMpmcQueue_ Failed!");
         return false;

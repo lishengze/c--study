@@ -16,9 +16,9 @@ using namespace std;
 
 using namespace share_common;
 
-class MarketManager {
+class TradeManager {
 public:
-    MarketManager() ;
+    TradeManager() ;
 
     bool Init() ;
 
@@ -32,7 +32,7 @@ public:
 
 
 
-    ~MarketManager() {
+    ~TradeManager() {
         if (shptrGetSrcMarketDataThread_->joinable()) {
             shptrGetSrcMarketDataThread_->join();
         }
