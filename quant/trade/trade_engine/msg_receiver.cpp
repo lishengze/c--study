@@ -36,7 +36,7 @@ bool MsgReceiver::Stop() {
 bool MsgReceiver::InitMarketDataQueue() {
 
     // 打开共享内存
-    std::string strSharedMemName = CONFIG_MANAGER_INSTANCE->GetStringValue("MsgReceiver", "SharedMemName", "MarketData.queue");
+    std::string strSharedMemName = CONFIG_MANAGER_INSTANCE->GetStringValue("ComputedMarketData", "QueueName", "MarketData.queue");
     int shm_fd = shm_open(strSharedMemName.c_str(), O_RDWR, 0);
     if (shm_fd == -1) {
         LOG_ERROR("shm_open {} failed ", strSharedMemName);

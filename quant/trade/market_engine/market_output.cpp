@@ -45,8 +45,8 @@ void MarketOutput::OutputMarketData(const MarketData& market_data) {
 
 bool MarketOutput::InitShareMarketDataQueue() {
 
-    strSharedMemName_ = CONFIG_MANAGER_INSTANCE->GetStringValue("MarketOutput", "SharedMemName", "CompuatedMarketData");
-    iQueueSize_ = CONFIG_MANAGER_INSTANCE->GetIntValue("MarketOutput", "QueueSize", 1024);
+    strSharedMemName_ = CONFIG_MANAGER_INSTANCE->GetStringValue("ComputedMarketData", "QueueName", "CompuatedMarketData");
+    iQueueSize_ = CONFIG_MANAGER_INSTANCE->GetIntValue("ComputedMarketData", "QueueSize", 1024);
 
     ptr_share_market_data_queue_ = new mpmc_queue<MarketData>();
 

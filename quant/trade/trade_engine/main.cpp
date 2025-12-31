@@ -1,4 +1,4 @@
-#include "ute_server.h"
+#include "trade_manager.h"
 #include "logger.h"
 #include "share_comm_util.h"
 
@@ -13,7 +13,9 @@ int main()
 
     LOG_INFO("UTE Server Test Start");    
 
-    TestUteMain();
+    TradeManager tradeManager;
+    tradeManager.Init();
+    tradeManager.Start();
 
     return 0;    
 }   

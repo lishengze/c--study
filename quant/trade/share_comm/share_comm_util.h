@@ -24,6 +24,9 @@
 #include <chrono>
 #include <string>
 #include <iostream>
+#include "logger.h"
+using namespace share_common;
+
 // #include <numa.h>
 
 

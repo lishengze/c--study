@@ -18,9 +18,7 @@
 using namespace share_common;
 using std::shared_ptr;
 
-MarketManager::MarketManager():ptr_src_market_data_queue_{nullptr}, iQueueSize_{0} {
-    iQueueSize_ = CONFIG_MANAGER_INSTANCE->GetIntValue("MarketManager", "QueueSize", 10000);
-
+MarketManager::MarketManager():ptr_src_market_data_queue_{nullptr}, iQueueSize_{4096} {
     std::string loggerName = "market_engine_"+ SecTimeStr("%Y%m%d") + ".log";
     logger::init(loggerName);
     logger::set_level(spdlog::level::debug);

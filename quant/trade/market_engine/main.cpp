@@ -1,4 +1,4 @@
-#include "strategy_client.h"
+#include "market_manager.h"
 #include "logger.h"
 #include "share_comm_util.h"
 
@@ -13,7 +13,10 @@ int main()
 
     LOG_INFO("Strategy Client Test Start");    
 
-    TestStrategyMain();
 
+    MarketManager marketManager;
+    marketManager.Init();
+    marketManager.Start();
+    
     return 0;    
 }   
