@@ -126,6 +126,10 @@ struct MarketData {
         double volume; // 成交量
         unsigned long long timestamp; // 时间戳（纳秒）
 
+    void SetRandomData() {
+        open = high = low = close = volume = timestamp = 0;
+    }
+
     std::string str() const {
         return std::string("exchange:") + std::string(exchange) 
                 + std::string(", stock_code:") + std::string(stock_code) 

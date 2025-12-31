@@ -81,8 +81,6 @@ bool MarketManager::StartListenSrcMarketData() {
             ptr_src_market_data_queue_->pop(msg); 
 
             data_compute_.OnMarketSrcData(msg);
-
-            // sleep(1); // todo ≤‚ ‘◊®”√;
         }
         LOG_INFO("Waiting  Queue Data Is Over");
         
