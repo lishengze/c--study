@@ -5,6 +5,7 @@
 #include <functional>
 #include <algorithm>
 #include <string>
+#include <chrono>
 
 // namespace share_common 
 // {
@@ -126,8 +127,15 @@ struct MarketData {
         double volume; // 成交量
         unsigned long long timestamp; // 时间戳（纳秒）
 
+    MarketData() : open(0), high(100000), low(0), close(0), volume(0), timestamp(0) {
+        memset(exchange, 0, sizeof(exchange));
+        memset(stock_code, 0, sizeof(stock_code));
+    }
+
     void SetRandomData() {
-        open = high = low = close = volume = timestamp = 0;
+        open = high = low = close = volume = 0;
+
+        timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
     std::string str() const {
