@@ -4,6 +4,7 @@
 #include <array>
 #include <functional>
 #include <algorithm>
+#include <string>
 
 // namespace share_common 
 // {
@@ -271,6 +272,17 @@ struct MarketData {
         double close; // 收盘价
         double volume; // 成交量
         unsigned long long timestamp; // 时间戳（纳秒）
+
+    std::string str() const {
+        return std::string("exchange:") + std::string(exchange) 
+                + std::string(", stock_code:") + std::string(stock_code) 
+                + std::string(", open:") + std::to_string(open) 
+                + std::string(", high:") + std::to_string(high) 
+                + std::string(", low:") + std::to_string(low) 
+                + std::string(", close:") + std::to_string(close) 
+                + std::string(", volume:") + std::to_string(volume) 
+                + std::string(", timestamp:") + std::to_string(timestamp);
+    }
 };
 
 /// @brief 通用请求消息结构体

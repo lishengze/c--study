@@ -16,9 +16,9 @@ using namespace std;
 
 using namespace share_common;
 
-class TradeManager {
+class MarketManager {
 public:
-    TradeManager() ;
+    MarketManager() ;
 
     bool Init() ;
 
@@ -26,13 +26,13 @@ public:
 
     bool Start();
 
-    /// @brief Æô¶¯¼àÌıÔ´ÊĞ³¡Êı¾İ¶ÓÁĞ
+    /// @brief å¯åŠ¨ç›‘å¬æºå¸‚åœºæ•°æ®é˜Ÿåˆ—
     /// @return 
     bool StartListenSrcMarketData();
 
 
 
-    ~TradeManager() {
+    ~MarketManager() {
         if (shptrGetSrcMarketDataThread_->joinable()) {
             shptrGetSrcMarketDataThread_->join();
         }
@@ -43,10 +43,10 @@ private:
     MarketOutput market_output_;
     MarketReceiver market_receiver_;
 
-    mpmc_queue<MarketData>* ptr_src_market_data_queue_;  // Ô´ÊĞ³¡ĞĞÇéÊı¾İ¶ÓÁĞ
+    mpmc_queue<MarketData>* ptr_src_market_data_queue_;  // æºå¸‚åœºè¡Œæƒ…æ•°æ®é˜Ÿåˆ—
 
-    int iQueueSize_;  // ¶ÓÁĞ´óĞ¡
+    int iQueueSize_;  // é˜Ÿåˆ—å¤§å°
 
-    std::shared_ptr<std::thread>  shptrGetSrcMarketDataThread_;           // Ïû·ÑÕßÏß³Ì;
-    bool bIsRunning_;  // Ïß³ÌÔËĞĞ±êÖ¾Î»
+    std::shared_ptr<std::thread>  shptrGetSrcMarketDataThread_;           // æ¶ˆè´¹è€…çº¿ç¨‹;
+    bool bIsRunning_;  // çº¿ç¨‹è¿è¡Œæ ‡å¿—ä½
 };

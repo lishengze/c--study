@@ -1,4 +1,4 @@
-#include "market_output.h"
+#include "trade_output.h"
 
 #include <string>
 #include <sys/mman.h>
@@ -17,8 +17,6 @@ using namespace share_common;
 using std::shared_ptr;
 
 bool TradeOutput::Init() {
-
-    InitShareMarketDataQueue();
 
     return true;
 }

@@ -11,10 +11,13 @@ using namespace share_common;
 
 class MarketOutput {
 public:
-    MarketOutput():ptr_share_market_data_queue_{nullptr},
-                                ptr_share_market_data_queue_slot_   {nullptr},
-                                iQueueSize_{4096},
-                                strSharedMemName_ {"share_market_data_queue"}  {}
+    MarketOutput():iQueueSize_{4096},
+                  strSharedMemName_ {"share_market_data_queue"},     
+                    ptr_share_market_data_queue_{nullptr},
+                    ptr_share_market_data_queue_slot_   {nullptr}
+    {
+        
+    }
 
     bool Init();
 

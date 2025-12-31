@@ -77,7 +77,7 @@ add_subdirectory(standard)
 add_subdirectory(queue/work_queue)
 add_subdirectory(queue/share_test)
 add_subdirectory(queue/study)
-add_subdirectory(queue/trade)
+add_subdirectory(quant/trade)
 
 # add_subdirectory(memory/cpp)
 add_subdirectory(perf)

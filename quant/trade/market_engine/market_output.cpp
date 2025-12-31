@@ -12,6 +12,7 @@
 #include "bits.h"
 
 #include "logger.h"
+#include "config_manager.h"
 
 using namespace share_common;
 using std::shared_ptr;
@@ -43,6 +44,9 @@ void MarketOutput::OutputMarketData(const MarketData& market_data) {
 }
 
 bool MarketOutput::InitShareMarketDataQueue() {
+
+    strSharedMemName_ = CONFIG_MANAGER_INSTANCE->GetStringValue("MarketOutput", "SharedMemName", "CompuatedMarketData");
+    iQueueSize_ = CONFIG_MANAGER_INSTANCE->GetIntValue("MarketOutput", "QueueSize", 1024);
 
     ptr_share_market_data_queue_ = new mpmc_queue<MarketData>();
 

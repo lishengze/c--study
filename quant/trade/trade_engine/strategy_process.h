@@ -7,6 +7,8 @@ public:
 
     }
 
+
+
     bool Init();
 
     bool Start();
@@ -16,6 +18,8 @@ public:
     ~StrategyProcess() {
 
     }
+
+    void OnMarketSrcData(const MarketData& market_data);
 
 private:  
 };

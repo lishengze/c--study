@@ -1,5 +1,7 @@
 #include "market_manager.h"
 #include "config_manager.h"
+#include "logger.h"
+#include "share_comm_util.h"
 
 #include <string>
 #include <sys/mman.h>
@@ -18,6 +20,11 @@ using std::shared_ptr;
 
 MarketManager::MarketManager():ptr_src_market_data_queue_{nullptr}, iQueueSize_{0} {
     iQueueSize_ = CONFIG_MANAGER_INSTANCE->GetIntValue("MarketManager", "QueueSize", 10000);
+
+    std::string loggerName = "market_engine_"+ SecTimeStr("%Y%m%d") + ".log";
+    logger::init(loggerName);
+    logger::set_level(spdlog::level::debug);
+
 }
 
 bool MarketManager::Init() {

@@ -11,7 +11,7 @@ using namespace share_common;
 
 class TradeOutput {
 public:
-    TradeOutput():{}
+    TradeOutput(){}
 
     bool Init();
 
