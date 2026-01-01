@@ -33,13 +33,11 @@ bool MarketOutput::Stop() {
 }
 
 void MarketOutput::OutputMarketData(const MarketData& market_data) {
+    LOG_INFO("OutputMarketData: \n{}", market_data.str());
     
-    // if (market_data_callback_func_) {
-    //     market_data_callback_func_(market_data);
-    // }
 
     if (ptr_share_market_data_queue_) {
-        ptr_share_market_data_queue_->push(market_data);
+        ptr_share_market_data_queue_->push_share(ptr_share_market_data_queue_slot_, market_data);
     }
 }
 
@@ -95,6 +93,10 @@ bool MarketOutput::InitShareMarketDataQueue() {
         LOG_ERROR("ptr_share_market_data_queue_ create_shared  failed");
         return false;
     }
+
+    // 手动将slot 映射到外部的内存地址中 -- 共享内存版本,这一步导致了很多的问题，导致无法进行服务端对slot 的解锁出错了。
+    ptr_share_market_data_queue_->slot_attach(ptr_share_market_data_queue_slot_, 
+                                                static_cast<void*>((char*)addr + sizeof(mpmc_queue<MarketData>) + 32));    
 
 
     return true;

@@ -19,11 +19,13 @@ public:
         ptr_src_market_data_queue_ = ptr_src_market_data_queue;
     }
 
-    void SendMarketDataToQueue(const MarketData& market_data) {
-        if (ptr_src_market_data_queue_ != nullptr) {
-            ptr_src_market_data_queue_->push(market_data);
-        }
+    void SendMarketDataToQueue(const MarketData& market_data);
+
+    mpmc_queue<MarketData>* GetSrcMarketDataQueue() {
+        return ptr_src_market_data_queue_;
     }
+
+    bool InitSrcMarketDataQueue();
 
     bool Start();
 

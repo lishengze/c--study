@@ -18,11 +18,7 @@
 using namespace share_common;
 using std::shared_ptr;
 
-MarketManager::MarketManager():ptr_src_market_data_queue_{nullptr}, iQueueSize_{4096} {
-    std::string loggerName = "market_engine_"+ SecTimeStr("%Y%m%d") + ".log";
-    logger::init(loggerName);
-    logger::set_level(spdlog::level::debug);
-
+MarketManager::MarketManager():ptr_src_market_data_queue_{nullptr}, iQueueSize_{4096},bIsRunning_{true} {
 }
 
 bool MarketManager::Init() {
@@ -30,57 +26,85 @@ bool MarketManager::Init() {
     CONFIG_MANAGER_INSTANCE->Init();
 
 
-    if (!InitSrcMarketDataQueue()) return false;
+    // if (!InitSrcMarketDataQueue()) return false;
 
     if (!market_receiver_.Init()) return false;
+
+    ptr_src_market_data_queue_ = market_receiver_.GetSrcMarketDataQueue();
+
+    market_receiver_.SetSrcMarketDataQueue(ptr_src_market_data_queue_);
 
     if (!market_output_.Init()) return false;
 
     if (!data_compute_.Init()) return false;
 
-    return true;
-}
+    MarketDataCallbackFuncType callback_func = std::bind(&MarketOutput::OutputMarketData, &market_output_, std::placeholders::_1);
+    data_compute_.SetMarketDataCallbackFunc(callback_func);
 
-bool MarketManager::InitSrcMarketDataQueue() {
-
-    ptr_src_market_data_queue_ = new mpmc_queue<MarketData>();
-
-    if (!ptr_src_market_data_queue_->create(iQueueSize_)) {
-        LOG_ERROR("queue create  failed");
-        return false;
-    }
+    LOG_INFO("MarketManager Init Success");
 
     return true;
 }
+
+// bool MarketManager::InitSrcMarketDataQueue() {
+//     LOG_INFO("InitSrcMarketDataQueue Start");
+
+//     ptr_src_market_data_queue_ = new mpmc_queue<MarketData>();
+
+//     if (!ptr_src_market_data_queue_->create(iQueueSize_)) {
+//         LOG_ERROR("queue create  failed");
+//         return false;
+//     }
+
+//     MarketData market_data;
+
+//     for (int i = 0; i < 10; ++i) {
+//         market_data.SetRandomData();
+
+//         if (!ptr_src_market_data_queue_->trypush(market_data)) {
+//             LOG_ERROR("InitSrcMarketDataQueue, ptr_src_market_data_queue_ try_push failed");
+//             return false;
+//         } else {
+//             LOG_INFO("InitSrcMarketDataQueue, ptr_src_market_data_queue_ try_push success");
+//         }
+//     }
+
+                
+//     return true;
+// }
 
 
 bool MarketManager::Start() { 
+    if (!StartListenSrcMarketData()) return false;
 
     if (!market_receiver_.Start()) return false;
 
     if (!data_compute_.Start()) return false;    
 
-    MarketDataCallbackFuncType callback_func = std::bind(&MarketOutput::OutputMarketData, &market_output_, std::placeholders::_1);
-
-    data_compute_.SetMarketDataCallbackFunc(callback_func);
-
     if (!market_output_.Start()) return false;
 
-
-    if (!StartListenSrcMarketData()) return false;
+    LOG_INFO("MarketManager Start Success");
 
     return true;
 
 }
 
 bool MarketManager::StartListenSrcMarketData() {
+    LOG_INFO("StartListenSrcMarketData Start");
 
     shptrGetSrcMarketDataThread_ = std::make_shared<std::thread>([this]() {
         while (bIsRunning_) {
             MarketData msg;
-            ptr_src_market_data_queue_->pop(msg); 
 
-            data_compute_.OnMarketSrcData(msg);
+            if (ptr_src_market_data_queue_->trypop(msg)) {
+                LOG_INFO("StartListenSrcMarketData, pop market_data:\n{}", msg.str());
+                data_compute_.OnMarketSrcData(msg);
+            } else {
+                LOG_INFO("StartListenSrcMarketData, ptr_src_market_data_queue_ try_pop failed");
+            }
+            
+            std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+            
         }
         LOG_INFO("Waiting  Queue Data Is Over");
         

@@ -7,16 +7,22 @@ using namespace share_common;
 
 int main()
 {
-    std::string loggerName = "strategy_client_"+ SecTimeStr("%Y%m%d") + ".log";
+    std::string loggerName = "market_"+ SecTimeStr("%Y%m%d") + ".log";
     logger::init(loggerName);
     logger::set_level(spdlog::level::debug);
 
-    LOG_INFO("Strategy Client Test Start");    
+    LOG_INFO("Market Start");    
 
 
     MarketManager marketManager;
-    marketManager.Init();
-    marketManager.Start();
+    if (!marketManager.Init()) {
+        LOG_ERROR("MarketManager Init Failed");
+        return -1;
+    }
+    if (!marketManager.Start()) {
+        LOG_ERROR("MarketManager Start Failed");
+        return -1;
+    }
     
     return 0;    
 }   

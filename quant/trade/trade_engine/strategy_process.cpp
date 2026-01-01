@@ -13,7 +13,7 @@ bool StrategyProcess::Start() {
 }
 
 void StrategyProcess::OnMarketSrcData(const MarketData& market_data) {
-    LOG_INFO("OnMarketSrcData, market_data: {}", market_data.str());
+    LOG_INFO("OnMarketSrcData, market_data: \n{}", market_data.str());
 }
 
 bool StrategyProcess::Stop() {

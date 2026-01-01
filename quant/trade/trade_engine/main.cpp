@@ -7,15 +7,21 @@ using namespace share_common;
 
 int main()
 {
-    std::string loggerName = "ute_server_"+ SecTimeStr("%Y%m%d") + ".log";
+    std::string loggerName = "trade_"+ SecTimeStr("%Y%m%d") + ".log";
     logger::init(loggerName);
     logger::set_level(spdlog::level::debug);
 
-    LOG_INFO("UTE Server Test Start");    
+    LOG_INFO("Trade Server Start");    
 
     TradeManager tradeManager;
-    tradeManager.Init();
-    tradeManager.Start();
+    if (!tradeManager.Init()) {
+        LOG_ERROR("TradeManager Init Failed");
+        return -1;
+    }
+    if (!tradeManager.Start()) {
+        LOG_ERROR("TradeManager Start Failed");
+        return -1;
+    }
 
     return 0;    
 }   

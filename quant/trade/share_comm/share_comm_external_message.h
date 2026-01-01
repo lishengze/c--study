@@ -127,13 +127,22 @@ struct MarketData {
         double volume; // 成交量
         unsigned long long timestamp; // 时间戳（纳秒）
 
-    MarketData() : open(0), high(100000), low(0), close(0), volume(0), timestamp(0) {
-        memset(exchange, 0, sizeof(exchange));
-        memset(stock_code, 0, sizeof(stock_code));
+    MarketData() : open(11), high(0), low(0), close(0), volume(0), timestamp(0) {
+        strcpy(exchange, "SH");
+        strcpy(stock_code, "600000");
+    }
+
+    MarketData(const MarketData& other):open{other.open}, high{other.high}, low{other.low}, close{other.close}, volume{other.volume}, timestamp{other.timestamp} {
+        strcpy(exchange, other.exchange);
+        strcpy(stock_code, other.stock_code);
     }
 
     void SetRandomData() {
-        open = high = low = close = volume = 0;
+        open++;
+        high = open + 10;
+        low = open - 10;
+        close = open + 5;
+        volume = 1000000;
 
         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }

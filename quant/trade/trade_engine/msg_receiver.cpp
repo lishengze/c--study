@@ -82,7 +82,7 @@ bool MsgReceiver::StartReceiveMarketData() {
     shptrGetSrcMarketDataThread_ = std::make_shared<std::thread>([this]() {
         while (bIsRunning_) {
             MarketData market_data;
-            if (ptr_share_market_data_queue_->pop(market_data)) {
+            if (ptr_share_market_data_queue_->pop_share(ptr_share_market_data_queue_slot_, market_data)) {
                 // 处理市场数据
                 market_data_callback_func_(market_data);
             }

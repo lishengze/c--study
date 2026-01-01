@@ -22,7 +22,7 @@ public:
 
     bool Init() ;
 
-    bool InitSrcMarketDataQueue() ;
+    // bool InitSrcMarketDataQueue() ;
 
     bool Start();
 

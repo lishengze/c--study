@@ -20,9 +20,7 @@ using namespace share_common;
 using std::shared_ptr;
 
 TradeManager::TradeManager() {
-    std::string loggerName = "trade_engine_"+ SecTimeStr("%Y%m%d") + ".log";
-    logger::init(loggerName);
-    logger::set_level(spdlog::level::debug);    
+
 }
 
 bool TradeManager::Init() {
