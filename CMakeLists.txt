@@ -79,6 +79,9 @@ add_subdirectory(queue/share_test)
 add_subdirectory(queue/study)
 add_subdirectory(quant/trade)
 
+add_subdirectory(quant/Eigen/test_eigen)
+
+
 # add_subdirectory(memory/cpp)
 add_subdirectory(perf)
 add_subdirectory(perf/cache_test)

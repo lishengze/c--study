@@ -6,116 +6,67 @@
 #include <algorithm>
 #include <string>
 #include <chrono>
+#include <memory>
+#include <unordered_map>
+#include <iostream>
+#include <vector>
+#include <mutex>
 
-// namespace share_common 
-// {
 
-template <size_t Size>
-inline void CopyToArray(const char* buf,
-						size_t buf_len,
-						std::array<char, Size>& to)
-{
-	size_t min = std::min(buf_len, Size);
-	if (min <= 0)
-	{
-		std::memset(&to[0], ' ', Size);
-	}
-	else
-	{
-		std::memcpy(&to[0], buf, min);
-		if (min < Size)
-		{
-			std::memset(&to[min], ' ', Size - min);
-		}
-		
-		if (buf[min - 1] == 0)
-		{
-			to[min - 1] = ' ';
-		}
-	}
-}
-
-template <size_t Size, int CArraySize>
-inline void CopyToArray(const char (&c_array)[CArraySize],
-						std::array<char, Size>& target)
-{
-	CopyToArray(&c_array[0], CArraySize, target);
-}
-
-#pragma pack(push, 1)
-
-//msgtype字典
-const unsigned int kPktLoginReq = 1001; //登录请求
-const unsigned int kPktLoginAns = 2001; //登录应答
-const unsigned int kPktLogoutReq = 1002; //登出请求
-const unsigned int kPktLogoutAns = 2002; //登出应答
-const unsigned int kPktOrderReq = 1003; //委托请求
-const unsigned int kPktCancelOrderReq = 1004; //撤单请求
-const unsigned int kPktOrderAns = 2003; //委托应答
-const unsigned int kPktCancelOrderAns= 2004; //撤单应答
-const unsigned int kPktOrderMatch = 2005; //委托成交回报
-const unsigned int kPktRejectMsg = 9; //请求拒单
-const unsigned int kPktStrategyEnd = 10; //策略结束
-const unsigned int kPktStrategyInit = 8; // 策略初始化消息;
-
-//order_staus字典
-const unsigned char kNew = 0;                                    //已申报
-const unsigned char kPartiallyFilled = 1;                        //部分成交
-const unsigned char kFilled = 2;                                 //全部成交
-const unsigned char kCancelled = 4;                              //已撤销
-const unsigned char kReject = 8;                                 //已拒绝
-const unsigned char kPartiallyFilledPartiallyCancelled = 3;      //部分成交部分撤销
-const unsigned char kPartiallyCancelled = 5;                     //部分撤销
-const unsigned char kUnSend = 9;                                 //未申报
-const unsigned char kSended = 10;                                //正报
-const unsigned char kWaitCancelled = 11;                         //待撤销
-const unsigned char kPartiallyFilledWaitCancelled = 12;          //部成待撤
-const unsigned char kProcessed = 13;                             //已处理
-const unsigned char kNull = 99;                                  //无
-
-//market_id字典
-const unsigned short kShangHai = 101;  ///< 上海
-const unsigned short kShenZhen = 102;  ///< 深圳
-const unsigned short kHongKong = 103;  ///< 香港
-const unsigned short kThird = 109;  ///< 北京
-const unsigned short kHKTShangHai = 105;  ///< 港股通-沪市
-const unsigned short kHKTShenZhen = 106;  ///< 港股通-深市
-const unsigned short kBShangHai = 107;  ///< 上海B股
-const unsigned short kBShenZhen = 108;  ///< 深圳B股
-const unsigned short kFund = 110;  ///< 基金
-const unsigned short kBankShangHai = 111;  ///< 银行间-沪市
-const unsigned short kBankShenZhen = 112;  ///< 银行间-深市
-const unsigned short kHKT = 199;  ///< 港股通
-
-//side字典
-const char kBuy = '1';  ///< 买
-const char kSell = '2';  ///< 卖
-const char kPurchase = 'D';  ///< 申购
-const char kRedeem = 'E';  ///< 赎回
-const char kBorrow = 'G';  ///< 借入
-const char kLoan = 'F';  ///< 出借
-
-//order_type字典
-const char kLimited = '1';    ///< 限价委托
-const char kLocalOptimal = '2';   ///< 本方最优
-const char kCounterpartyOptimalOrLimited = '3';   ///< 对手方最优剩余转限价
-const char kImmediateOrCancel = '4';  ///< 市价立即成交剩余撤销
-const char kFillOrKill = '5'; ///< 市价全额成交或撤销
-const char kFiveLevelFillOrKill = '6';    ///< 市价最优五档全额成交剩余撤销
-
-// ErrCode
-
-const unsigned int kSuccess = 0; //成功
-const unsigned int kUteFailed = 1; //UTE进程终止;
-const unsigned int kUteNotInited = 2; //UTE进程终止;
+// ===================== 跨平台显式加载动态库 API 封装 =====================
+#if defined(_WIN32) || defined(_WIN64)
+    // Windows 平台 API
+    #include <windows.h>
+    typedef HMODULE DllHandle;          // 动态库句柄类型
+    #define DLL_INVALID_HANDLE NULL     // 无效句柄
+    // 加载动态库
+    static DllHandle dll_load(const char* dll_path) {
+        return LoadLibraryA(dll_path);
+    }
+    // 获取接口地址
+    static void* dll_get_proc(DllHandle handle, const char* func_name) {
+        return (void*)GetProcAddress(handle, func_name);
+    }
+    // 卸载动态库
+    static void dll_unload(DllHandle handle) {
+        if (handle != DLL_INVALID_HANDLE) {
+            FreeLibrary(handle);
+        }
+    }
+    // 错误信息获取
+    static const char* dll_get_error() {
+        static char err_buf[256] = {0};
+        FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), 0, err_buf, sizeof(err_buf), NULL);
+        return err_buf;
+    }
+#else
+    // Linux/Mac 平台 API
+    #include <dlfcn.h>
+    typedef void* DllHandle;            // 动态库句柄类型
+    #define DLL_INVALID_HANDLE NULL     // 无效句柄
+    // 加载动态库
+    static DllHandle dll_load(const char* dll_path) {
+        return dlopen(dll_path, RTLD_LAZY);
+    }
+    // 获取接口地址
+    static void* dll_get_proc(DllHandle handle, const char* func_name) {
+        return dlsym(handle, func_name);
+    }
+    // 卸载动态库
+    static void dll_unload(DllHandle handle) {
+        if (handle != DLL_INVALID_HANDLE) {
+            dlclose(handle);
+        }
+    }
+    // 错误信息获取
+    static const char* dll_get_error() {
+        return dlerror();
+    }
+#endif
 
 
 
 
-
-struct StrategyKey {
-    unsigned long long ulStrategyKey; //策略ID
-};
 
 struct MarketData {
         char exchange[3]; // 交易所（SH/SZ）
@@ -126,6 +77,7 @@ struct MarketData {
         double close; // 收盘价
         double volume; // 成交量
         unsigned long long timestamp; // 时间戳（纳秒）
+        unsigned long long ulID;
 
     MarketData() : open(11), high(0), low(0), close(0), volume(0), timestamp(0) {
         strcpy(exchange, "SH");
@@ -159,100 +111,184 @@ struct MarketData {
     }
 };
 
-/// @brief 通用请求消息结构体
-struct UteMsg {
-    UteMsg() : iMsgID(0), iMsgSrcType(0), pMsgHander(nullptr), iMsgLen(0), ulStrategyKey(0) {
-        memset(strMsgBuf, 0, sizeof(strMsgBuf));
-    }
 
-    UteMsg(int iMsgID, unsigned int iMsgLen, unsigned long long ulStrategyKey, const char* pMsgBuf) :
-         iMsgID(iMsgID), iMsgSrcType(0), pMsgHander(nullptr), iMsgLen(iMsgLen), ulStrategyKey(ulStrategyKey) {
-        memset(strMsgBuf, 0, sizeof(strMsgBuf));
+struct IndexData {
 
-        // LOG_DEBUG("***** Default Constructor!");
-
-        if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
-            memcpy(strMsgBuf, pMsgBuf, iMsgLen);            
-        }
+    IndexData():ulID{0},dAlpha01{0}, dAlpha10{0}, dAlpha36{0} {
 
     }
 
-    UteMsg(int iMsgID, unsigned int iMsgLen, int iMsgSrcType, void* pMsgHander, const char* pMsgBuf) :
-         iMsgID(iMsgID), iMsgSrcType(iMsgSrcType), pMsgHander(pMsgHander), iMsgLen(iMsgLen), ulStrategyKey(0) {
-        memset(strMsgBuf, 0, sizeof(strMsgBuf));
-        if (iMsgLen > 0 && iMsgLen <= sizeof(strMsgBuf)) {
-            memcpy(strMsgBuf, pMsgBuf, iMsgLen);            
-        }
-    }    
-
-    UteMsg(const UteMsg&& other) :
-        iMsgID(other.iMsgID),iMsgSrcType(other.iMsgSrcType), 
-        pMsgHander(other.pMsgHander), iMsgLen(other.iMsgLen), ulStrategyKey(other.ulStrategyKey) {
-        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);         
+    IndexData(const IndexData& other) {
+        ulID = other.ulID;
+        dAlpha01 = other.dAlpha01;
+        dAlpha10 = other.dAlpha10;
+        dAlpha36 = other.dAlpha36;
     }
 
-    UteMsg& operator=(const UteMsg&& other)
-    {
-        if (this == &other ) return *this;
-        iMsgID = other.iMsgID;
-        iMsgLen = other.iMsgLen;
-        ulStrategyKey = other.ulStrategyKey;
-        iMsgSrcType = other.iMsgSrcType;
-        pMsgHander = other.pMsgHander;
-        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
-        return *this;
-    }
-
-     UteMsg(const UteMsg& other)
-    {
-        if (this == &other ) return;
-        iMsgID = other.iMsgID;
-        iMsgLen = other.iMsgLen;
-        ulStrategyKey = other.ulStrategyKey;
-        iMsgSrcType = other.iMsgSrcType;
-        pMsgHander = other.pMsgHander;
-        memcpy(strMsgBuf, other.strMsgBuf, other.iMsgLen);
-        return;
-    }    
-
-    int  iMsgID;            // 消息类型
-    int  iMsgSrcType;       // 消息来源类型
-    void* pMsgHander;       // 消息处理句柄
-    unsigned int iMsgLen;  // 拷贝消息缓冲区的真实长度;
-    unsigned long long ulStrategyKey; // 由strategyID 和 bachID 拼接的key;
-    char strMsgBuf[2048]; // 增加编译宏判断;
+    unsigned long long ulID;
+    double dAlpha01;
+    double dAlpha10;
+    double dAlpha36;
 };
 
-// 用于策略进程和UTE进程之间的消息通信;
-// 1. iMsgID: 消息ID;
-// 2. pMsgBuf: 消息缓冲区;
-// 3. ulMsgKey: 策略ID;;
+const int ErrSuccess = 0;
+const int ErrFuncPointerIsNull = -1;
+const int ErrFuncParam1IsNull = -2;
 
-using UteGetStrategyReqCallBackFuncType = std::function<void(int , const char* , unsigned long long)>;
+struct Fund {
+    double dFund;
+};
 
+struct StockHold {
+    double dStock;
+};
 
-// 用于转发API请求和交易所回报 到 UTE 业务线程的回调接口;
-// 1. iMsgID: 消息ID;
-// 2. pMsgBuf: 消息缓冲区;
-// 3. iMsgLen: 消息长度;
-// 4. iMsgSrcType: 消息来源类型;
-// 5. pMsgHandler: 消息处理句柄;
-using UteGetInnerReqCallBackFuncType = std::function<void(int , const char* , int , int, void*)>;
+struct OrderReq {
+    char exchange[3]; // 交易所（SH/SZ）
+    char stock_code[10]; // 证券代码
+    char side; // 买卖方向（1：买，2：卖）
+    char order_type; // 订单类型（1：限价委托，2：本方最优，3：对手方最优剩余转限价，4：市价立即成交剩余撤销，5：市价全额成交或撤销，6：市价最优五档全额成交剩余撤销）
+    double price; // 价格（限价委托必填）
+    double volume; // 成交量（必填）
+    unsigned long long timestamp; // 时间戳（纳秒）
 
-// 策略接收UTE Event 事件的回调接口类型;
-// 1. iErrCode: 错误码;
-// 2. pErrDesc: 错误信息;
-using StrategyGetRspCallbackEventFuncType = std::function<void(int , const char*)>;
+    OrderReq() : side('1'), order_type('1'), price(0), volume(0), timestamp(0) {
+        strcpy(exchange, "SH");
+        strcpy(stock_code, "600000");
+        timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    }
 
+    std::string str() const {
+        return std::string("exchange:") + std::string(exchange) 
+                + std::string(", stock_code:") + std::string(stock_code) 
+                + std::string(", side:") + std::string(1, side) 
+                + std::string(", order_type:") + std::string(1, order_type) 
+                + std::string(", price:") + std::to_string(price) 
+                + std::string(", volume:") + std::to_string(volume) 
+                + std::string(", timestamp:") + std::to_string(timestamp);
+    }
+};
 
-// 策略接收UTE 回报消息的 事件的回调接口类型;
-// 1. iMsgID: 消息ID;
-// 2. pMsgBuf: 消息缓冲区;
-// 3. iMsgLen: 消息长度;
-using StrategyGetRspCallbackMessageFuncType = std::function<void(int , const char*, const int)>;
-
+class StrategyProcess;
 
 using MarketDataCallbackFuncType = std::function<void(const MarketData&)>;
+
+using IndexDataCallbackFuncType = std::function<void(const IndexData&)>;
+
+// 对应 dll_class_create
+typedef void* (funcStrategyCreateFunc)();
+// 对应 dll_class_destroy
+typedef void (funcStrategyDestroyFunc)(void* pStrategyImpler);
+
+// 处理行情接口;+
+typedef int (funcProcessMarketData)(void* pStrategyImpler, MarketData* pMarketData);
+
+// 处理指标数据接口;+
+typedef int (funcProcessIndexData)(void* pStrategyImpler, IndexData* pIndexData);
+
+// 注册应用主函数接口;+
+typedef int (funcRegisterAppMain)(void* pStrategyImpler, StrategyProcess* pStrategyProcess);
+
+
+struct TradeUnitDllInfo
+{
+    TradeUnitDllInfo(const std::string& lib_name) : lib_name_(lib_name) {
+
+    }
+
+    bool LoadDll() {
+        DllHandle dll_handle = dll_load(lib_name_.c_str());
+        if (dll_handle == DLL_INVALID_HANDLE) {
+            std::cerr << "[主程序] 加载动态库失败！错误信息：" << lib_name_ 
+                        << " , error: " << dll_get_error() << std::endl;
+            return false;
+        }
+        std::cout << "[主程序] 动态库加载成功！路径：" << lib_name_ << std::endl;
+
+        pFuncStrategyCreate = (funcStrategyCreateFunc*)dll_get_proc(dll_handle, "dll_class_create");
+        if (pFuncStrategyCreate == nullptr) {
+            std::cerr << "[主程序] 加载动态库失败！错误信息：pFuncStrategyCreate 为空 "  << std::endl;
+            return false;
+        }
+        pFuncStrategyDestroy = (funcStrategyDestroyFunc*)dll_get_proc(dll_handle, "dll_class_destroy");
+        if (pFuncStrategyDestroy == nullptr) {
+            std::cerr << "[主程序] 加载动态库失败！错误信息：pFuncStrategyDestroy 为空 "  << std::endl;
+            return false;
+        }
+        pFuncProcessMarketData = (funcProcessMarketData*)dll_get_proc(dll_handle, "dll_process_market_data");
+        if (pFuncProcessMarketData == nullptr) {
+            std::cerr << "[主程序] 加载动态库失败！错误信息：pFuncProcessMarketData 为空 "  << std::endl;
+            return false;
+        }
+        pFuncProcessIndexData = (funcProcessIndexData*)dll_get_proc(dll_handle, "dll_process_index_data");
+        if (pFuncProcessIndexData == nullptr) {
+            std::cerr << "[主程序] 加载动态库失败！错误信息：pFuncProcessIndexData 为空 "  << std::endl;
+            return false;
+        }
+        pFuncRegisterAppMain = (funcRegisterAppMain*)dll_get_proc(dll_handle, "dll_register_app_main");
+        if (pFuncRegisterAppMain == nullptr) {
+            std::cerr << "[主程序] 加载动态库失败！错误信息：pFuncRegisterAppMain 为空 "  << std::endl;
+            return false;
+        }
+
+        pStrategyImpler = pFuncStrategyCreate();
+        if (pStrategyImpler == nullptr) {
+            std::cerr << "[主程序] 加载动态库失败！错误信息：pStrategyImpler 为空 "  << std::endl;
+            return false;
+        }
+
+        return true;
+    }
+
+    ~TradeUnitDllInfo() {
+        if (pFuncStrategyDestroy) {
+            pFuncStrategyDestroy(pStrategyImpler);
+        }
+    }
+
+    int ProcessMarketData(MarketData* pMarketData) {
+        if (pFuncProcessMarketData) {
+            return pFuncProcessMarketData(pStrategyImpler, pMarketData);
+        } else {
+            return ErrFuncPointerIsNull;
+        }
+
+        return ErrSuccess;
+    }
+
+    int ProcessIndexData(IndexData* pIndexData) {
+        if (pFuncProcessIndexData) {
+            return pFuncProcessIndexData(pStrategyImpler, pIndexData);
+        } else {
+            return ErrFuncPointerIsNull;
+        }
+
+        return ErrSuccess;
+    }
+
+    int RegisterAppMain(StrategyProcess* pStrategyProcess) {
+        if (pFuncRegisterAppMain) {
+            return pFuncRegisterAppMain(pStrategyImpler, pStrategyProcess);
+        } else {
+            return ErrFuncPointerIsNull;
+        }
+
+        return ErrSuccess;
+    }
+
+    std::string lib_name_;  
+
+    void* pStrategyImpler;
+    funcRegisterAppMain *pFuncRegisterAppMain;
+	funcProcessMarketData *pFuncProcessMarketData;
+    funcProcessIndexData *pFuncProcessIndexData;
+    funcStrategyCreateFunc* pFuncStrategyCreate;
+    funcStrategyDestroyFunc* pFuncStrategyDestroy;
+
+
+};
+
+using TradeUnitDllInfoPtr = std::shared_ptr<TradeUnitDllInfo>;
 
 
 #ifdef __GNUC__
@@ -267,7 +303,3 @@ using MarketDataCallbackFuncType = std::function<void(const MarketData&)>;
 #else
 #define SHARE_COMM_LIKELY(x) (x)
 #endif
-
-// } // namespace share_common
-
-#pragma pack(pop)

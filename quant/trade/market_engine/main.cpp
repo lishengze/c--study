@@ -23,6 +23,11 @@ int main()
         LOG_ERROR("MarketManager Start Failed");
         return -1;
     }
+   
     
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
     return 0;    
 }   

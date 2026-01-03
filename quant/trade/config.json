@@ -6,5 +6,6 @@
     "ComputedMarketData": {
         "QueueName": "compute_market_data_queue",
         "QueueSize": 4096
-    }
+    },
+    "StrategyList":["strategy_impl_1"]
 }

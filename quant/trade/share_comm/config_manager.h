@@ -15,6 +15,11 @@ public:
 
     double GetDoubleValue(const std::string& section, const std::string& key, double default_value);
 
+    void RefreshConfig();
+
+    std::vector<std::string> GetStringListValue(const std::string& section, const std::string& key);
+
+
 private:
     std::string sConfigFileName_;
     njson reqJsonData_;
