@@ -1,70 +1,90 @@
 #pragma once
 
-#include <cstring>
-#include <array>
-#include <functional>
-#include <algorithm>
-#include <string>
-#include <chrono>
-#include <memory>
-#include <unordered_map>
-#include <iostream>
-#include <vector>
-#include <mutex>
+
+#include "comm_define.h"
+
+// 行情频率枚举（支持扩展，新增频率只需在此添加）
+enum class BarFrequency {
+    TICK = 0,        // 最细粒度：Tick数据（逐笔）
+    MINUTE_1 = 1,    // 1分钟线
+    MINUTE_5 = 5,    // 5分钟线
+    HOUR_1 = 60,     // 1小时线
+    DAY = 1440,      // 日线（1440分钟）
+    WEEK = 10080     // 周线（10080分钟）
+};
+
+enum class KlineIndicatorType {
+    Alpha_001 = 1,        // 最细粒度：Tick数据（逐笔）
+    Alpha_010 = 10,    // 1分钟线
+    Alpha_036 = 36
+};
+
+struct DepthDataAtom {
+    char exchange[3]; // 交易所（SH/SZ）
+    char stock_code[10]; // 证券代码
+    double bid_price[5]; // 买盘价格
+    double bid_volume[5]; // 买盘成交量
+    double ask_price[5]; // 卖盘价格
+    double ask_volume[5]; // 卖盘成交量
+    unsigned long long timestamp; // 时间戳（纳秒）
+    unsigned long long ulID;
+};
+
+using DepthDataAtomSharedPtr = std::shared_ptr<DepthDataAtom>;
+
+struct DepthData {
+    my_vector<my_vector<DepthDataAtom>> depth_data_atoms;   // 深度数据，第一层代表股票代码，第二层代码同一个股票代码，多个时刻的深度数据
+    my_vector<my_mutex> depth_mutex_;
+
+};
+using DepthDataSharePtr = std::shared_ptr<DepthData>;
 
 
-// ===================== 跨平台显式加载动态库 API 封装 =====================
-#if defined(_WIN32) || defined(_WIN64)
-    // Windows 平台 API
-    #include <windows.h>
-    typedef HMODULE DllHandle;          // 动态库句柄类型
-    #define DLL_INVALID_HANDLE NULL     // 无效句柄
-    // 加载动态库
-    static DllHandle dll_load(const char* dll_path) {
-        return LoadLibraryA(dll_path);
+inline unsigned int GetDataLimit(BarFrequency iFrequency) {
+    switch (iFrequency) {
+        case BarFrequency::TICK:
+            return 1000000;
+        case BarFrequency::MINUTE_1:
+            return 1000000;
+        case BarFrequency::MINUTE_5:
+            return 1000000;
+        case BarFrequency::HOUR_1:
+            return 1000000;
+        case BarFrequency::DAY:
+            return 1000000;
+        case BarFrequency::WEEK:
+            return 1000000;
+        default:
+            return 1000000;
     }
-    // 获取接口地址
-    static void* dll_get_proc(DllHandle handle, const char* func_name) {
-        return (void*)GetProcAddress(handle, func_name);
-    }
-    // 卸载动态库
-    static void dll_unload(DllHandle handle) {
-        if (handle != DLL_INVALID_HANDLE) {
-            FreeLibrary(handle);
-        }
-    }
-    // 错误信息获取
-    static const char* dll_get_error() {
-        static char err_buf[256] = {0};
-        FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), 0, err_buf, sizeof(err_buf), NULL);
-        return err_buf;
-    }
-#else
-    // Linux/Mac 平台 API
-    #include <dlfcn.h>
-    typedef void* DllHandle;            // 动态库句柄类型
-    #define DLL_INVALID_HANDLE NULL     // 无效句柄
-    // 加载动态库
-    static DllHandle dll_load(const char* dll_path) {
-        return dlopen(dll_path, RTLD_LAZY);
-    }
-    // 获取接口地址
-    static void* dll_get_proc(DllHandle handle, const char* func_name) {
-        return dlsym(handle, func_name);
-    }
-    // 卸载动态库
-    static void dll_unload(DllHandle handle) {
-        if (handle != DLL_INVALID_HANDLE) {
-            dlclose(handle);
-        }
-    }
-    // 错误信息获取
-    static const char* dll_get_error() {
-        return dlerror();
-    }
-#endif
+}
+
+struct KlineIndicator {
+    char exchange[3]; // 交易所（SH/SZ）
+    char stock_code[10]; // 证券代码
+    unsigned long long timestamp; // 时间戳（纳秒）
+    int bar_index; // 时间戳对应的K线索引, 1,5,60,1440, 10080;
+    unsigned short stock_index; // 股票索引
+};
+using KlineIndicatorSharedPtr = std::shared_ptr<KlineIndicator>;
 
 
+struct KlineAtom {
+    char exchange[3]; // 交易所（SH/SZ）
+    char stock_code[10]; // 证券代码
+    double open_price; // 开盘价
+    double high_price; // 最高价
+    double low_price; // 最低价
+    double close_price; // 收盘价
+    double volume; // 成交量
+    double amount; // 成交额
+    unsigned long long timestamp; // 时间戳（纳秒）
+    int bar_index; // 时间戳对应的K线索引, 1,5,60,1440, 10080;
+    unsigned short stock_index; // 股票索引
+
+    KlineIndicatorSharedPtr pKlineIndicator;  // 存储K线指标;
+};
+using KlineAtomSharedPtr = std::shared_ptr<KlineAtom>;
 
 
 
@@ -110,7 +130,6 @@ struct MarketData {
                 + std::string(", timestamp:") + std::to_string(timestamp);
     }
 };
-
 
 struct IndexData {
 
@@ -189,6 +208,56 @@ typedef int (funcProcessIndexData)(void* pStrategyImpler, IndexData* pIndexData)
 // 注册应用主函数接口;+
 typedef int (funcRegisterAppMain)(void* pStrategyImpler, StrategyProcess* pStrategyProcess);
 
+// ===================== 跨平台显式加载动态库 API 封装 =====================
+#if defined(_WIN32) || defined(_WIN64)
+    // Windows 平台 API
+    #include <windows.h>
+    typedef HMODULE DllHandle;          // 动态库句柄类型
+    #define DLL_INVALID_HANDLE NULL     // 无效句柄
+    // 加载动态库
+    static DllHandle dll_load(const char* dll_path) {
+        return LoadLibraryA(dll_path);
+    }
+    // 获取接口地址
+    static void* dll_get_proc(DllHandle handle, const char* func_name) {
+        return (void*)GetProcAddress(handle, func_name);
+    }
+    // 卸载动态库
+    static void dll_unload(DllHandle handle) {
+        if (handle != DLL_INVALID_HANDLE) {
+            FreeLibrary(handle);
+        }
+    }
+    // 错误信息获取
+    static const char* dll_get_error() {
+        static char err_buf[256] = {0};
+        FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), 0, err_buf, sizeof(err_buf), NULL);
+        return err_buf;
+    }
+#else
+    // Linux/Mac 平台 API
+    #include <dlfcn.h>
+    typedef void* DllHandle;            // 动态库句柄类型
+    #define DLL_INVALID_HANDLE NULL     // 无效句柄
+    // 加载动态库
+    static DllHandle dll_load(const char* dll_path) {
+        return dlopen(dll_path, RTLD_LAZY);
+    }
+    // 获取接口地址
+    static void* dll_get_proc(DllHandle handle, const char* func_name) {
+        return dlsym(handle, func_name);
+    }
+    // 卸载动态库
+    static void dll_unload(DllHandle handle) {
+        if (handle != DLL_INVALID_HANDLE) {
+            dlclose(handle);
+        }
+    }
+    // 错误信息获取
+    static const char* dll_get_error() {
+        return dlerror();
+    }
+#endif
 
 struct TradeUnitDllInfo
 {

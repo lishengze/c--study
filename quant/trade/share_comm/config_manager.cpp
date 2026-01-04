@@ -24,7 +24,7 @@ void ConfigManager::RefreshConfig() {
     }
 }
 
-int ConfigManager::GetIntValue(const std::string& section, const std::string& key, int default_value) {
+int ConfigManager::GetIntValue(const my_string& section, const my_string& key, int default_value) {
 
     RefreshConfig();
 
@@ -34,7 +34,7 @@ int ConfigManager::GetIntValue(const std::string& section, const std::string& ke
 
     return default_value;
 }
-double ConfigManager::GetDoubleValue(const std::string& section, const std::string& key, double default_value) {
+double ConfigManager::GetDoubleValue(const my_string& section, const my_string& key, double default_value) {
     RefreshConfig();
 
     if (reqJsonData_.contains(section) && reqJsonData_[section].contains(key) && reqJsonData_[section][key].is_number()) {
@@ -42,22 +42,33 @@ double ConfigManager::GetDoubleValue(const std::string& section, const std::stri
     }
     return default_value;
 }
-std::string ConfigManager::GetStringValue(const std::string& section, const std::string& key, const std::string& default_value) {
+my_string ConfigManager::GetStringValue(const my_string& section, const my_string& key, const my_string& default_value) {
     RefreshConfig();
 
     if (reqJsonData_.contains(section) && reqJsonData_[section].contains(key) && reqJsonData_[section][key].is_string()) {
-        return reqJsonData_[section][key].get<std::string>();
+        return reqJsonData_[section][key].get<my_string>();
     }
     return default_value;
 }
 
-std::vector<std::string> ConfigManager::GetStringListValue(const std::string& section, const std::string& key) {
+my_vector<my_string> ConfigManager::GetStringListValue(const my_string& section, const my_string& key) {
     RefreshConfig();
 
-    std::vector<std::string> ret;
+    std::vector<my_string> ret;
 
     if (reqJsonData_.contains(section) && reqJsonData_[section].contains(key) && reqJsonData_[section][key].is_array()) {
-        return reqJsonData_[section][key].get<std::vector<std::string>>();
+        // return reqJsonData_[section][key].get<std::vector<my_string>>();
+    }
+    return ret;
+}
+
+my_vector<int> ConfigManager::GetIntListValue(const my_string& section, const my_string& key) {
+    RefreshConfig();
+
+    my_vector<int> ret;
+
+    if (reqJsonData_.contains(section) && reqJsonData_[section].contains(key) && reqJsonData_[section][key].is_array()) {
+        // return reqJsonData_[section][key].get<std::vector<int>>();
     }
     return ret;
 }

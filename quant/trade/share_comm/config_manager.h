@@ -1,6 +1,7 @@
 #pragma once
+#include "comm_define.h"
+
 #include "thread_safe_singleton.h"
-#include <string>
 #include "json_util.hpp"
 
 class ConfigManager {
@@ -9,19 +10,20 @@ public:
 
     bool Init();
 
-    int GetIntValue(const std::string& section, const std::string& key, int default_value);
+    int GetIntValue(const my_string& section, const my_string& key, int default_value);
 
-    std::string GetStringValue(const std::string& section, const std::string& key, const std::string& default_value);
+    my_string GetStringValue(const my_string& section, const my_string& key, const my_string& default_value);
 
-    double GetDoubleValue(const std::string& section, const std::string& key, double default_value);
+    double GetDoubleValue(const my_string& section, const my_string& key, double default_value);
 
     void RefreshConfig();
 
-    std::vector<std::string> GetStringListValue(const std::string& section, const std::string& key);
+    my_vector<my_string> GetStringListValue(const my_string& section, const my_string& key);
 
+    my_vector<int> GetIntListValue(const my_string& section, const my_string& key);
 
 private:
-    std::string sConfigFileName_;
+    my_string sConfigFileName_;
     njson reqJsonData_;
 };
 
