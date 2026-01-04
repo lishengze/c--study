@@ -10,6 +10,7 @@ get_filename_component(WORK_MAIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}" PATH)
 
 # 包含头文件目录
 include_directories(${WORK_MAIN_DIR}/share_comm)
+include_directories(${WORK_MAIN_DIR}/share_comm/include())
 
 # ===================== 1. 编译动态库 =====================
 add_library(

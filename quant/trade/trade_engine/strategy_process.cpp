@@ -6,8 +6,8 @@ using std::string;
 using namespace share_common;
 
 bool StrategyProcess::Init() {
-    string lib_name = "./libstrategy_impl_1.so";
-    TradeUnitDllInfoPtr pTradeUnitDllInfo = std::make_shared<TradeUnitDllInfo>(lib_name);
+    string lib_name = "libstrategy_impl_1";
+    TradeUnitDllInfoPtr pTradeUnitDllInfo = std::make_shared<TradeUnitDllInfo>(lib_name, ".");
 
     if (!pTradeUnitDllInfo->LoadDll()) {
         return false;

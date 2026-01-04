@@ -118,15 +118,15 @@ struct MarketData {
         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
-    std::string str() const {
-        return std::string("exchange:") + std::string(exchange) 
-                + std::string(", stock_code:") + std::string(stock_code) 
-                + std::string(", open:") + std::to_string(open) 
-                + std::string(", high:") + std::to_string(high) 
-                + std::string(", low:") + std::to_string(low) 
-                + std::string(", close:") + std::to_string(close) 
-                + std::string(", volume:") + std::to_string(volume) 
-                + std::string(", timestamp:") + std::to_string(timestamp);
+    my_string str() const {
+        return my_string("exchange:") + my_string(exchange) 
+                + my_string(", stock_code:") + my_string(stock_code) 
+                + my_string(", open:") + std::to_string(open) 
+                + my_string(", high:") + std::to_string(high) 
+                + my_string(", low:") + std::to_string(low) 
+                + my_string(", close:") + std::to_string(close) 
+                + my_string(", volume:") + std::to_string(volume) 
+                + my_string(", timestamp:") + std::to_string(timestamp);
     }
 };
 
@@ -176,14 +176,14 @@ struct OrderReq {
         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
-    std::string str() const {
-        return std::string("exchange:") + std::string(exchange) 
-                + std::string(", stock_code:") + std::string(stock_code) 
-                + std::string(", side:") + std::string(1, side) 
-                + std::string(", order_type:") + std::string(1, order_type) 
-                + std::string(", price:") + std::to_string(price) 
-                + std::string(", volume:") + std::to_string(volume) 
-                + std::string(", timestamp:") + std::to_string(timestamp);
+    my_string str() const {
+        return my_string("exchange:") + my_string(exchange) 
+                + my_string(", stock_code:") + my_string(stock_code) 
+                + my_string(", side:") + my_string(1, side) 
+                + my_string(", order_type:") + my_string(1, order_type) 
+                + my_string(", price:") + std::to_string(price) 
+                + my_string(", volume:") + std::to_string(volume) 
+                + my_string(", timestamp:") + std::to_string(timestamp);
     }
 };
 
@@ -258,20 +258,48 @@ typedef int (funcRegisterAppMain)(void* pStrategyImpler, StrategyProcess* pStrat
     }
 #endif
 
+class StrategyProcess;
+
+class IStrateImpl {
+public:
+    IStrateImpl():logger_{nullptr}, pStrategyProcess_{nullptr} {
+        
+    }
+    virtual int ProcessMarketData(MarketData* pMarketData) = 0;
+
+    virtual int ProcessIndexData(IndexData* pIndexData) = 0;
+    
+    virtual int RegisterAppMain(StrategyProcess* pStrategyProcess)  {
+        pStrategyProcess_ = pStrategyProcess;
+        return ErrSuccess;
+    }
+
+    void SetLogger(spdlog_ptr logger) {
+        logger_ = logger;
+    }
+
+protected:
+    spdlog_ptr logger_;
+    
+    StrategyProcess* pStrategyProcess_;
+};
+
+
 struct TradeUnitDllInfo
 {
-    TradeUnitDllInfo(const std::string& lib_name) : lib_name_(lib_name) {
-
+    TradeUnitDllInfo(const my_string& lib_name, const my_string lib_path=".") : lib_name_(lib_name), lib_path_(lib_path) {
+        
     }
 
     bool LoadDll() {
-        DllHandle dll_handle = dll_load(lib_name_.c_str());
+        my_string full_lib_path = lib_path_ + "/" + lib_name_ + ".so";
+        DllHandle dll_handle = dll_load(full_lib_path.c_str());
         if (dll_handle == DLL_INVALID_HANDLE) {
-            std::cerr << "[主程序] 加载动态库失败！错误信息：" << lib_name_ 
+            std::cerr << "[主程序] 加载动态库失败！错误信息：" << full_lib_path 
                         << " , error: " << dll_get_error() << std::endl;
             return false;
         }
-        std::cout << "[主程序] 动态库加载成功！路径：" << lib_name_ << std::endl;
+        std::cout << "[主程序] 动态库加载成功！路径：" << full_lib_path << std::endl;
 
         pFuncStrategyCreate = (funcStrategyCreateFunc*)dll_get_proc(dll_handle, "dll_class_create");
         if (pFuncStrategyCreate == nullptr) {
@@ -305,12 +333,49 @@ struct TradeUnitDllInfo
             return false;
         }
 
+        if (!InitLogger()) {
+            return false;
+        }
+
+        IStrateImpl* tmp = (IStrateImpl*)(pStrategyImpler);
+
+        if (tmp == nullptr) {
+            std::cerr << "[主程序] 加载动态库失败！错误信息：tmp 为空 "  << std::endl;
+            return false;
+        }
+        tmp->SetLogger(logger_);
+
+        return true;
+    }
+
+    bool InitLogger() {
+        logger_ = spdlog::create_async<spdlog::sinks::rotating_file_sink_mt>(
+            "async_file_logger", 
+            lib_name_, 
+            (std::size_t)1024 * 1024 * 1024 * 3, 
+            1000); 
+
+        if (logger_ == nullptr) {
+            std::cerr << "[主程序] 初始化日志失败！错误信息：logger_ 为空 "  << std::endl;
+            return false;
+        }
+
+        logger_->set_pattern("[%H:%M:%S] %P %t [%l] %s [%!] %# | %v");
+        logger_->set_level(spdlog::level::debug);
+        logger_->flush_on(spdlog::level::err);
+        spdlog::flush_every(std::chrono::seconds(1));
+        logger_->set_level(spdlog::level::debug);
         return true;
     }
 
     ~TradeUnitDllInfo() {
         if (pFuncStrategyDestroy) {
             pFuncStrategyDestroy(pStrategyImpler);
+        }
+
+        if (logger_) {
+            logger_->flush();
+            spdlog::drop_all();
         }
     }
 
@@ -344,7 +409,9 @@ struct TradeUnitDllInfo
         return ErrSuccess;
     }
 
-    std::string lib_name_;  
+    my_string lib_name_;  
+    my_string lib_path_;  
+
 
     void* pStrategyImpler;
     funcRegisterAppMain *pFuncRegisterAppMain;
@@ -353,7 +420,7 @@ struct TradeUnitDllInfo
     funcStrategyCreateFunc* pFuncStrategyCreate;
     funcStrategyDestroyFunc* pFuncStrategyDestroy;
 
-
+    spdlog_ptr logger_;
 };
 
 using TradeUnitDllInfoPtr = std::shared_ptr<TradeUnitDllInfo>;

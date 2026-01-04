@@ -2,10 +2,7 @@
 
 #include "share_comm_external_message.h"
 
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
-#include <string>
+#include "comm_define.h"
 
 // ===================== 1. 跨平台导出/导入宏定义 =====================
 #if defined(_WIN32) || defined(_WIN64)
@@ -24,23 +21,6 @@
     #define LIB_API DLL_IMPORT
 #endif
 
-class StrategyProcess;
-
-class IStrateImpl {
-public:
-    virtual int ProcessMarketData(MarketData* pMarketData) = 0;
-
-    virtual int ProcessIndexData(IndexData* pIndexData) = 0;
-    
-    virtual int RegisterAppMain(StrategyProcess* pStrategyProcess)  {
-        pStrategyProcess_ = pStrategyProcess;
-        return ErrSuccess;
-    }
-
-protected:
-
-    StrategyProcess* pStrategyProcess_;
-};
 
 // -------------------- 主程序 → 动态库：调用动态库类成员函数（入参为自定义结构体） --------------------
 // 动态库类成员函数封装：业务处理（传入自定义结构体）

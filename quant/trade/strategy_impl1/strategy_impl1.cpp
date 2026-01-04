@@ -1,11 +1,13 @@
 #include "strategy_dll.h"
 #include <iostream>
 #include "strategy_process.h"
+#include "share_comm_external_message.h"
 
 class StrategyImpl1 : public IStrateImpl {
 public:
     int ProcessMarketData(MarketData* pMarketData) override {
-        std::cout << "StrategyImpl1::ProcessMarketData: " << pMarketData->str() << std::endl;
+        // std::cout << "StrategyImpl1::ProcessMarketData: " << pMarketData->str() << std::endl;
+        logger_->info("StrategyImpl1::ProcessMarketData: {}", pMarketData->str());
         
 
         if (pStrategyProcess_ == nullptr) {
@@ -64,6 +66,7 @@ LIB_API int dll_register_app_main(void* pStrategyHandler, StrategyProcess* pStra
     }
 
     StrategyImpl1* pStrategyImpl = (StrategyImpl1*)pStrategyHandler;
+    
     return pStrategyImpl->RegisterAppMain(pStrategyProcess);
 }
 
