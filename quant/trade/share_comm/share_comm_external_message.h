@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "comm_define.h"
 
 // 行情频率枚举（支持扩展，新增频率只需在此添加）
@@ -82,7 +81,7 @@ struct KlineAtom {
     int bar_index; // 时间戳对应的K线索引, 1,5,60,1440, 10080;
     unsigned short stock_index; // 股票索引
 
-    KlineIndicatorSharedPtr pKlineIndicator;  // 存储K线指标;
+    my_unorder_map<KlineIndicatorType, double> mapKlineIndicatorValue_; // 存储当前K线指标类型对应的值;
 };
 using KlineAtomSharedPtr = std::shared_ptr<KlineAtom>;
 
