@@ -102,7 +102,7 @@ bool MarketOutput::InitShareMarketDataQueue() {
     return true;
 }
 
-void MarketOutput::OutputVecKline(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
+void MarketOutput::OutputVecKline(const my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
     for (auto iter: vecKlineAtomSrc) {
         LOG_INFO("OutputVecKline: \n{}", iter->str());
     }

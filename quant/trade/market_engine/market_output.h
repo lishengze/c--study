@@ -31,7 +31,7 @@ public:
 
     void SendKlineAtom(const KlineAtomSharedPtr& market_data);
 
-    void OutputVecKline(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc);
+    void OutputVecKline(const my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc);
 
     
     virtual ~MarketOutput() {}

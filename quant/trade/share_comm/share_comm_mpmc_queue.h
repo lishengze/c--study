@@ -590,7 +590,7 @@ element_slot():current_turn_(0),spin_lock_obj_(){}
         
         // 使用自旋锁保护临界区
         { 
-            lock_guard<spin_lock> lock(spin_lock_obj_);
+            tech::lock_guard<spin_lock> lock(spin_lock_obj_);
             current_turn_.store(cur_turn + 1, std::memory_order_relaxed); // RELEASE ?
             new (&element_) T(std::forward<Args>(args)...);
         }
@@ -606,7 +606,7 @@ element_slot():current_turn_(0),spin_lock_obj_(){}
     {
         // 使用自旋锁保护临界区
         { 
-            lock_guard<spin_lock> lock(spin_lock_obj_);
+            tech::lock_guard<spin_lock> lock(spin_lock_obj_);
             auto cur_turn = current_turn_.load(std::memory_order_relaxed);
             current_turn_.store(cur_turn + 1, std::memory_order_relaxed); // RELEASE ?
             new (&element_) T(std::forward<Args>(args)...);
@@ -628,7 +628,7 @@ element_slot():current_turn_(0),spin_lock_obj_(){}
         
         // 使用自旋锁保护临界区
         { 
-            lock_guard<spin_lock> lock(spin_lock_obj_);
+            tech::lock_guard<spin_lock> lock(spin_lock_obj_);
             current_turn_.store(cur_turn + 1, std::memory_order_relaxed); // RELEASE ?
             element = std::move(element_);
             element_.~T();
@@ -643,7 +643,7 @@ element_slot():current_turn_(0),spin_lock_obj_(){}
     {
         // 使用自旋锁保护临界区
         { 
-            lock_guard<spin_lock> lock(spin_lock_obj_);
+            tech::lock_guard<spin_lock> lock(spin_lock_obj_);
             auto cur_turn = current_turn_.load(std::memory_order_relaxed);
             current_turn_.store(cur_turn + 1, std::memory_order_relaxed); // RELEASE ?
             element = std::move(element_);
