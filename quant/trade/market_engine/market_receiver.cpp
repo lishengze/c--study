@@ -79,7 +79,7 @@ bool MarketReceiver::Start() {
     } else if (CONFIG_MANAGER_INSTANCE->GetStringValue("WorkMode", "Mode", "Test") == "TestKline") {
 
         ptr_thread_ = std::make_shared<std::thread>([this]() {
-                
+        
             my_vector<KlineAtomSharedPtr> vecKlineAtoms;
             my_unorder_map<my_string, int>& stock_index_dic = CONFIG_MANAGER_INSTANCE->GetStockIndexDic();
 

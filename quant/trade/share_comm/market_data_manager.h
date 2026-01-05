@@ -12,12 +12,32 @@ struct KLineDataManager {
     KLineDataManager(BarFrequency iFrequency) : data_count_(0), iFrequency_(iFrequency) {
 
         data_limit_ = GetDataLimit(iFrequency);
-        vecOpen.resize(data_limit_);
-        vecHigh.resize(data_limit_);
-        vecLow.resize(data_limit_);
-        vecClose.resize(data_limit_);
-        vecVolume.resize(data_limit_);
-        vecAmount.resize(data_limit_);
+
+        my_unorder_map<my_string, int> mapStockIndex_  = CONFIG_MANAGER_INSTANCE->GetStockIndexDic();
+        vecOpen.reserve(mapStockIndex_.size());
+        vecHigh.reserve(mapStockIndex_.size());
+        vecLow.reserve(mapStockIndex_.size());
+        vecClose.reserve(mapStockIndex_.size());
+        vecVolume.reserve(mapStockIndex_.size());
+        vecAmount.reserve(mapStockIndex_.size());
+
+        my_vector<double> EmptyVec;
+        EmptyVec.reserve(data_limit_);
+
+        vecOpen.resize(mapStockIndex_.size());
+        vecHigh.resize(mapStockIndex_.size());
+        vecLow.resize(mapStockIndex_.size());
+        vecClose.resize(mapStockIndex_.size());
+        vecVolume.resize(mapStockIndex_.size());
+        vecAmount.resize(mapStockIndex_.size());
+        vecLatestKlineAtom.resize(mapStockIndex_.size());
+
+        // vecOpen.resize(data_limit_);
+        // vecHigh.resize(data_limit_);
+        // vecLow.resize(data_limit_);
+        // vecClose.resize(data_limit_);
+        // vecVolume.resize(data_limit_);
+        // vecAmount.resize(data_limit_);
     }
 
     /// @brief  根据 depth 数据聚合K线数据
@@ -39,12 +59,12 @@ struct KLineDataManager {
         for (auto kline_atom: vecKlineAtomSrc) {
             LOG_INFO("AddKlineAtom: {}", kline_atom->str());
 
-            vecOpen[kline_atom->stock_index][data_count_] = kline_atom->open_price;
-            vecHigh[kline_atom->stock_index][data_count_] = kline_atom->high_price;
-            vecLow[kline_atom->stock_index][data_count_] = kline_atom->low_price;
-            vecClose[kline_atom->stock_index][data_count_] = kline_atom->close_price;
-            vecVolume[kline_atom->stock_index][data_count_] = kline_atom->volume;
-            vecAmount[kline_atom->stock_index][data_count_] = kline_atom->amount;
+            vecOpen[kline_atom->stock_index].push_back(kline_atom->open_price);
+            vecHigh[kline_atom->stock_index].push_back(kline_atom->high_price);
+            vecLow[kline_atom->stock_index].push_back(kline_atom->low_price);
+            vecClose[kline_atom->stock_index].push_back(kline_atom->close_price);
+            vecVolume[kline_atom->stock_index].push_back(kline_atom->volume);
+            vecAmount[kline_atom->stock_index].push_back(kline_atom->amount);
 
             vecLatestKlineAtom[kline_atom->stock_index] = kline_atom;
         }

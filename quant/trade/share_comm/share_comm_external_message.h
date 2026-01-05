@@ -68,7 +68,7 @@ struct KlineAtom {
     char exchange[3]; // 交易所（SH/SZ）
     char stock_code[10]; // 证券代码
     double open_price; // 开盘价
-    double high_price; // 最高价
+    double high_price; // 最高价q
     double low_price; // 最低价
     double close_price; // 收盘价
     double volume; // 成交量
