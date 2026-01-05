@@ -28,8 +28,8 @@ bool ConfigManager::Init() {
 
 
 
-    if (reqJsonData_.contains("Kline") && reqJsonData_["Instruction"].contains("StockDic")) {
-        njson& stock_dic = reqJsonData_["Kline"]["StockDic"];
+    if (reqJsonData_.contains("Instruction") && reqJsonData_["Instruction"].contains("StockDic")) {
+        njson& stock_dic = reqJsonData_["Instruction"]["StockDic"];
         for (auto& it : stock_dic.items()) {
             mapStockIndex_[it.key()] = it.value().get<int>();
         }
@@ -38,8 +38,8 @@ bool ConfigManager::Init() {
         return false;
     }
 
-    if (reqJsonData_.contains("Kline") && reqJsonData_["Instruction"].contains("IndicatorDic")) {
-        njson& indicator_dic = reqJsonData_["Kline"]["IndicatorDic"];
+    if (reqJsonData_.contains("Instruction") && reqJsonData_["Instruction"].contains("IndicatorDic")) {
+        njson& indicator_dic = reqJsonData_["Instruction"]["IndicatorDic"];
         for (auto& it : indicator_dic.items()) {
             mapIndicatorIndex_[it.key()] = it.value().get<int>();
         }
@@ -50,7 +50,7 @@ bool ConfigManager::Init() {
 
     
     if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("KlineFreqList")) {
-        for (auto& freq : reqJsonData_["Kline"]["FreqSet"]) {
+        for (auto& freq : reqJsonData_["Kline"]["KlineFreqList"]) {
             if (freq.is_number()) {
                 setKlineFreqSet_.insert(freq.get<int>());
             }
@@ -62,7 +62,7 @@ bool ConfigManager::Init() {
 
 
     if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("IndicatorList")) {
-        for (auto& freq : reqJsonData_["Kline"]["FreqSet"]) {
+        for (auto& freq : reqJsonData_["Kline"]["IndicatorList"]) {
             if (freq.is_number()) {
                 setKlineFreqSet_.insert(freq.get<int>());
             }

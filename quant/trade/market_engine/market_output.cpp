@@ -25,6 +25,7 @@ bool MarketOutput::Init() {
 }
 
 bool MarketOutput::Start() {
+    LOG_INFO("MarketOutput Start");
     return true;
 }
 

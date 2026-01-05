@@ -63,7 +63,7 @@ void KLineDataManager::UpdateKlineIndicator(my_vector<float>& vecCurIndicatorVal
     // 这一段代码线程安全;不同的线程更新的指标值不同;
     if (vecCurIndicatorValue.size() == vecLatestKlineAtom.size()) {
         for (int i = 0; i < vecCurIndicatorValue.size(); i++) {
-            vecLatestKlineAtom[i]->mapKlineIndicatorValue_[indicator_type] = vecCurIndicatorValue[i];
+            vecLatestKlineAtom[i]->UpdateKlineIndicatorValue(indicator_type, vecCurIndicatorValue[i]);
         }
     }
 
@@ -81,8 +81,9 @@ void KLineDataManager::UpdateKlineIndicator(my_vector<float>& vecCurIndicatorVal
 
 }
 
-void MarketDataManager::ProcessVecKline(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
+void MarketDataManager::ProcessVecKline(const my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
     if (vecKlineAtomSrc.empty()) {
+        LOG_WARN("MarketDataManager ProcessVecKline, vecKlineAtomSrc empty");
         return; 
     }
 
@@ -90,5 +91,7 @@ void MarketDataManager::ProcessVecKline(my_vector<KlineAtomSharedPtr>& vecKlineA
 
     if (kline_data_map_.find(iBarIndex) != kline_data_map_.end()) {
         kline_data_map_[iBarIndex]->AddKlineAtom(vecKlineAtomSrc);
+    } else {
+        LOG_WARN("MarketDataManager ProcessVecKline, bar_index %d not found", iBarIndex);
     }
 }

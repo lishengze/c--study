@@ -1,6 +1,7 @@
 #pragma once
 
 #include "comm_define.h"
+#include "indicator.h"
 
 // 行情频率枚举（支持扩展，新增频率只需在此添加）
 enum class BarFrequency {
@@ -12,11 +13,6 @@ enum class BarFrequency {
     WEEK = 10080     // 周线（10080分钟）
 };
 
-enum class KlineIndicatorType {
-    Alpha_001 = 1,        // 最细粒度：Tick数据（逐笔）
-    Alpha_010 = 10,    // 1分钟线
-    Alpha_036 = 36
-};
 
 struct DepthDataAtom {
     char exchange[3]; // 交易所（SH/SZ）
@@ -80,7 +76,7 @@ struct KlineAtom {
     unsigned long long timestamp; // 时间戳（纳秒）
     int bar_index; // 时间戳对应的K线索引, 1,5,60,1440, 10080;
     unsigned short stock_index; // 股票索引
-    my_unorder_map<KlineIndicatorType, double> mapKlineIndicatorValue_; // 存储当前K线指标类型对应的值;
+    // IndicatorAtom indicator_atom;
 
     KlineAtom() : open_price(11), high_price(0), low_price(0), close_price(0), volume(0), timestamp(0) {
         strcpy(exchange, "SH");
@@ -91,6 +87,10 @@ struct KlineAtom {
         strcpy(this->stock_code, stock_code.c_str());
         this->stock_index = stock_index;
         this->bar_index = bar_index;
+    }
+
+    void UpdateKlineIndicatorValue(KlineIndicatorType indicator_type, double value) {
+        // indicator_atom.UpdateIndicatorValue(indicator_type, value);
     }
 
     void SetRandomData() {

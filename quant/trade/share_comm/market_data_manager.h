@@ -31,12 +31,14 @@ struct KLineDataManager {
     /// @brief 根据配置初始化K线指标计算类
     void Init();
 
-    void AddKlineAtom(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
+    void AddKlineAtom(const my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
         if (vecKlineAtomSrc.empty()) {
             return;
         }
 
         for (auto kline_atom: vecKlineAtomSrc) {
+            LOG_INFO("AddKlineAtom: {}", kline_atom->str());
+
             vecOpen[kline_atom->stock_index][data_count_] = kline_atom->open_price;
             vecHigh[kline_atom->stock_index][data_count_] = kline_atom->high_price;
             vecLow[kline_atom->stock_index][data_count_] = kline_atom->low_price;
@@ -48,7 +50,7 @@ struct KLineDataManager {
         }
         data_count_++;
 
-        StartCalculateKlineIndicator();
+        // StartCalculateKlineIndicator();
     }
 
     int GetDataCount() {
@@ -100,12 +102,14 @@ public:
             KLineDataManagerSharePtr kline_data_manager = std::make_shared<KLineDataManager>(BarFrequency(indicatorType));
             kline_data_manager->Init();
             kline_data_map_[indicatorType] = kline_data_manager;
+            kline_data_manager->Init();
         }
 
         return true;
     }
 
     bool Start() {
+        LOG_INFO("MarketDataManager Start");
         return true;
     }
 
@@ -123,7 +127,7 @@ public:
         }
     }    
 
-    void ProcessVecKline(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc);
+    void ProcessVecKline(const my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc);
 
     void SetKlineCallback(KlineVectorCallbackFuncType funcKlineVectorCallback) {
         funcKlineVectorCallback_ = funcKlineVectorCallback;

@@ -77,30 +77,38 @@ bool MarketReceiver::Start() {
         });
 
     } else if (CONFIG_MANAGER_INSTANCE->GetStringValue("WorkMode", "Mode", "Test") == "TestKline") {
-        my_vector<KlineAtomSharedPtr> vecKlineAtoms;
-        my_unorder_map<my_string, int>& stock_index_dic = CONFIG_MANAGER_INSTANCE->GetStockIndexDic();
 
-        for (auto& stock_index_pair : stock_index_dic) {
-            KlineAtomSharedPtr ptrKlineAtom(new KlineAtom(stock_index_pair.first, stock_index_pair.second, 1));
-            ptrKlineAtom->SetRandomData();
-            vecKlineAtoms.push_back(ptrKlineAtom);
-        }
+        ptr_thread_ = std::make_shared<std::thread>([this]() {
                 
-        while (true) {
-            // 从源市场行情数据队列中获取数据
-            for (auto& ptrKlineAtom : vecKlineAtoms) {
+            my_vector<KlineAtomSharedPtr> vecKlineAtoms;
+            my_unorder_map<my_string, int>& stock_index_dic = CONFIG_MANAGER_INSTANCE->GetStockIndexDic();
+
+            for (auto& stock_index_pair : stock_index_dic) {
+                KlineAtomSharedPtr ptrKlineAtom(new KlineAtom(stock_index_pair.first, stock_index_pair.second, 1));
                 ptrKlineAtom->SetRandomData();
+                vecKlineAtoms.push_back(ptrKlineAtom);
             }
 
-            kline_vector_callback_func_(vecKlineAtoms);
-            
-            std::this_thread::sleep_for(std::chrono::seconds(
-                                            CONFIG_MANAGER_INSTANCE->GetIntValue("WorkMode", "DataFreqSec", 5)));                
-        }
+            while (true) {
+                // 从源市场行情数据队列中获取数据
+                for (auto& ptrKlineAtom : vecKlineAtoms) {
+                    ptrKlineAtom->SetRandomData();
+                    ptrKlineAtom->bar_index = 1;
+                }
+
+                kline_vector_callback_func_(vecKlineAtoms);
+                
+                std::this_thread::sleep_for(std::chrono::seconds(
+                                                CONFIG_MANAGER_INSTANCE->GetIntValue("WorkMode", "DataFreqSec", 5)));                
+            }
+
+         });
     } else {
         LOG_INFO("MarketReceiver Start Failed, WorkMode is not Test");
         return true;
     }
+
+    LOG_INFO("MarketReceiver Start Success");
 
     return true;
 }

@@ -11,7 +11,7 @@ using namespace share_common;
 
 class MarketReceiver {
 public:
-    MarketReceiver():ptr_src_market_data_queue_(nullptr),ptr_thread_(nullptr) {}
+    MarketReceiver():kline_vector_callback_func_{nullptr}, ptr_src_market_data_queue_(nullptr),ptr_thread_(nullptr) {}
 
     bool Init();
 
@@ -25,6 +25,9 @@ public:
         return ptr_src_market_data_queue_;
     }
 
+    void SetKlineVectorCallback(KlineVectorCallbackFuncType callback_func) {
+        kline_vector_callback_func_ = callback_func;
+    }
     
 
     bool InitSrcKlineAtomQueue();

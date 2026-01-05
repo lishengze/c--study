@@ -40,6 +40,9 @@ bool MarketManager::Init() {
     KlineVectorCallbackFuncType callback_func = std::bind(&MarketOutput::OutputVecKline, &market_output_, std::placeholders::_1);
     market_data_manager_.SetKlineCallback(callback_func);
 
+    KlineVectorCallbackFuncType kline_vector_callback_func = std::bind(&MarketDataManager::ProcessVecKline, &market_data_manager_, std::placeholders::_1);
+    market_receiver_.SetKlineVectorCallback(kline_vector_callback_func);
+
     LOG_INFO("MarketManager Init Success");
 
     return true;
