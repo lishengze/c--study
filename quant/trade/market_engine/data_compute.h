@@ -11,11 +11,11 @@ public:
 
     bool Start();
 
-    void OnMarketSrcData(const MarketData& market_data);
+    void OnMarketSrcData(const KlineAtom& market_data);
 
     bool Stop();
 
-    void SetMarketDataCallbackFunc(const MarketDataCallbackFuncType& market_data_callback_func) {
+    void SetMarketDataCallbackFunc(const KlineAtomCallbackFuncType& market_data_callback_func) {
         market_data_callback_func_ = market_data_callback_func;
     }
 
@@ -24,5 +24,5 @@ public:
     }
 
 private:
-    MarketDataCallbackFuncType market_data_callback_func_;    
+    KlineAtomCallbackFuncType market_data_callback_func_;    
 };

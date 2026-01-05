@@ -15,17 +15,19 @@ public:
 
     bool Init();
 
-    void SetSrcMarketDataQueue(mpmc_queue<MarketData>* ptr_src_market_data_queue) {
+    void SetSrcMarketDataQueue(mpmc_queue<KlineAtom>* ptr_src_market_data_queue) {
         ptr_src_market_data_queue_ = ptr_src_market_data_queue;
     }
 
-    void SendMarketDataToQueue(const MarketData& market_data);
+    void SendKlineAtomToQueue(const KlineAtom& kline_atom);
 
-    mpmc_queue<MarketData>* GetSrcMarketDataQueue() {
+    mpmc_queue<KlineAtom>* GetSrcMarketDataQueue() {
         return ptr_src_market_data_queue_;
     }
 
-    bool InitSrcMarketDataQueue();
+    
+
+    bool InitSrcKlineAtomQueue();
 
     bool Start();
 
@@ -38,8 +40,10 @@ public:
     }
 
 private:
+
+    KlineVectorCallbackFuncType kline_vector_callback_func_;
     
-    mpmc_queue<MarketData>* ptr_src_market_data_queue_;  // 源市场行情数据队列
+    mpmc_queue<KlineAtom>* ptr_src_market_data_queue_;  // 源市场行情数据队列
 
     std::shared_ptr<std::thread> ptr_thread_;  // 接收线程
 };

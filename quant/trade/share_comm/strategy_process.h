@@ -28,7 +28,7 @@ public:
 
     }
 
-    void OnMarketSrcData(const MarketData& market_data);
+    void OnMarketSrcData(const KlineAtom& market_data);
 
 private:  
     std::unordered_map<std::string, TradeUnitDllInfoPtr> strategy_dll_map_;

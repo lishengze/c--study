@@ -5,7 +5,7 @@
 
 class StrategyImpl1 : public IStrateImpl {
 public:
-    int ProcessMarketData(MarketData* pMarketData) override {
+    int ProcessKlineAtom(KlineAtom* pMarketData) override {
         // std::cout << "StrategyImpl1::ProcessMarketData: " << pMarketData->str() << std::endl;
         logger_->info("StrategyImpl1::ProcessMarketData: {}", pMarketData->str());
         
@@ -27,7 +27,7 @@ public:
 };
 
 // 动态库类成员函数封装：业务处理（传入自定义结构体）
-LIB_API int dll_process_market_data(void* pStrategyHandler,  MarketData* pMarketData) {
+LIB_API int dll_process_market_data(void* pStrategyHandler,  KlineAtom* pMarketData) {
     if (pStrategyHandler == nullptr ) {
         return ErrFuncPointerIsNull;
     }
@@ -38,7 +38,7 @@ LIB_API int dll_process_market_data(void* pStrategyHandler,  MarketData* pMarket
 
 
     StrategyImpl1* pStrategyImpl = (StrategyImpl1*)pStrategyHandler;
-    return pStrategyImpl->ProcessMarketData(pMarketData);
+    return pStrategyImpl->ProcessKlineAtom(pMarketData);
 }
 
 // 动态库类成员函数封装：获取类状态

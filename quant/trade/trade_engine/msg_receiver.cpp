@@ -13,16 +13,18 @@
 
 bool MsgReceiver::Init() {
 
-    if (!InitMarketDataQueue()) {
+    if (!InitKlineAtomQueue()) {
         LOG_ERROR("InitMarketDataQueue failed");
         return false;
     }
     return true;
 }
 
+
+
 bool MsgReceiver::Start() {
-    if (!StartReceiveMarketData()) {
-        LOG_ERROR("StartReceiveMarketData failed");
+    if (!StartReceiveKlineAtom()) {
+        LOG_ERROR("StartReceiveKlineAtom failed");
         return false;
     }   
     return true;
@@ -33,10 +35,10 @@ bool MsgReceiver::Stop() {
 }
 
 
-bool MsgReceiver::InitMarketDataQueue() {
+bool MsgReceiver::InitKlineAtomQueue() {
 
     // 打开共享内存
-    std::string strSharedMemName = CONFIG_MANAGER_INSTANCE->GetStringValue("ComputedMarketData", "QueueName", "MarketData.queue");
+    std::string strSharedMemName = CONFIG_MANAGER_INSTANCE->GetStringValue("ComputedMarketData", "QueueName", "KlineAtom.queue");
     int shm_fd = shm_open(strSharedMemName.c_str(), O_RDWR, 0);
     if (shm_fd == -1) {
         LOG_ERROR("shm_open {} failed ", strSharedMemName);
@@ -62,7 +64,7 @@ bool MsgReceiver::InitMarketDataQueue() {
 
     close(shm_fd);
 
-    ptr_share_market_data_queue_ = static_cast<mpmc_queue<MarketData>*>(addr);   
+    ptr_share_market_data_queue_ = static_cast<mpmc_queue<KlineAtom>*>(addr);   
 
     if (!ptr_share_market_data_queue_) {
         LOG_ERROR("ptr_share_market_data_queue_ is null");
@@ -70,18 +72,18 @@ bool MsgReceiver::InitMarketDataQueue() {
     }
     
     // 手动将slot 映射到外部的内存地址中 -- 共享内存版本,这一步导致了很多的问题，导致无法进行服务端对slot 的解锁出错了。
-    ptr_share_market_data_queue_->slot_attach(ptr_share_market_data_queue_slot_, static_cast<void*>((char*)addr + sizeof(mpmc_queue<MarketData>) + 32));
+    ptr_share_market_data_queue_->slot_attach(ptr_share_market_data_queue_slot_, static_cast<void*>((char*)addr + sizeof(mpmc_queue<KlineAtom>) + 32));
 
 
     return true;
         
 }
 
-bool MsgReceiver::StartReceiveMarketData() {
+bool MsgReceiver::StartReceiveKlineAtom() {
     // 启动接收市场数据线程
-    shptrGetSrcMarketDataThread_ = std::make_shared<std::thread>([this]() {
+    shptrGetSrcKlineAtomThread_ = std::make_shared<std::thread>([this]() {
         while (bIsRunning_) {
-            MarketData market_data;
+            KlineAtom market_data;
             if (ptr_share_market_data_queue_->pop_share(ptr_share_market_data_queue_slot_, market_data)) {
                 // 处理市场数据
                 market_data_callback_func_(market_data);
@@ -89,8 +91,8 @@ bool MsgReceiver::StartReceiveMarketData() {
         }
     });
     
-    if (!shptrGetSrcMarketDataThread_) {
-        LOG_ERROR("shptrGetSrcMarketDataThread_ is null");
+    if (!shptrGetSrcKlineAtomThread_) {
+        LOG_ERROR("shptrGetSrcKlineAtomThread_ is null");
         return false;
     }
 

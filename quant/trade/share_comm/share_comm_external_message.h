@@ -80,39 +80,24 @@ struct KlineAtom {
     unsigned long long timestamp; // 时间戳（纳秒）
     int bar_index; // 时间戳对应的K线索引, 1,5,60,1440, 10080;
     unsigned short stock_index; // 股票索引
-
     my_unorder_map<KlineIndicatorType, double> mapKlineIndicatorValue_; // 存储当前K线指标类型对应的值;
-};
-using KlineAtomSharedPtr = std::shared_ptr<KlineAtom>;
 
-
-
-struct MarketData {
-        char exchange[3]; // 交易所（SH/SZ）
-        char stock_code[10]; // 证券代码
-        double open; // 开盘价
-        double high; // 最高价
-        double low; // 最低价
-        double close; // 收盘价
-        double volume; // 成交量
-        unsigned long long timestamp; // 时间戳（纳秒）
-        unsigned long long ulID;
-
-    MarketData() : open(11), high(0), low(0), close(0), volume(0), timestamp(0) {
+    KlineAtom() : open_price(11), high_price(0), low_price(0), close_price(0), volume(0), timestamp(0) {
         strcpy(exchange, "SH");
         strcpy(stock_code, "600000");
     }
 
-    MarketData(const MarketData& other):open{other.open}, high{other.high}, low{other.low}, close{other.close}, volume{other.volume}, timestamp{other.timestamp} {
-        strcpy(exchange, other.exchange);
-        strcpy(stock_code, other.stock_code);
+    KlineAtom(const my_string& stock_code, const int stock_index, const int bar_index) : open_price(11), high_price(0), low_price(0), close_price(0), volume(0), timestamp(0) {
+        strcpy(this->stock_code, stock_code.c_str());
+        this->stock_index = stock_index;
+        this->bar_index = bar_index;
     }
 
     void SetRandomData() {
-        open++;
-        high = open + 10;
-        low = open - 10;
-        close = open + 5;
+        open_price += 0.1;
+        high_price = open_price + 10;
+        low_price = open_price - 10;
+        close_price = open_price + 5;
         volume = 1000000;
 
         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -121,14 +106,63 @@ struct MarketData {
     my_string str() const {
         return my_string("exchange:") + my_string(exchange) 
                 + my_string(", stock_code:") + my_string(stock_code) 
-                + my_string(", open:") + std::to_string(open) 
-                + my_string(", high:") + std::to_string(high) 
-                + my_string(", low:") + std::to_string(low) 
-                + my_string(", close:") + std::to_string(close) 
-                + my_string(", volume:") + std::to_string(volume) 
-                + my_string(", timestamp:") + std::to_string(timestamp);
+                + my_string(", open_price:") + std::to_string(open_price)
+                + my_string(", high_price:") + std::to_string(high_price)
+                + my_string(", low_price:") + std::to_string(low_price)
+                + my_string(", close_price:") + std::to_string(close_price)
+                + my_string(", volume:") + std::to_string(volume)
+                + my_string(", amount:") + std::to_string(amount)
+                + my_string(", timestamp:") + std::to_string(timestamp)
+                + my_string(", bar_index:") + std::to_string(bar_index)
+                + my_string(", stock_index:") + std::to_string(stock_index);                
     }
 };
+using KlineAtomSharedPtr = std::shared_ptr<KlineAtom>;
+
+
+
+// struct MarketData {
+//         char exchange[3]; // 交易所（SH/SZ）
+//         char stock_code[10]; // 证券代码
+//         double open; // 开盘价
+//         double high; // 最高价
+//         double low; // 最低价
+//         double close; // 收盘价
+//         double volume; // 成交量
+//         unsigned long long timestamp; // 时间戳（纳秒）
+//         unsigned long long ulID;
+
+//     MarketData() : open(11), high(0), low(0), close(0), volume(0), timestamp(0) {
+//         strcpy(exchange, "SH");
+//         strcpy(stock_code, "600000");
+//     }
+
+//     MarketData(const MarketData& other):open{other.open}, high{other.high}, low{other.low}, close{other.close}, volume{other.volume}, timestamp{other.timestamp} {
+//         strcpy(exchange, other.exchange);
+//         strcpy(stock_code, other.stock_code);
+//     }
+
+//     void SetRandomData() {
+//         open++;
+//         high = open + 10;
+//         low = open - 10;
+//         close = open + 5;
+//         volume = 1000000;
+
+//         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+//     }
+
+//     my_string str() const {
+//         return my_string("exchange:") + my_string(exchange) 
+//                 + my_string(", stock_code:") + my_string(stock_code) 
+//                 + my_string(", open:") + std::to_string(open) 
+//                 + my_string(", high:") + std::to_string(high) 
+//                 + my_string(", low:") + std::to_string(low) 
+//                 + my_string(", close:") + std::to_string(close) 
+//                 + my_string(", volume:") + std::to_string(volume) 
+//                 + my_string(", timestamp:") + std::to_string(timestamp);
+//     }
+// };
 
 struct IndexData {
 
@@ -189,17 +223,13 @@ struct OrderReq {
 
 class StrategyProcess;
 
-using MarketDataCallbackFuncType = std::function<void(const MarketData&)>;
-
-using IndexDataCallbackFuncType = std::function<void(const IndexData&)>;
-
 // 对应 dll_class_create
 typedef void* (funcStrategyCreateFunc)();
 // 对应 dll_class_destroy
 typedef void (funcStrategyDestroyFunc)(void* pStrategyImpler);
 
 // 处理行情接口;+
-typedef int (funcProcessMarketData)(void* pStrategyImpler, MarketData* pMarketData);
+typedef int (funcProcessMarketData)(void* pStrategyImpler, KlineAtom* pMarketData);
 
 // 处理指标数据接口;+
 typedef int (funcProcessIndexData)(void* pStrategyImpler, IndexData* pIndexData);
@@ -265,7 +295,7 @@ public:
     IStrateImpl():logger_{nullptr}, pStrategyProcess_{nullptr} {
         
     }
-    virtual int ProcessMarketData(MarketData* pMarketData) = 0;
+    virtual int ProcessKlineAtom(KlineAtom* pMarketData) = 0;
 
     virtual int ProcessIndexData(IndexData* pIndexData) = 0;
     
@@ -379,9 +409,9 @@ struct TradeUnitDllInfo
         }
     }
 
-    int ProcessMarketData(MarketData* pMarketData) {
+    int ProcessKlineAtom(KlineAtom* pKlineAtom) {
         if (pFuncProcessMarketData) {
-            return pFuncProcessMarketData(pStrategyImpler, pMarketData);
+            return pFuncProcessMarketData(pStrategyImpler, pKlineAtom);
         } else {
             return ErrFuncPointerIsNull;
         }
@@ -438,3 +468,10 @@ using TradeUnitDllInfoPtr = std::shared_ptr<TradeUnitDllInfo>;
 #else
 #define SHARE_COMM_LIKELY(x) (x)
 #endif
+
+
+using KlineAtomCallbackFuncType = std::function<void(const KlineAtom&)>;
+
+using KlineVectorCallbackFuncType = std::function<void(const std::vector<KlineAtomSharedPtr>&)>;
+
+using IndexDataCallbackFuncType = std::function<void(const IndexData&)>;

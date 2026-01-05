@@ -4,8 +4,23 @@
         "DataFreqSec": 5
     },
     "ComputedMarketData": {
-        "QueueName": "compute_market_data_queue",
+        "QueueName": "kline_data",
         "QueueSize": 4096
     },
-    "StrategyList":["strategy_impl_1"]
+    "Kline": {
+        "StockDic": {
+            "600000.SH": 0,
+            "600001.SH": 1,
+            "000001.SZ": 2,
+            "000002.SZ": 3
+        },
+        "IndicatorDic": {
+            "Alpha_1": 1,
+            "Alpha_2": 2,
+            "Alpha_3": 3,
+            "Alpha_36": 36,
+            "Alpha_101": 101
+        }
+    },
+    "StrategyList":["strategy_impl_1","strategy_impl_2"]
 }

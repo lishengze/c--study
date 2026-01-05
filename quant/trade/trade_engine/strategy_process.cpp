@@ -22,12 +22,12 @@ bool StrategyProcess::Start() {
     return true;
 }
 
-void StrategyProcess::OnMarketSrcData(const MarketData& market_data) {
+void StrategyProcess::OnMarketSrcData(const KlineAtom& market_data) {
     LOG_INFO("OnMarketSrcData, market_data: \n{}", market_data.str());
 
     for (auto& it : strategy_dll_map_) {
         TradeUnitDllInfoPtr pTradeUnitDllInfo = it.second;
-        pTradeUnitDllInfo->ProcessMarketData(const_cast<MarketData*>(&market_data));
+        pTradeUnitDllInfo->ProcessKlineAtom(const_cast<KlineAtom*>(&market_data));
     }
 }
 

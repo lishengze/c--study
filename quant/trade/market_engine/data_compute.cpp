@@ -10,7 +10,7 @@ bool DataCompute::Start() {
     return true;
 }
 
-void DataCompute::OnMarketSrcData(const MarketData& market_data) {
+void DataCompute::OnMarketSrcData(const KlineAtom& market_data) {
     LOG_INFO("OnMarketSrcData, market_data: {}", market_data.str());
 
     market_data_callback_func_(market_data);

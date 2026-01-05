@@ -1,6 +1,6 @@
 #include "KlineCompute.h"
 #include "comm_define.h"
-#include "market_data.h"
+#include "market_data_manager.h"
 
 // 工具：创建指定维度vector并初始化0
 static my_vector<my_vector<float>> create_mat(int rows, int cols, float val = 0.0f) {

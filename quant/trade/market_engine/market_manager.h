@@ -8,6 +8,7 @@
 #include "share_comm_external_message.h"
 
 #include "logger.h"
+#include "market_data_manager.h"
 
 #include <memory>
 #include <string>
@@ -26,27 +27,30 @@ public:
 
     bool Start();
 
-    /// @brief 启动监听源市场数据队列
-    /// @return 
-    bool StartListenSrcMarketData();
 
 
 
     ~MarketManager() {
-        if (shptrGetSrcMarketDataThread_->joinable()) {
-            shptrGetSrcMarketDataThread_->join();
-        }
+        // if (shptrGetSrcMarketDataThread_->joinable()) {
+        //     shptrGetSrcMarketDataThread_->join();
+        // }
     }
 
 private:
-    DataCompute data_compute_;
+
+    MarketDataManager market_data_manager_;
+
     MarketOutput market_output_;
+
     MarketReceiver market_receiver_;
 
-    mpmc_queue<MarketData>* ptr_src_market_data_queue_;  // 源市场行情数据队列
+    // /// @brief 启动监听源市场数据队列
+    // /// @return 
+    // bool StartListenSrcMarketData();
 
-    int iQueueSize_;  // 队列大小
+    // mpmc_queue<MarketData>* ptr_src_market_data_queue_;  // 源市场行情数据队列
 
-    std::shared_ptr<std::thread>  shptrGetSrcMarketDataThread_;           // 消费者线程;
-    bool bIsRunning_;  // 线程运行标志位
+    // int iQueueSize_;  // 队列大小
+    // std::shared_ptr<std::thread>  shptrGetSrcMarketDataThread_;           // 消费者线程;
+    // bool bIsRunning_;  // 线程运行标志位
 };

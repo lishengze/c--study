@@ -66,7 +66,7 @@ struct KLineDataManager {
     my_vector<my_vector<float>> vecVolume; // 成交量
     my_vector<my_vector<float>> vecAmount; // 成交额    
 
-    my_vector<KlineAtomSharedPtr> vecKlineAtom; // 存储当前最新的K线数据，更新分为两步骤，第一步，根据depth 数据聚合K线数据：2. 根据配置计算相关指标;
+    my_vector<KlineAtomSharedPtr> vecKlineAtom; // 存储当前最新的K线数据，更新分为两步骤，1. 根据depth 数据聚合K线数据：2. 根据配置计算相关指标;
     my_vector<my_vector<DepthDataAtomSharedPtr>> vecDepthAtom; // 存储当前累积的depth 数据，用于聚合K线数据;
 
     my_unorder_map<KlineIndicatorType, IKlineCompute*> mapKlineIndicatorCompute_; // 存储当前配置需要计算的K线指标类型;
@@ -77,6 +77,15 @@ using KLineDataManagerSharePtr = std::shared_ptr<KLineDataManager>;
 class MarketDataManager {
     // my_unorder_map<std::string, std::vector<MarketData>> market_data_map;
 public:
+
+    bool Init() {
+        return true;
+    }
+
+    bool Start() {
+        return true;
+    }
+
     void AggrateKline(my_vector<DepthDataAtomSharedPtr>& vecDepthAtomSrc) {
         for (auto iter: kline_data_map_) {
             my_vector<KlineAtomSharedPtr> vecKlineAtom = iter.second->AggregateKline(vecDepthAtomSrc);  
@@ -91,9 +100,23 @@ public:
         }
     }    
 
+    void ProcessVecKline(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
+        // for (auto iter: kline_data_map_) {
+        //     iter.second->AddKlineAtom(vecKlineAtomSrc);
+        // }
+    }
+
+    void SetKlineCallback(KlineVectorCallbackFuncType funcKlineVectorCallback) {
+        funcKlineVectorCallback_ = funcKlineVectorCallback;
+    }
+
 
 private:
     DepthData depth_data_;
     my_unorder_map<int, KLineDataManagerSharePtr> kline_data_map_; // 根据配置确定要处理的Kline 数据类型;
 
+    KlineVectorCallbackFuncType funcKlineVectorCallback_; // K线数据回调函数;
+
 };
+
+using MarketDataManagerSharePtr = std::shared_ptr<MarketDataManager>;

@@ -24,7 +24,7 @@
 
 // -------------------- 主程序 → 动态库：调用动态库类成员函数（入参为自定义结构体） --------------------
 // 动态库类成员函数封装：业务处理（传入自定义结构体）
-LIB_API int dll_process_market_data(void* pStrategyHandler,  MarketData* pMarketData);
+LIB_API int dll_process_market_data(void* pStrategyHandler,  KlineAtom* pMarketData);
 
 // 动态库类成员函数封装：获取类状态
 LIB_API int dll_process_index_data(void* pStrategyHandler, IndexData* pMarketData);

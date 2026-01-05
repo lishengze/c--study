@@ -4,6 +4,7 @@
 #include "thread_safe_singleton.h"
 #include "json_util.hpp"
 
+
 class ConfigManager {
 public:
     ConfigManager() : sConfigFileName_("config.json") {}
@@ -22,9 +23,20 @@ public:
 
     my_vector<int> GetIntListValue(const my_string& section, const my_string& key);
 
+    my_unorder_map<my_string, int>& GetStockIndexDic() { return mapStockIndex_; }
+
+    my_set<my_string>& GetStrategySet() { return setStrategySet_; }
+
+    my_unorder_map<my_string, int>& GetIndicatorIndexDic() { return mapIndicatorIndex_; }
+
 private:
     my_string sConfigFileName_;
     njson reqJsonData_;
+
+    my_unorder_map<my_string, int> mapStockIndex_ ;
+    my_unorder_map<my_string, int> mapIndicatorIndex_ ;
+
+    my_set<my_string> setStrategySet_;
 };
 
 

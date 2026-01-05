@@ -14,6 +14,37 @@ bool ConfigManager::Init() {
         return false;
     }
 
+    if (reqJsonData_.contains("StrategyList") && reqJsonData_["StrategyList"].is_array()) {
+        for (auto& strategy : reqJsonData_["StrategyList"]) {
+            if (strategy.is_string()) {
+                setStrategySet_.insert(strategy.get<my_string>());
+            }
+        }
+    } else {
+        LOG_ERROR("ConfigManager::Init, StrategyList is empty");
+        return false;
+    }
+
+    if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("StockDic")) {
+        njson& stock_dic = reqJsonData_["Kline"]["StockDic"];
+        for (auto& it : stock_dic.items()) {
+            mapStockIndex_[it.key()] = it.value().get<int>();
+        }
+    } else {
+        LOG_ERROR("ConfigManager::Init, StockDic is empty");
+        return false;
+    }
+
+    if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("IndicatorDic")) {
+        njson& indicator_dic = reqJsonData_["Kline"]["IndicatorDic"];
+        for (auto& it : indicator_dic.items()) {
+            mapIndicatorIndex_[it.key()] = it.value().get<int>();
+        }
+    } else {
+        LOG_ERROR("ConfigManager::Init, IndicatorDic is empty");
+        return false;
+    }
+
     return true;
 } 
 
