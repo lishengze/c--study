@@ -169,7 +169,7 @@ my_vector<my_vector<int>> rolling_argmin(const my_vector<my_vector<float>>& mat,
 
 // ========== Alpha101因子核心实现 ==========
 // Alpha001: (rank(Ts_ArgMin(SignedPower(((returns<0)?stddev(returns,20):close),2),5)) - 0.5)
-my_vector<my_vector<float>> calc_alpha001(KLineDataManagerSharePtr data) {
+my_vector<my_vector<float>> calc_alpha001(const KLineDataManager* data) {
     if (data->vecHigh.empty() || data->vecLow.empty() || data->vecClose.empty() || data->vecHigh.size() != data->vecLow.size() || data->vecHigh.size() != data->vecClose.size()) return {};
     int rows = data->vecHigh.size();
     int cols = data->vecHigh[0].size();
@@ -200,7 +200,7 @@ my_vector<my_vector<float>> calc_alpha001(KLineDataManagerSharePtr data) {
 }
 
 // Alpha010: rank(((sum(open,5)*sum(high,5)) - (sum(low,5)*sum(close,5))))
-my_vector<my_vector<float>> calc_alpha010(const KLineDataManagerSharePtr& data) {
+my_vector<my_vector<float>> calc_alpha010(const KLineDataManager* data) {
     if (data->vecOpen.empty() || data->vecHigh.empty() || data->vecLow.empty() || data->vecClose.empty() || data->vecOpen.size() != data->vecHigh.size() || data->vecHigh.size() != data->vecLow.size() || data->vecLow.size() != data->vecClose.size()) return {};
     auto sum_open = rolling_sum(data->vecOpen, 5);
     auto sum_high = rolling_sum(data->vecHigh, 5);
@@ -219,7 +219,7 @@ my_vector<my_vector<float>> calc_alpha010(const KLineDataManagerSharePtr& data) 
 }
 
 // Alpha036: rank(decay_linear(correlation(high,volume,5),3) - rank(stddev(close,10)))
-my_vector<my_vector<float>> calc_alpha036(const KLineDataManagerSharePtr& data) {
+my_vector<my_vector<float>> calc_alpha036(const KLineDataManager* data) {
     if (data->vecHigh.empty() || data->vecVolume.empty() || data->vecClose.empty() || data->vecHigh.size() != data->vecVolume.size() || data->vecHigh.size() != data->vecClose.size()) return {};
     auto corr = rolling_corr(data->vecHigh, data->vecVolume, 5);
     auto decay_corr = decay_linear(corr, 3);
@@ -238,21 +238,53 @@ my_vector<my_vector<float>> calc_alpha036(const KLineDataManagerSharePtr& data) 
 }
 
 bool KlineCompute_1::calculate_kline_indicator() {
+    my_vector<float> ret;
+    KLineDataManager* kline_data_manager = get_kline_data_manager();
+
+    if (kline_data_manager != nullptr && kline_data_manager->GetDataCount() >= iMinimumDataCount) {
+        auto tmpRst = calc_alpha001(kline_data_manager);        
+        for (int i = 0; i < tmpRst.size(); i++) {
+            ret.push_back(tmpRst[i][tmpRst[i].size()-1]);
+        }
+    }
+    kline_data_manager->UpdateKlineIndicator(ret, KlineIndicatorType::Alpha_001);    
+
     return true;
 }
 
-bool KlineCompute_2::calculate_kline_indicator() {
+bool KlineCompute_10::calculate_kline_indicator() {
+    my_vector<float> ret;
+
+    KLineDataManager* kline_data_manager = get_kline_data_manager();
+
+    if (kline_data_manager != nullptr && kline_data_manager->GetDataCount() >= iMinimumDataCount) {
+        auto tmpRst = calc_alpha010(kline_data_manager);        
+        for (int i = 0; i < tmpRst.size(); i++) {
+            ret.push_back(tmpRst[i][tmpRst[i].size()-1]);
+        }
+    }
+
+    kline_data_manager->UpdateKlineIndicator(ret, KlineIndicatorType::Alpha_010);
+
     return true;
 }
 
-bool KlineCompute_3::calculate_kline_indicator() {
-    return true;
-}
+bool KlineCompute_36::calculate_kline_indicator() {
+    my_vector<float> ret;
 
-bool KlineCompute_4::calculate_kline_indicator() {
-    return true;
-}
 
-bool KlineCompute_5::calculate_kline_indicator() {
+    
+    KLineDataManager* kline_data_manager = get_kline_data_manager();
+
+    if (kline_data_manager != nullptr && kline_data_manager->GetDataCount() >= iMinimumDataCount) {
+        auto tmpRst = calc_alpha036(kline_data_manager);        
+        for (int i = 0; i < tmpRst.size(); i++) {
+            ret.push_back(tmpRst[i][tmpRst[i].size()-1]);
+        }
+    }
+
+
+    kline_data_manager->UpdateKlineIndicator(ret, KlineIndicatorType::Alpha_036);
+
     return true;
 }

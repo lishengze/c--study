@@ -29,6 +29,10 @@ public:
 
     my_unorder_map<my_string, int>& GetIndicatorIndexDic() { return mapIndicatorIndex_; }
 
+    my_set<int>& GetKlineFreqSet() { return setKlineFreqSet_; }
+
+    my_set<int>& GetIndicatorSet() { return setIndicatorSet_; }
+
 private:
     my_string sConfigFileName_;
     njson reqJsonData_;
@@ -37,6 +41,8 @@ private:
     my_unorder_map<my_string, int> mapIndicatorIndex_ ;
 
     my_set<my_string> setStrategySet_;
+    my_set<int> setKlineFreqSet_;
+    my_set<int> setIndicatorSet_;
 };
 
 

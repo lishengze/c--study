@@ -42,19 +42,19 @@ using DepthDataSharePtr = std::shared_ptr<DepthData>;
 inline unsigned int GetDataLimit(BarFrequency iFrequency) {
     switch (iFrequency) {
         case BarFrequency::TICK:
-            return 1000000;
+            return 100000;
         case BarFrequency::MINUTE_1:
-            return 1000000;
+            return 12000;
         case BarFrequency::MINUTE_5:
-            return 1000000;
+            return 2400;
         case BarFrequency::HOUR_1:
-            return 1000000;
+            return 2400;
         case BarFrequency::DAY:
-            return 1000000;
+            return 2400;
         case BarFrequency::WEEK:
-            return 1000000;
+            return 2400;
         default:
-            return 1000000;
+            return 100000;
     }
 }
 

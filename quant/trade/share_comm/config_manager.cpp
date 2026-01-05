@@ -25,7 +25,10 @@ bool ConfigManager::Init() {
         return false;
     }
 
-    if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("StockDic")) {
+
+
+
+    if (reqJsonData_.contains("Kline") && reqJsonData_["Instruction"].contains("StockDic")) {
         njson& stock_dic = reqJsonData_["Kline"]["StockDic"];
         for (auto& it : stock_dic.items()) {
             mapStockIndex_[it.key()] = it.value().get<int>();
@@ -35,7 +38,7 @@ bool ConfigManager::Init() {
         return false;
     }
 
-    if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("IndicatorDic")) {
+    if (reqJsonData_.contains("Kline") && reqJsonData_["Instruction"].contains("IndicatorDic")) {
         njson& indicator_dic = reqJsonData_["Kline"]["IndicatorDic"];
         for (auto& it : indicator_dic.items()) {
             mapIndicatorIndex_[it.key()] = it.value().get<int>();
@@ -44,6 +47,31 @@ bool ConfigManager::Init() {
         LOG_ERROR("ConfigManager::Init, IndicatorDic is empty");
         return false;
     }
+
+    
+    if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("KlineFreqList")) {
+        for (auto& freq : reqJsonData_["Kline"]["FreqSet"]) {
+            if (freq.is_number()) {
+                setKlineFreqSet_.insert(freq.get<int>());
+            }
+        }
+    } else {
+        LOG_ERROR("ConfigManager::Init, KlineFreqSet is empty");
+        return false;
+    }
+
+
+    if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("IndicatorList")) {
+        for (auto& freq : reqJsonData_["Kline"]["FreqSet"]) {
+            if (freq.is_number()) {
+                setKlineFreqSet_.insert(freq.get<int>());
+            }
+        }
+    } else {
+        LOG_ERROR("ConfigManager::Init, KlineFreqSet is empty");
+        return false;
+    }
+
 
     return true;
 } 

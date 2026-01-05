@@ -2,6 +2,7 @@
 
 #include "comm_define.h"
 #include "share_comm_external_message.h"
+#include "config_manager.h"
 
 
 class IKlineCompute;
@@ -30,12 +31,12 @@ struct KLineDataManager {
     /// @brief 根据配置初始化K线指标计算类
     void Init();
 
-    void AddKlineAtom(my_vector<KlineAtomSharedPtr>& vecKlineAtom) {
-        if (vecKlineAtom.empty()) {
+    void AddKlineAtom(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
+        if (vecKlineAtomSrc.empty()) {
             return;
         }
 
-        for (auto kline_atom: vecKlineAtom) {
+        for (auto kline_atom: vecKlineAtomSrc) {
             vecOpen[kline_atom->stock_index][data_count_] = kline_atom->open_price;
             vecHigh[kline_atom->stock_index][data_count_] = kline_atom->high_price;
             vecLow[kline_atom->stock_index][data_count_] = kline_atom->low_price;
@@ -43,33 +44,47 @@ struct KLineDataManager {
             vecVolume[kline_atom->stock_index][data_count_] = kline_atom->volume;
             vecAmount[kline_atom->stock_index][data_count_] = kline_atom->amount;
 
-            vecKlineAtom[kline_atom->stock_index] = kline_atom;
+            vecLatestKlineAtom[kline_atom->stock_index] = kline_atom;
         }
         data_count_++;
 
         StartCalculateKlineIndicator();
     }
 
+    int GetDataCount() {
+        return data_count_;
+    }
+
+    void UpdateKlineIndicator(my_vector<float>& vecCurIndicatorValue, KlineIndicatorType indicator_type);
+
     void StartCalculateKlineIndicator();
 
-    void UpdateKlineAtom(const my_vector<float>& vecCurIndicatorValue, KlineIndicatorType indicator_type);
+    void SetKlineCallback(KlineVectorCallbackFuncType funcKlineVectorCallback) {
+        funcKlineVectorComputeDoneCallback_ = funcKlineVectorCallback;
+    }
 
 
     unsigned int data_count_;
     unsigned int data_limit_;    
     BarFrequency iFrequency_;   // 当前K线数据的频率;
 
-    my_vector<my_vector<float>> vecOpen; // 开盘价
-    my_vector<my_vector<float>> vecHigh; // 最高价
-    my_vector<my_vector<float>> vecLow; // 最低价
-    my_vector<my_vector<float>> vecClose; // 收盘价
-    my_vector<my_vector<float>> vecVolume; // 成交量
-    my_vector<my_vector<float>> vecAmount; // 成交额    
+    my_vector<my_vector<float>> vecOpen;        // 开盘价
+    my_vector<my_vector<float>> vecHigh;        // 最高价
+    my_vector<my_vector<float>> vecLow;        // 最低价
+    my_vector<my_vector<float>> vecClose;        // 收盘价
+    my_vector<my_vector<float>> vecVolume;        // 成交量
+    my_vector<my_vector<float>> vecAmount;        // 成交额    
 
-    my_vector<KlineAtomSharedPtr> vecKlineAtom; // 存储当前最新的K线数据，更新分为两步骤，1. 根据depth 数据聚合K线数据：2. 根据配置计算相关指标;
+    my_vector<KlineAtomSharedPtr> vecLatestKlineAtom; // 存储当前最新的K线数据，更新分为两步骤，1. 根据depth 数据聚合K线数据：2. 根据配置计算相关指标;
     my_vector<my_vector<DepthDataAtomSharedPtr>> vecDepthAtom; // 存储当前累积的depth 数据，用于聚合K线数据;
 
     my_unorder_map<KlineIndicatorType, IKlineCompute*> mapKlineIndicatorCompute_; // 存储当前配置需要计算的K线指标类型;
+
+    my_mutex update_indicator_mutex_; // 用于更新K线指标的互斥锁;
+    my_set<KlineIndicatorType> setKlineIndicatorType_; // 用于记录当前需要计算的K线指标类型;
+
+
+    KlineVectorCallbackFuncType funcKlineVectorComputeDoneCallback_; // K线数据回调函数 
 };
 
 using KLineDataManagerSharePtr = std::shared_ptr<KLineDataManager>;
@@ -79,6 +94,14 @@ class MarketDataManager {
 public:
 
     bool Init() {
+        my_set<int> vecIndicatorTypes = CONFIG_MANAGER_INSTANCE->GetKlineFreqSet();
+
+        for (int indicatorType : vecIndicatorTypes) {
+            KLineDataManagerSharePtr kline_data_manager = std::make_shared<KLineDataManager>(BarFrequency(indicatorType));
+            kline_data_manager->Init();
+            kline_data_map_[indicatorType] = kline_data_manager;
+        }
+
         return true;
     }
 
@@ -100,11 +123,7 @@ public:
         }
     }    
 
-    void ProcessVecKline(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
-        // for (auto iter: kline_data_map_) {
-        //     iter.second->AddKlineAtom(vecKlineAtomSrc);
-        // }
-    }
+    void ProcessVecKline(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc);
 
     void SetKlineCallback(KlineVectorCallbackFuncType funcKlineVectorCallback) {
         funcKlineVectorCallback_ = funcKlineVectorCallback;
@@ -115,7 +134,7 @@ private:
     DepthData depth_data_;
     my_unorder_map<int, KLineDataManagerSharePtr> kline_data_map_; // 根据配置确定要处理的Kline 数据类型;
 
-    KlineVectorCallbackFuncType funcKlineVectorCallback_; // K线数据回调函数;
+    KlineVectorCallbackFuncType funcKlineVectorCallback_; // K线数据回调函数 -- 这里
 
 };
 

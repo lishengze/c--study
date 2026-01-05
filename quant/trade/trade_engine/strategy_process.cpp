@@ -1,4 +1,5 @@
 #include "strategy_process.h"
+#include "config_manager.h"
 #include "logger.h"
 #include "share_comm_external_message.h"
 #include <string>
@@ -7,13 +8,24 @@ using namespace share_common;
 
 bool StrategyProcess::Init() {
     string lib_name = "libstrategy_impl_1";
-    TradeUnitDllInfoPtr pTradeUnitDllInfo = std::make_shared<TradeUnitDllInfo>(lib_name, ".");
 
-    if (!pTradeUnitDllInfo->LoadDll()) {
-        return false;
+    my_set<my_string>& setStrategySet_ = CONFIG_MANAGER_INSTANCE->GetStrategySet();
+    for (auto& it : setStrategySet_) {
+
+        string lib_name = it;
+
+        TradeUnitDllInfoPtr pTradeUnitDllInfo = std::make_shared<TradeUnitDllInfo>(lib_name, ".");
+
+        if (!pTradeUnitDllInfo->LoadDll()) {
+            return false;
+        }
+
+        if (pTradeUnitDllInfo->RegisterAppMain(this) > 0) {
+            strategy_dll_map_[lib_name] = pTradeUnitDllInfo;
+        }        
     }
-    pTradeUnitDllInfo->RegisterAppMain(this);
-    strategy_dll_map_[lib_name] = pTradeUnitDllInfo;
+    
+
 
     return true;
 }

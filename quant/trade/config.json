@@ -1,13 +1,5 @@
 {
-    "WorkMode": {
-        "Mode":"Test",
-        "DataFreqSec": 5
-    },
-    "ComputedMarketData": {
-        "QueueName": "kline_data",
-        "QueueSize": 4096
-    },
-    "Kline": {
+    "Instruction": {
         "StockDic": {
             "600000.SH": 0,
             "600001.SH": 1,
@@ -17,10 +9,24 @@
         "IndicatorDic": {
             "Alpha_1": 1,
             "Alpha_2": 2,
-            "Alpha_3": 3,
+            "Alpha_10": 10,
             "Alpha_36": 36,
             "Alpha_101": 101
-        }
+        }        
+    },    
+    "WorkMode": {
+        "Mode":"TestKline",
+        "DataFreqSec": 5,
+        "MarketComputeCpuCount":4
+    },
+    "ComputedMarketData": {
+        "QueueName": "kline_data",
+        "QueueSize": 4096
+    },
+
+    "Kline": {
+        "KlineFreqList": [1, 2, 3, 4, 5],
+        "IndicatorList": [1, 10, 36]
     },
     "StrategyList":["strategy_impl_1","strategy_impl_2"]
 }

@@ -7,11 +7,11 @@
 #define INITTRIAL_KLINE_COMPUTE(TRIAL_UNIT) do{ \
     KlineCompute_##TRIAL_UNIT *tmp = new KlineCompute_##TRIAL_UNIT(); \
     tmp->set_kline_data_manager(this, KlineIndicatorType(TRIAL_UNIT));\
-    mapKlineIndicatorCompute_[KlineIndicatorType(TRIAL_UNIT)] = tmp;\      
+    mapKlineIndicatorCompute_[KlineIndicatorType(TRIAL_UNIT)] = tmp; \ 
 }while(0)\
 
 void KLineDataManager::Init() {
-    my_vector<int> vecIndicatorTypes = CONFIG_MANAGER_INSTANCE->GetIntListValue("kline", "indicator_types");
+    my_set<int> vecIndicatorTypes = CONFIG_MANAGER_INSTANCE->GetIndicatorSet();
 
     for (int indicatorType : vecIndicatorTypes) {
         switch (indicatorType)
@@ -19,17 +19,11 @@ void KLineDataManager::Init() {
         case 1:
             INITTRIAL_KLINE_COMPUTE(1);
             break;
-        case 2:
-            INITTRIAL_KLINE_COMPUTE(2);
+        case 10:
+            INITTRIAL_KLINE_COMPUTE(10);
             break;
-        case 3:
-            INITTRIAL_KLINE_COMPUTE(3);
-            break;
-        case 4:
-            INITTRIAL_KLINE_COMPUTE(4);
-            break;
-        case 5:
-            INITTRIAL_KLINE_COMPUTE(5);
+        case 36:
+            INITTRIAL_KLINE_COMPUTE(36);
             break;
         default:
             break;
@@ -64,9 +58,37 @@ void KLineDataManager::StartCalculateKlineIndicator() {
     }
 }
 
-void KLineDataManager::UpdateKlineAtom(const my_vector<float>& vecCurIndicatorValue, KlineIndicatorType indicator_type) {
-    
-    for (int i = 0; i < vecCurIndicatorValue.size(); i++) {
-        vecKlineAtom[i]->mapKlineIndicatorValue_[indicator_type] = vecCurIndicatorValue[i];
+void KLineDataManager::UpdateKlineIndicator(my_vector<float>& vecCurIndicatorValue, KlineIndicatorType indicator_type) {
+
+    // 这一段代码线程安全;不同的线程更新的指标值不同;
+    if (vecCurIndicatorValue.size() == vecLatestKlineAtom.size()) {
+        for (int i = 0; i < vecCurIndicatorValue.size(); i++) {
+            vecLatestKlineAtom[i]->mapKlineIndicatorValue_[indicator_type] = vecCurIndicatorValue[i];
+        }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(update_indicator_mutex_);
+        setKlineIndicatorType_.insert(indicator_type);
+
+        // 所有指标计算完成;
+        if (setKlineIndicatorType_.size() == mapKlineIndicatorCompute_.size()) {
+            funcKlineVectorComputeDoneCallback_(vecLatestKlineAtom);
+        }
+
+        setKlineIndicatorType_.clear();
+    }
+
+}
+
+void MarketDataManager::ProcessVecKline(my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
+    if (vecKlineAtomSrc.empty()) {
+        return; 
+    }
+
+    int iBarIndex = vecKlineAtomSrc[0]->bar_index;
+
+    if (kline_data_map_.find(iBarIndex) != kline_data_map_.end()) {
+        kline_data_map_[iBarIndex]->AddKlineAtom(vecKlineAtomSrc);
     }
 }

@@ -17,6 +17,8 @@
 #include "market_manager.h"
 #include "market_data_manager.h"
 
+#include "thread_pool.h"
+
 using namespace share_common;
 using std::shared_ptr;
 
@@ -25,7 +27,9 @@ MarketManager::MarketManager() {
 
 bool MarketManager::Init() {
 
-    CONFIG_MANAGER_INSTANCE->Init();
+    if (!CONFIG_MANAGER_INSTANCE->Init()) return false;
+
+    THREAD_POOL_SIMPLE->Init(CONFIG_MANAGER_INSTANCE->GetIntValue("WorkMode", "MarketComputeCpuCount",4));
 
     if (!market_receiver_.Init()) return false;
 
