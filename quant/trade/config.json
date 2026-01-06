@@ -10,23 +10,23 @@
             "Alpha_1": 1,
             "Alpha_2": 2,
             "Alpha_10": 10,
-            "Alpha_36": 36,
-            "Alpha_101": 101
+            "Alpha_36": 36
         }        
     },    
     "WorkMode": {
         "Mode":"TestKline",
-        "DataFreqSec": 5,
+        "DataFreqSec": 1,
         "MarketComputeCpuCount":4
     },
     "ComputedMarketData": {
         "QueueName": "kline_data",
-        "QueueSize": 4096
+        "QueueSize": 1024
     },
 
     "Kline": {
         "KlineFreqList": [1, 2, 3, 4, 5],
-        "IndicatorList": [1, 10, 36]
+        "IndicatorList": [1, 10, 36],
+        "StockList": ["600000.SH", "000001.SZ", "000002.SZ", "600001.SH"]
     },
-    "StrategyList":["strategy_impl_1","strategy_impl_2"]
+    "StrategyList":["strategy_impl_1"]
 }

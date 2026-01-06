@@ -117,6 +117,24 @@ struct KlineAtom {
 
     }
 
+    KlineAtom(const KlineAtom& other) {
+        if (this == &other) return;
+        memcpy(exchange, other.exchange, 3);
+        memcpy(stock_code, other.stock_code, 10);
+        open_price = other.open_price;
+        high_price = other.high_price;
+        low_price = other.low_price;
+        close_price = other.close_price;
+        volume = other.volume;
+        amount = other.amount;
+        timestamp = other.timestamp;
+        bar_index = other.bar_index;
+        stock_index = other.stock_index;
+        alpha_1 = other.alpha_1;
+        alpha_10 = other.alpha_10;
+        alpha_36 = other.alpha_36;
+    }
+
     KlineAtom(const my_string& stock_code, const int stock_index, const int bar_index) : open_price(11), high_price(0), low_price(0), close_price(0), volume(0), timestamp(0) {
         strcpy(this->stock_code, stock_code.c_str());
         this->stock_index = stock_index;
@@ -227,6 +245,7 @@ struct OrderReq {
     double price; // 价格（限价委托必填）
     double volume; // 成交量（必填）
     unsigned long long timestamp; // 时间戳（纳秒）
+    unsigned int uiStrategyID;
 
     OrderReq() : side('1'), order_type('1'), price(0), volume(0), timestamp(0) {
         strcpy(exchange, "SH");
@@ -234,14 +253,20 @@ struct OrderReq {
         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
+    OrderReq(char* stock_code_src, unsigned int uiStrategyIDSrc,  double price, double volume) : 
+    side('1'), order_type('1'), price(price), volume(volume), timestamp(0), uiStrategyID(uiStrategyIDSrc) {
+        strcpy(stock_code, stock_code_src);
+        timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    }    
+
     my_string str() const {
-        return my_string("exchange:") + my_string(exchange) 
+        return  my_string("StaID:") + std::to_string(uiStrategyID) 
                 + my_string(", stock_code:") + my_string(stock_code) 
                 + my_string(", side:") + my_string(1, side) 
-                + my_string(", order_type:") + my_string(1, order_type) 
                 + my_string(", price:") + std::to_string(price) 
                 + my_string(", volume:") + std::to_string(volume) 
-                + my_string(", timestamp:") + std::to_string(timestamp);
+                + my_string(", timestamp:") + NanoToMicroString(timestamp)
+                ;
     }
 };
 
@@ -346,14 +371,16 @@ struct TradeUnitDllInfo
     }
 
     bool LoadDll() {
-        my_string full_lib_path = lib_path_ + "/" + lib_name_ + ".so";
+        my_string full_lib_path = lib_path_ + "/lib" + lib_name_ + ".so";
         DllHandle dll_handle = dll_load(full_lib_path.c_str());
         if (dll_handle == DLL_INVALID_HANDLE) {
             std::cerr << "[主程序] 加载动态库失败！错误信息：" << full_lib_path 
                         << " , error: " << dll_get_error() << std::endl;
             return false;
         }
-        std::cout << "[主程序] 动态库加载成功！路径：" << full_lib_path << std::endl;
+        LOG_INFO("LoadDll, full_lib_path: {}, SUCCESS", full_lib_path);
+
+        // std::cout << "[主程序] 动态库加载成功！路径：" << full_lib_path << std::endl;
 
         pFuncStrategyCreate = (funcStrategyCreateFunc*)dll_get_proc(dll_handle, "dll_class_create");
         if (pFuncStrategyCreate == nullptr) {
@@ -404,7 +431,7 @@ struct TradeUnitDllInfo
 
     bool InitLogger() {
         logger_ = spdlog::create_async<spdlog::sinks::rotating_file_sink_mt>(
-            "async_file_logger", 
+            lib_name_, 
             lib_name_, 
             (std::size_t)1024 * 1024 * 1024 * 3, 
             1000); 

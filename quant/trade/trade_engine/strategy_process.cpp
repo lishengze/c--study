@@ -17,12 +17,15 @@ bool StrategyProcess::Init() {
         TradeUnitDllInfoPtr pTradeUnitDllInfo = std::make_shared<TradeUnitDllInfo>(lib_name, ".");
 
         if (!pTradeUnitDllInfo->LoadDll()) {
-            return false;
+            LOG_WARN("LoadDll failed, lib_name: {}", lib_name);
+            
         }
 
-        if (pTradeUnitDllInfo->RegisterAppMain(this) > 0) {
+        if (pTradeUnitDllInfo->RegisterAppMain(this) == ErrSuccess) {
             strategy_dll_map_[lib_name] = pTradeUnitDllInfo;
-        }        
+        } else {
+            LOG_WARN("RegisterAppMain failed, lib_name: {}", lib_name);            
+        }
     }
     
 

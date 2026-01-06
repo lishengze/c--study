@@ -3,16 +3,16 @@
 #include "strategy_process.h"
 #include "share_comm_external_message.h"
 
-class StrategyImpl1 : public IStrateImpl {
+class StrategyImpl2 : public IStrateImpl {
 public:
     int ProcessKlineAtom(KlineAtom* pMarketData) override {
-        // std::cout << "StrategyImpl1::ProcessMarketData: " << pMarketData->str() << std::endl;
-        logger_->info("StrategyImpl1::ProcessMarketData: {}", pMarketData->str());
+        // std::cout << "StrategyImpl2::ProcessMarketData: " << pMarketData->str() << std::endl;
+        logger_->info("StrategyImpl2::ProcessMarketData: {}", pMarketData->str());
         
         if (pStrategyProcess_ == nullptr) {
             return ErrFuncParam1IsNull;
         } else {
-            OrderReq order_req(pMarketData->stock_code, 1, pMarketData->close_price, pMarketData->volume/2);
+            OrderReq order_req(pMarketData->stock_code,2, pMarketData->close_price, pMarketData->volume/2);
             pStrategyProcess_->SendOrderReq(order_req);
         }
         
@@ -35,7 +35,7 @@ LIB_API int dll_process_market_data(void* pStrategyHandler,  KlineAtom* pMarketD
     }
 
 
-    StrategyImpl1* pStrategyImpl = (StrategyImpl1*)pStrategyHandler;
+    StrategyImpl2* pStrategyImpl = (StrategyImpl2*)pStrategyHandler;
     return pStrategyImpl->ProcessKlineAtom(pMarketData);
 }
 
@@ -49,7 +49,7 @@ LIB_API int dll_process_index_data(void* pStrategyHandler, IndexData* pIndexData
         return ErrFuncParam1IsNull;
     }
 
-    StrategyImpl1* pStrategyImpl = (StrategyImpl1*)pStrategyHandler;
+    StrategyImpl2* pStrategyImpl = (StrategyImpl2*)pStrategyHandler;
     return pStrategyImpl->ProcessIndexData(pIndexData);
 }
 
@@ -63,21 +63,21 @@ LIB_API int dll_register_app_main(void* pStrategyHandler, StrategyProcess* pStra
         return ErrFuncParam1IsNull;
     }
 
-    StrategyImpl1* pStrategyImpl = (StrategyImpl1*)pStrategyHandler;
+    StrategyImpl2* pStrategyImpl = (StrategyImpl2*)pStrategyHandler;
     
     return pStrategyImpl->RegisterAppMain(pStrategyProcess);
 }
 
 LIB_API void* dll_class_create() {
-    StrategyImpl1* dll_obj = new StrategyImpl1();
-    printf("[动态库封装接口] 创建 StrategyImpl1 实例\n");
+    StrategyImpl2* dll_obj = new StrategyImpl2();
+    printf("[动态库封装接口] 创建 StrategyImpl2 实例\n");
     return (void*)dll_obj;  // 转换为 void* 隐藏类型
 }
 
 LIB_API void dll_class_destroy(void* dll_obj_handle) {
     if (dll_obj_handle != nullptr) {
-        StrategyImpl1* dll_obj = (StrategyImpl1*)dll_obj_handle;
+        StrategyImpl2* dll_obj = (StrategyImpl2*)dll_obj_handle;
         delete dll_obj;
-        printf("[动态库封装接口] 销毁 StrategyImpl1 实例\n");
+        printf("[动态库封装接口] 销毁 StrategyImpl2 实例\n");
     }
 }

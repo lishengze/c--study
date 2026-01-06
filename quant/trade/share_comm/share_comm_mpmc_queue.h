@@ -128,13 +128,16 @@ public:
     bool create_shared(uint32_t size, slot_type* & pMpmcShareSlots, void* buffer)
     {
         size = size ? size : 1;
-        size = roundup_pow_of_two(size + 1);
+        size = roundup_pow_of_two(size);
         
         // 直接使用传入的共享内存地址作为slots_
         pMpmcShareSlots = static_cast<slot_type*>(buffer);
+
+        // printf("size: %d, pMpmcShareSlots: %p, buffer: %p\n", size, pMpmcShareSlots, buffer);
         
         // 初始化所有元素槽（如果需要）
         for (uint32_t i = 0; i < size; ++i) {
+            // printf("pMpmcShareSlots[%d]: %p\n", i, &pMpmcShareSlots[i]);
             new (&pMpmcShareSlots[i]) slot_type();
         }
         

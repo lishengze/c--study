@@ -36,6 +36,8 @@ bool TradeManager::Init() {
     KlineAtomCallbackFuncType market_data_callback_func = std::bind(&StrategyProcess::OnMarketSrcData, &strategy_process_, std::placeholders::_1);
     msg_receiver_.SetKlineAtomCallbackFunc(market_data_callback_func);
 
+    LOG_INFO("TradeManager Init success");
+
 
     return true;
 }
@@ -48,6 +50,7 @@ bool TradeManager::Start() {
 
     if (!trade_output_.Start()) return false;
 
+    LOG_INFO("TradeManager Start success");
 
     return true;
 

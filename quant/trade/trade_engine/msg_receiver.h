@@ -13,7 +13,7 @@ using namespace share_common;
 /// @brief 交易数据来源是 交易所的 API；
 class MsgReceiver {
 public:
-    MsgReceiver():ptr_share_market_data_queue_(nullptr), ptr_share_market_data_queue_slot_(nullptr) {}
+    MsgReceiver():ptr_share_market_data_queue_(nullptr), ptr_share_market_data_queue_slot_(nullptr), bIsRunning_{true} {}
 
     virtual ~MsgReceiver() {
         if (shptrGetSrcKlineAtomThread_ && shptrGetSrcKlineAtomThread_->joinable()) {

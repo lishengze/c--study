@@ -38,7 +38,10 @@ bool MsgReceiver::Stop() {
 bool MsgReceiver::InitKlineAtomQueue() {
 
     // 打开共享内存
-    std::string strSharedMemName = CONFIG_MANAGER_INSTANCE->GetStringValue("ComputedMarketData", "QueueName", "KlineAtom.queue");
+    //  CONFIG_MANAGER_INSTANCE->GetStringValue("ComputedMarketData", "QueueName", "KlineAtom.queue");
+    std::string strSharedMemName = CONFIG_MANAGER_INSTANCE->GetStringValue("ComputedMarketData", "QueueName", "CompuatedMarketData");
+    LOG_INFO("InitKlineAtomQueue, QueueName: {}", strSharedMemName);
+
     int shm_fd = shm_open(strSharedMemName.c_str(), O_RDWR, 0);
     if (shm_fd == -1) {
         LOG_ERROR("shm_open {} failed ", strSharedMemName);
@@ -74,20 +77,27 @@ bool MsgReceiver::InitKlineAtomQueue() {
     // 手动将slot 映射到外部的内存地址中 -- 共享内存版本,这一步导致了很多的问题，导致无法进行服务端对slot 的解锁出错了。
     ptr_share_market_data_queue_->slot_attach(ptr_share_market_data_queue_slot_, static_cast<void*>((char*)addr + sizeof(mpmc_queue<KlineAtom>) + 32));
 
+    LOG_INFO("InitMarketDataQueue success");
 
     return true;
         
 }
 
 bool MsgReceiver::StartReceiveKlineAtom() {
+    LOG_INFO("StartReceiveKlineAtom");
     // 启动接收市场数据线程
     shptrGetSrcKlineAtomThread_ = std::make_shared<std::thread>([this]() {
-        while (bIsRunning_) {
-            KlineAtom market_data;
+        KlineAtom market_data;
+
+        while (bIsRunning_) {            
             if (ptr_share_market_data_queue_->pop_share(ptr_share_market_data_queue_slot_, market_data)) {
                 // 处理市场数据
                 market_data_callback_func_(market_data);
+            } else {
+                // LOG_INFO("pop_share failed");
             }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     });
     

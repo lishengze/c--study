@@ -20,7 +20,7 @@ public:
 
     bool SendOrderReq(const OrderReq& order_req) {
         // LOG_INFO("SendOrderReq, order_req: \n{}", order_req.str());
-        std::cout << "SendOrderReq, order_req: \n" << order_req.str() << std::endl;
+        std::cout << "SendOrderReq OrderReq: " << order_req.str() << std::endl;
         return true;        
     }
 
