@@ -407,8 +407,9 @@ public:
      * @brief 构造函数
      * @note 初始化当前turn值为0
      */
-element_slot():current_turn_(0){
+element_slot() {
     iSlotInnerTestIndex_ = 0;
+    current_turn_ = 0;
 }
 
 element_slot(int iTestIndex):current_turn_(0){

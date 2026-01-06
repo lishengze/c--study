@@ -60,17 +60,40 @@ bool ConfigManager::Init() {
         return false;
     }
 
+    for (auto& freq : setKlineFreqSet_) {
+        LOG_INFO("ConfigManager::Init, KlineFreqSet:{}", freq);
+    }
+
 
     if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("IndicatorList")) {
         for (auto& freq : reqJsonData_["Kline"]["IndicatorList"]) {
             if (freq.is_number()) {
-                setKlineFreqSet_.insert(freq.get<int>());
+                setIndicatorSet_.insert(freq.get<int>());
             }
         }
     } else {
         LOG_ERROR("ConfigManager::Init, KlineFreqSet is empty");
         return false;
     }
+
+    for (auto& indicator : setIndicatorSet_) {
+        LOG_INFO("ConfigManager::Init, IndicatorSet:{}", indicator);
+    }
+
+    if (reqJsonData_.contains("Kline") && reqJsonData_["Kline"].contains("StockList")) {
+        for (auto& stock : reqJsonData_["Kline"]["StockList"]) {
+            if (stock.is_string()) {
+                setStockSet_.insert(stock.get<my_string>());
+            }
+        }
+    } else {
+        LOG_ERROR("ConfigManager::Init, StockList is empty");
+        return false;
+    }
+
+    for (auto& stock : setStockSet_) {
+        LOG_INFO("ConfigManager::Init, StockSet:{}", stock);
+    }    
 
 
     return true;
@@ -85,7 +108,7 @@ void ConfigManager::RefreshConfig() {
 
 int ConfigManager::GetIntValue(const my_string& section, const my_string& key, int default_value) {
 
-    RefreshConfig();
+    // RefreshConfig();
 
     if (reqJsonData_.contains(section) && reqJsonData_[section].contains(key) && reqJsonData_[section][key].is_number()) {
         return reqJsonData_[section][key].get<int>();
@@ -94,7 +117,7 @@ int ConfigManager::GetIntValue(const my_string& section, const my_string& key, i
     return default_value;
 }
 double ConfigManager::GetDoubleValue(const my_string& section, const my_string& key, double default_value) {
-    RefreshConfig();
+    // RefreshConfig();
 
     if (reqJsonData_.contains(section) && reqJsonData_[section].contains(key) && reqJsonData_[section][key].is_number()) {
         return reqJsonData_[section][key].get<double>();
@@ -102,7 +125,7 @@ double ConfigManager::GetDoubleValue(const my_string& section, const my_string& 
     return default_value;
 }
 my_string ConfigManager::GetStringValue(const my_string& section, const my_string& key, const my_string& default_value) {
-    RefreshConfig();
+    // RefreshConfig();
 
     if (reqJsonData_.contains(section) && reqJsonData_[section].contains(key) && reqJsonData_[section][key].is_string()) {
         return reqJsonData_[section][key].get<my_string>();
@@ -111,7 +134,7 @@ my_string ConfigManager::GetStringValue(const my_string& section, const my_strin
 }
 
 my_vector<my_string> ConfigManager::GetStringListValue(const my_string& section, const my_string& key) {
-    RefreshConfig();
+    // RefreshConfig();
 
     std::vector<my_string> ret;
 
@@ -122,7 +145,7 @@ my_vector<my_string> ConfigManager::GetStringListValue(const my_string& section,
 }
 
 my_vector<int> ConfigManager::GetIntListValue(const my_string& section, const my_string& key) {
-    RefreshConfig();
+    // RefreshConfig();
 
     my_vector<int> ret;
 

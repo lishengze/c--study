@@ -2,6 +2,36 @@
 
 #include "comm_define.h"
 #include "indicator.h"
+#include "share_comm_util.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#pragma pack(push, 1)
+
+// // 生成 [min, max] 整数随机数
+// int rand_int(int min, int max) {
+//     srand((unsigned int)time(NULL));
+
+//     // 校验参数合法性
+//     if (min > max) {
+//         int temp = min;
+//         min = max;
+//         max = temp;
+//     }
+//     return min + rand() % (max - min + 1);
+// }
+
+// 生成 [min, max) 浮点数随机数
+inline double rand_float(double min, double max) {
+    if (min >= max) return min;
+    return min + (double)rand() / RAND_MAX * (max - min);
+}
+
+
+
+
 
 // 行情频率枚举（支持扩展，新增频率只需在此添加）
 enum class BarFrequency {
@@ -76,11 +106,15 @@ struct KlineAtom {
     unsigned long long timestamp; // 时间戳（纳秒）
     int bar_index; // 时间戳对应的K线索引, 1,5,60,1440, 10080;
     unsigned short stock_index; // 股票索引
+
+    double alpha_1;
+    double alpha_10;
+    double alpha_36;
+
     // IndicatorAtom indicator_atom;
 
-    KlineAtom() : open_price(11), high_price(0), low_price(0), close_price(0), volume(0), timestamp(0) {
-        strcpy(exchange, "SH");
-        strcpy(stock_code, "600000");
+    KlineAtom() {
+
     }
 
     KlineAtom(const my_string& stock_code, const int stock_index, const int bar_index) : open_price(11), high_price(0), low_price(0), close_price(0), volume(0), timestamp(0) {
@@ -91,78 +125,68 @@ struct KlineAtom {
 
     void UpdateKlineIndicatorValue(KlineIndicatorType indicator_type, double value) {
         // indicator_atom.UpdateIndicatorValue(indicator_type, value);
+
+        switch (indicator_type) {
+            case KlineIndicatorType::Alpha_001:
+                alpha_1 = value;
+                break;
+            case KlineIndicatorType::Alpha_010:
+                alpha_10 = value;
+                break;
+            case KlineIndicatorType::Alpha_036:
+                alpha_36 = value;
+                break;
+            default:
+                break;
+        }
+
     }
 
     void SetRandomData() {
-        open_price += 0.1;
-        high_price = open_price + 10;
-        low_price = open_price - 10;
-        close_price = open_price + 5;
-        volume = 1000000;
+        open_price = rand_float(5, 10);
+        high_price = rand_float(10,15);
+        low_price = rand_float(1, 5);
+        close_price = rand_float(5, 10);
+        volume = rand_float(100,1000);
+        amount = close_price * volume;
 
         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
+    // my_string str() const {
+    //     return my_string("exchange:") + my_string(exchange) 
+    //             + my_string(", stock_code:") + my_string(stock_code) 
+    //             + my_string(", time:") + ToSecondStr(timestamp)
+    //             + my_string(", bar_index:") + std::to_string(bar_index)
+    //             + my_string(", stock_index:") + std::to_string(stock_index)                
+    //             + my_string(", \nO:") + std::to_string(open_price)
+    //             + my_string(", H:") + std::to_string(high_price)
+    //             + my_string(", L:") + std::to_string(low_price)
+    //             + my_string(", C:") + std::to_string(close_price)
+    //             + my_string(", V:") + std::to_string(volume)
+    //             + my_string(", A:") + std::to_string(amount)                
+ 
+    //             + my_string(", alpha_1:") + std::to_string(alpha_1)
+    //             + my_string(", alpha_10:") + std::to_string(alpha_10)
+    //             + my_string(", alpha_36:") + std::to_string(alpha_36)
+    //             ;       
+    // }
+
     my_string str() const {
-        return my_string("exchange:") + my_string(exchange) 
-                + my_string(", stock_code:") + my_string(stock_code) 
-                + my_string(", open_price:") + std::to_string(open_price)
-                + my_string(", high_price:") + std::to_string(high_price)
-                + my_string(", low_price:") + std::to_string(low_price)
-                + my_string(", close_price:") + std::to_string(close_price)
-                + my_string(", volume:") + std::to_string(volume)
-                + my_string(", amount:") + std::to_string(amount)
-                + my_string(", timestamp:") + std::to_string(timestamp)
-                + my_string(", bar_index:") + std::to_string(bar_index)
-                + my_string(", stock_index:") + std::to_string(stock_index);                
-    }
+        return  my_string(stock_code) + my_string(", O:") + std::to_string(open_price)
+                + my_string(", H:") + std::to_string(high_price)
+                + my_string(", L:") + std::to_string(low_price)
+                + my_string(", C:") + std::to_string(close_price)
+                + my_string(", V:") + std::to_string(volume)
+                + my_string(", A:") + std::to_string(amount)                
+ 
+                + my_string(", alpha_1:") + std::to_string(alpha_1)
+                + my_string(", alpha_10:") + std::to_string(alpha_10)
+                + my_string(", alpha_36:") + std::to_string(alpha_36)
+                ;       
+    }    
 };
 using KlineAtomSharedPtr = std::shared_ptr<KlineAtom>;
-
-
-
-// struct MarketData {
-//         char exchange[3]; // 交易所（SH/SZ）
-//         char stock_code[10]; // 证券代码
-//         double open; // 开盘价
-//         double high; // 最高价
-//         double low; // 最低价
-//         double close; // 收盘价
-//         double volume; // 成交量
-//         unsigned long long timestamp; // 时间戳（纳秒）
-//         unsigned long long ulID;
-
-//     MarketData() : open(11), high(0), low(0), close(0), volume(0), timestamp(0) {
-//         strcpy(exchange, "SH");
-//         strcpy(stock_code, "600000");
-//     }
-
-//     MarketData(const MarketData& other):open{other.open}, high{other.high}, low{other.low}, close{other.close}, volume{other.volume}, timestamp{other.timestamp} {
-//         strcpy(exchange, other.exchange);
-//         strcpy(stock_code, other.stock_code);
-//     }
-
-//     void SetRandomData() {
-//         open++;
-//         high = open + 10;
-//         low = open - 10;
-//         close = open + 5;
-//         volume = 1000000;
-
-//         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-//     }
-
-//     my_string str() const {
-//         return my_string("exchange:") + my_string(exchange) 
-//                 + my_string(", stock_code:") + my_string(stock_code) 
-//                 + my_string(", open:") + std::to_string(open) 
-//                 + my_string(", high:") + std::to_string(high) 
-//                 + my_string(", low:") + std::to_string(low) 
-//                 + my_string(", close:") + std::to_string(close) 
-//                 + my_string(", volume:") + std::to_string(volume) 
-//                 + my_string(", timestamp:") + std::to_string(timestamp);
-//     }
-// };
 
 struct IndexData {
 
@@ -475,3 +499,5 @@ using KlineAtomCallbackFuncType = std::function<void(const KlineAtom&)>;
 using KlineVectorCallbackFuncType = std::function<void(const std::vector<KlineAtomSharedPtr>&)>;
 
 using IndexDataCallbackFuncType = std::function<void(const IndexData&)>;
+
+#pragma pack(pop)

@@ -13,31 +13,20 @@ struct KLineDataManager {
 
         data_limit_ = GetDataLimit(iFrequency);
 
-        my_unorder_map<my_string, int> mapStockIndex_  = CONFIG_MANAGER_INSTANCE->GetStockIndexDic();
-        vecOpen.reserve(mapStockIndex_.size());
-        vecHigh.reserve(mapStockIndex_.size());
-        vecLow.reserve(mapStockIndex_.size());
-        vecClose.reserve(mapStockIndex_.size());
-        vecVolume.reserve(mapStockIndex_.size());
-        vecAmount.reserve(mapStockIndex_.size());
+        // my_set<my_string> stock_set  = CONFIG_MANAGER_INSTANCE->GetStockSet();
 
-        my_vector<double> EmptyVec;
-        EmptyVec.reserve(data_limit_);
+        my_unorder_map<my_string, int> mapStockIndex = CONFIG_MANAGER_INSTANCE->GetStockIndexDic();
 
-        vecOpen.resize(mapStockIndex_.size());
-        vecHigh.resize(mapStockIndex_.size());
-        vecLow.resize(mapStockIndex_.size());
-        vecClose.resize(mapStockIndex_.size());
-        vecVolume.resize(mapStockIndex_.size());
-        vecAmount.resize(mapStockIndex_.size());
-        vecLatestKlineAtom.resize(mapStockIndex_.size());
 
-        // vecOpen.resize(data_limit_);
-        // vecHigh.resize(data_limit_);
-        // vecLow.resize(data_limit_);
-        // vecClose.resize(data_limit_);
-        // vecVolume.resize(data_limit_);
-        // vecAmount.resize(data_limit_);
+        vecOpen.resize(mapStockIndex.size());
+        vecHigh.resize(mapStockIndex.size());
+        vecLow.resize(mapStockIndex.size());
+        vecClose.resize(mapStockIndex.size());
+        vecVolume.resize(mapStockIndex.size());
+        vecAmount.resize(mapStockIndex.size());
+        vecLatestKlineAtom.resize(mapStockIndex.size());
+
+        srand((unsigned int)time(NULL));
     }
 
     /// @brief  根据 depth 数据聚合K线数据
@@ -57,7 +46,7 @@ struct KLineDataManager {
         }
 
         for (auto kline_atom: vecKlineAtomSrc) {
-            LOG_INFO("AddKlineAtom: {}", kline_atom->str());
+            // LOG_INFO("AddKlineAtom: {}", kline_atom->str());
 
             vecOpen[kline_atom->stock_index].push_back(kline_atom->open_price);
             vecHigh[kline_atom->stock_index].push_back(kline_atom->high_price);
@@ -70,7 +59,9 @@ struct KLineDataManager {
         }
         data_count_++;
 
-        // StartCalculateKlineIndicator();
+        LOG_DEBUG("AddKlineAtom:  data_count_: {}", data_count_);
+
+        StartCalculateKlineIndicator();
     }
 
     int GetDataCount() {
@@ -122,7 +113,6 @@ public:
             KLineDataManagerSharePtr kline_data_manager = std::make_shared<KLineDataManager>(BarFrequency(indicatorType));
             kline_data_manager->Init();
             kline_data_map_[indicatorType] = kline_data_manager;
-            kline_data_manager->Init();
         }
 
         return true;
@@ -151,6 +141,9 @@ public:
 
     void SetKlineCallback(KlineVectorCallbackFuncType funcKlineVectorCallback) {
         funcKlineVectorCallback_ = funcKlineVectorCallback;
+        for (auto iter: kline_data_map_) {
+            iter.second->SetKlineCallback(funcKlineVectorCallback_);
+        }
     }
 
 

@@ -82,11 +82,14 @@ bool MarketReceiver::Start() {
         
             my_vector<KlineAtomSharedPtr> vecKlineAtoms;
             my_unorder_map<my_string, int>& stock_index_dic = CONFIG_MANAGER_INSTANCE->GetStockIndexDic();
+            my_set<my_string>& stock_set = CONFIG_MANAGER_INSTANCE->GetStockSet();
 
-            for (auto& stock_index_pair : stock_index_dic) {
-                KlineAtomSharedPtr ptrKlineAtom(new KlineAtom(stock_index_pair.first, stock_index_pair.second, 1));
-                ptrKlineAtom->SetRandomData();
-                vecKlineAtoms.push_back(ptrKlineAtom);
+            for (auto& stock : stock_set) {
+                if (stock_index_dic.find(stock) != stock_index_dic.end()) {
+                    KlineAtomSharedPtr ptrKlineAtom(new KlineAtom(stock, stock_index_dic[stock], 1));
+                    ptrKlineAtom->SetRandomData();
+                    vecKlineAtoms.push_back(ptrKlineAtom);
+                }
             }
 
             while (true) {

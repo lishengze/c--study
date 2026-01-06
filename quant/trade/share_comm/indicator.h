@@ -14,6 +14,8 @@ struct IndicatorAtom {
     double alpha_10;
     double alpha_36;
 
+    IndicatorAtom() {}
+
     void UpdateIndicatorValue(KlineIndicatorType indicator_type, double value) {
         switch (indicator_type) {
             case KlineIndicatorType::Alpha_001:

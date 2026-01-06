@@ -71,15 +71,17 @@ inline long SecTime() {
 }
 
 
-inline string ToSecondStr(long nano, string time_format="%Y-%m-%d") {
+inline string ToSecondStr(const long nano, string time_format="%Y-%m-%d") {
     if (nano <=0) {
         return "NULL";
     }
 
-    nano /= NANO_PER_SECOND;
+    long nano_time = nano;
+
+    nano_time /= NANO_PER_SECOND;
     struct  tm* dt ={0};
     char buffer[30] = {0};
-    dt = gmtime(&nano);
+    dt = gmtime(&nano_time);
     strftime(buffer, sizeof(buffer), time_format.c_str(), dt);
 
     return std::string(buffer);

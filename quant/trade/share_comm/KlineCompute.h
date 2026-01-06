@@ -44,7 +44,7 @@ public:
     }
 
     bool StartCompute() override {
-        LOG_INFO("KlineCompute_1::StartCompute");
+        // LOG_INFO("KlineCompute_1::StartCompute");
 
         CallerObj caller_obj = std::bind(&KlineCompute_1::calculate_kline_indicator, this);
         THREAD_POOL_SIMPLE->post_call(caller_obj);
@@ -66,7 +66,7 @@ public:
 
     bool StartCompute() override {
 
-        LOG_INFO("KlineCompute_10::StartCompute");
+        // LOG_INFO("KlineCompute_10::StartCompute");
 
         CallerObj caller_obj = std::bind(&KlineCompute_10::calculate_kline_indicator, this);
         THREAD_POOL_SIMPLE->post_call(caller_obj);
@@ -85,7 +85,7 @@ public:
         iMinimumDataCount = 10;
     }
     bool StartCompute() override {
-        LOG_INFO("KlineCompute_36::StartCompute");
+        // LOG_INFO("KlineCompute_36::StartCompute");
         // THREAD_POOL_SIMPLE->submit_noreturn(&KlineCompute_36::calculate_kline_indicator, this);
 
         CallerObj caller_obj = std::bind(&KlineCompute_36::calculate_kline_indicator, this);

@@ -29,6 +29,8 @@ void KLineDataManager::Init() {
             break;
         }
     }
+
+    LOG_INFO("KLineDataManager Init, mapKlineIndicatorCompute_.size: {}, iFrequency_: {}", mapKlineIndicatorCompute_.size(), (int)iFrequency_);
 }
 
 /// @brief 根据 depth 数据聚合K线数据
@@ -73,10 +75,15 @@ void KLineDataManager::UpdateKlineIndicator(my_vector<float>& vecCurIndicatorVal
 
         // 所有指标计算完成;
         if (setKlineIndicatorType_.size() == mapKlineIndicatorCompute_.size()) {
-            funcKlineVectorComputeDoneCallback_(vecLatestKlineAtom);
+            if (funcKlineVectorComputeDoneCallback_ != nullptr) {
+                funcKlineVectorComputeDoneCallback_(vecLatestKlineAtom);
+            } else {
+                LOG_ERROR("MarketDataManager ProcessVecKline, funcKlineVectorComputeDoneCallback_ is nullptr");
+            }
+            setKlineIndicatorType_.clear();
         }
 
-        setKlineIndicatorType_.clear();
+        
     }
 
 }

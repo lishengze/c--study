@@ -14,7 +14,7 @@ public:
     MarketOutput():iQueueSize_{4096},
                   strSharedMemName_ {"share_market_data_queue"},     
                     ptr_share_market_data_queue_{nullptr},
-                    ptr_share_market_data_queue_slot_   {nullptr}
+                    ptr_share_market_data_queue_slot_{nullptr}
     {
         
     }

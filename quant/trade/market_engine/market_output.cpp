@@ -19,7 +19,11 @@ using std::shared_ptr;
 
 bool MarketOutput::Init() {
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
     InitShareMarketDataQueue();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     return true;
 }
@@ -34,11 +38,13 @@ bool MarketOutput::Stop() {
 }
 
 void MarketOutput::OutputMarketData(const KlineAtom& market_data) {
-    LOG_INFO("OutputMarketData: \n{}", market_data.str());
+    // LOG_INFO("OutputMarketData: \n{}\n", market_data.str());
     
 
     if (ptr_share_market_data_queue_) {
         ptr_share_market_data_queue_->push_share(ptr_share_market_data_queue_slot_, market_data);
+    } else {
+        LOG_ERROR("ptr_share_market_data_queue_ is nullptr");
     }
 }
 
@@ -46,6 +52,8 @@ bool MarketOutput::InitShareMarketDataQueue() {
 
     strSharedMemName_ = CONFIG_MANAGER_INSTANCE->GetStringValue("ComputedMarketData", "QueueName", "CompuatedMarketData");
     iQueueSize_ = CONFIG_MANAGER_INSTANCE->GetIntValue("ComputedMarketData", "QueueSize", 1024);
+
+    LOG_INFO("InitShareMarketDataQueue, strSharedMemName_: {}, iQueueSize_: {}", strSharedMemName_, iQueueSize_);
 
     ptr_share_market_data_queue_ = new mpmc_queue<KlineAtom>();
 
@@ -105,7 +113,12 @@ bool MarketOutput::InitShareMarketDataQueue() {
 
 void MarketOutput::OutputVecKline(const my_vector<KlineAtomSharedPtr>& vecKlineAtomSrc) {
     for (auto iter: vecKlineAtomSrc) {
-        LOG_INFO("OutputVecKline: \n{}", iter->str());
+        LOG_INFO("OutputVecKline: \n{}\n", iter->str());
+        if (ptr_share_market_data_queue_) {
+            ptr_share_market_data_queue_->push_share(ptr_share_market_data_queue_slot_, *(iter.get()));
+        } else {
+            LOG_ERROR("ptr_share_market_data_queue_ is nullptr");
+        }        
     }
 }
 

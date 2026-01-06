@@ -33,9 +33,9 @@ bool MarketManager::Init() {
 
     if (!market_receiver_.Init()) return false;
 
-    if (!market_data_manager_.Init()) return false;
+    if (!market_output_.Init()) return false;    
 
-    if (!market_output_.Init()) return false;
+    if (!market_data_manager_.Init()) return false;
 
     KlineVectorCallbackFuncType callback_func = std::bind(&MarketOutput::OutputVecKline, &market_output_, std::placeholders::_1);
     market_data_manager_.SetKlineCallback(callback_func);

@@ -246,6 +246,13 @@ bool KlineCompute_1::calculate_kline_indicator() {
         for (int i = 0; i < tmpRst.size(); i++) {
             ret.push_back(tmpRst[i][tmpRst[i].size()-1]);
         }
+    } else {
+        if (kline_data_manager == nullptr) {
+            LOG_INFO("KlineCompute_1: KlineDataManager is nullptr");
+        } else {
+            LOG_INFO("KlineCompute_1: Not enough data to calculate Alpha001 {}, {}", 
+                    kline_data_manager->GetDataCount(), iMinimumDataCount);
+        }
     }
     kline_data_manager->UpdateKlineIndicator(ret, KlineIndicatorType::Alpha_001);    
 
@@ -262,7 +269,16 @@ bool KlineCompute_10::calculate_kline_indicator() {
         for (int i = 0; i < tmpRst.size(); i++) {
             ret.push_back(tmpRst[i][tmpRst[i].size()-1]);
         }
+    } else {
+        if (kline_data_manager == nullptr) {
+            LOG_INFO("KlineCompute_10: KlineDataManager is nullptr");
+        } else {
+            LOG_INFO("KlineCompute_10: Not enough data to calculate Alpha010 {}, {}", 
+                    kline_data_manager->GetDataCount(), iMinimumDataCount);
+        }
     }
+
+
 
     kline_data_manager->UpdateKlineIndicator(ret, KlineIndicatorType::Alpha_010);
 
@@ -271,8 +287,6 @@ bool KlineCompute_10::calculate_kline_indicator() {
 
 bool KlineCompute_36::calculate_kline_indicator() {
     my_vector<float> ret;
-
-
     
     KLineDataManager* kline_data_manager = get_kline_data_manager();
 
@@ -281,10 +295,15 @@ bool KlineCompute_36::calculate_kline_indicator() {
         for (int i = 0; i < tmpRst.size(); i++) {
             ret.push_back(tmpRst[i][tmpRst[i].size()-1]);
         }
+    } else {
+        if (kline_data_manager == nullptr) {
+            LOG_INFO("KlineCompute_36: KlineDataManager is nullptr");
+        } else {
+            LOG_INFO("KlineCompute_36: Not enough data to calculate Alpha036 {}, {}", 
+                    kline_data_manager->GetDataCount(), iMinimumDataCount);
+        }
     }
 
-
     kline_data_manager->UpdateKlineIndicator(ret, KlineIndicatorType::Alpha_036);
-
     return true;
 }

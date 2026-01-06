@@ -81,9 +81,9 @@ class ThreadPoolSimple
                     pool_->caller_queue_.pop();
                 }
 
-                cout << "Thread " << pool_id_ << " execute caller" << endl;
+                // cout << "Thread " << pool_id_ << " execute caller" << endl;
                 caller();
-                cout << endl;
+                // cout << endl;
             }
         }
 
@@ -181,7 +181,7 @@ class ThreadPoolSimple
 
         caller_queue_.push(caller);
 
-        cout << "caller_queue_.size: " << caller_queue_.size() << endl;
+        // cout << "caller_queue_.size: " << caller_queue_.size() << endl;
 
         caller_condition_.notify_one();
     }

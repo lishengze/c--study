@@ -33,6 +33,8 @@ public:
 
     my_set<int>& GetIndicatorSet() { return setIndicatorSet_; }
 
+    my_set<my_string>& GetStockSet() { return setStockSet_; }
+
 private:
     my_string sConfigFileName_;
     njson reqJsonData_;
@@ -43,6 +45,7 @@ private:
     my_set<my_string> setStrategySet_;
     my_set<int> setKlineFreqSet_;
     my_set<int> setIndicatorSet_;
+    my_set<my_string> setStockSet_;
 };
 
 
