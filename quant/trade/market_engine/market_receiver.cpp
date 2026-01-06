@@ -80,17 +80,15 @@ bool MarketReceiver::Start() {
 
         ptr_thread_ = std::make_shared<std::thread>([this]() {
         
-            my_vector<KlineAtomSharedPtr> vecKlineAtoms;
-            my_unorder_map<my_string, int>& stock_index_dic = CONFIG_MANAGER_INSTANCE->GetStockIndexDic();
-            my_set<my_string>& stock_set = CONFIG_MANAGER_INSTANCE->GetStockSet();
+        my_vector<KlineAtomSharedPtr> vecKlineAtoms;
+        my_unorder_map<my_string, int>& stock_index_dic = CONFIG_MANAGER_INSTANCE->GetStockIndexDic();
 
-            for (auto& stock : stock_set) {
-                if (stock_index_dic.find(stock) != stock_index_dic.end()) {
-                    KlineAtomSharedPtr ptrKlineAtom(new KlineAtom(stock, stock_index_dic[stock], 1));
-                    ptrKlineAtom->SetRandomData();
-                    vecKlineAtoms.push_back(ptrKlineAtom);
-                }
+        for (auto& iter : stock_index_dic) {
+                KlineAtomSharedPtr ptrKlineAtom(new KlineAtom(iter.first, iter.second, 1));
+                ptrKlineAtom->SetRandomData();
+                vecKlineAtoms.push_back(ptrKlineAtom);
             }
+
 
             while (true) {
                 // 从源市场行情数据队列中获取数据

@@ -28,5 +28,5 @@
         "IndicatorList": [1, 10, 36],
         "StockList": ["600000.SH", "000001.SZ", "000002.SZ", "600001.SH"]
     },
-    "StrategyList":["strategy_impl_1"]
+    "StrategyList":["strategy_impl_1", "strategy_impl_2", "strategy_impl_3"]
 }
