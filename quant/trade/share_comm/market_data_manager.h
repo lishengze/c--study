@@ -24,6 +24,16 @@ struct KLineDataManager {
         vecClose.resize(mapStockIndex.size());
         vecVolume.resize(mapStockIndex.size());
         vecAmount.resize(mapStockIndex.size());
+
+        for (int i = 0; i < mapStockIndex.size(); ++i) {
+            vecOpen[i].reserve(data_limit_);
+            vecHigh[i].reserve(data_limit_);
+            vecLow[i].reserve(data_limit_);
+            vecClose[i].reserve(data_limit_);
+            vecVolume[i].reserve(data_limit_);
+            vecAmount[i].reserve(data_limit_);
+        }
+
         vecLatestKlineAtom.resize(mapStockIndex.size());
 
         srand((unsigned int)time(NULL));
@@ -45,19 +55,24 @@ struct KLineDataManager {
             return;
         }
 
-        for (auto kline_atom: vecKlineAtomSrc) {
-            // LOG_INFO("AddKlineAtom: {}", kline_atom->str());
+        {
+            // 加锁，确保线程安全;
+            std::lock_guard<std::mutex> lock(update_indicator_mutex_);
+            for (auto kline_atom: vecKlineAtomSrc) {
+                // LOG_INFO("AddKlineAtom: {}", kline_atom->str());
 
-            vecOpen[kline_atom->stock_index].push_back(kline_atom->open_price);
-            vecHigh[kline_atom->stock_index].push_back(kline_atom->high_price);
-            vecLow[kline_atom->stock_index].push_back(kline_atom->low_price);
-            vecClose[kline_atom->stock_index].push_back(kline_atom->close_price);
-            vecVolume[kline_atom->stock_index].push_back(kline_atom->volume);
-            vecAmount[kline_atom->stock_index].push_back(kline_atom->amount);
+                vecOpen[kline_atom->stock_index].push_back(kline_atom->open_price);
+                vecHigh[kline_atom->stock_index].push_back(kline_atom->high_price);
+                vecLow[kline_atom->stock_index].push_back(kline_atom->low_price);
+                vecClose[kline_atom->stock_index].push_back(kline_atom->close_price);
+                vecVolume[kline_atom->stock_index].push_back(kline_atom->volume);
+                vecAmount[kline_atom->stock_index].push_back(kline_atom->amount);
 
-            vecLatestKlineAtom[kline_atom->stock_index] = kline_atom;
+                vecLatestKlineAtom[kline_atom->stock_index] = kline_atom;
+            }
+            data_count_++;            
         }
-        data_count_++;
+
 
         LOG_DEBUG("AddKlineAtom:  data_count_: {}", data_count_);
 
@@ -145,7 +160,6 @@ public:
             iter.second->SetKlineCallback(funcKlineVectorCallback_);
         }
     }
-
 
 private:
     DepthData depth_data_;

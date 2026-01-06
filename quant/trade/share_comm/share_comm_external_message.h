@@ -430,18 +430,26 @@ struct TradeUnitDllInfo
     }
 
     bool InitLogger() {
-        logger_ = spdlog::create_async<spdlog::sinks::rotating_file_sink_mt>(
-            lib_name_, 
-            lib_name_, 
-            (std::size_t)1024 * 1024 * 1024 * 3, 
-            1000); 
+        // logger_ = spdlog::create_async<spdlog::sinks::basic_file_sink_mt>(
+        //     lib_name_+".log", 
+        //     lib_name_, 
+        //     (std::size_t)1024 * 1024 * 1024 * 3, 
+        //     1000); 
+
+        // logger_ = spdlog::create_async<spdlog::sinks::basic_file_sink_mt>(
+        //     lib_name_+".log", 
+        //     true, 
+        //     "w"); 
+
+        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(lib_name_+".log", true);
+        logger_ = std::make_shared<spdlog::logger>(lib_name_, file_sink);            
 
         if (logger_ == nullptr) {
             std::cerr << "[主程序] 初始化日志失败！错误信息：logger_ 为空 "  << std::endl;
             return false;
         }
 
-        logger_->set_pattern("[%H:%M:%S] %P %t [%l] %s [%!] %# | %v");
+        logger_->set_pattern("[%H:%M:%S],%P,%t,[%l],%s,[%!],%#|%v");
         logger_->set_level(spdlog::level::debug);
         logger_->flush_on(spdlog::level::err);
         spdlog::flush_every(std::chrono::seconds(1));

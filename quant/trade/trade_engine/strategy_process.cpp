@@ -7,7 +7,8 @@ using std::string;
 using namespace share_common;
 
 bool StrategyProcess::Init() {
-    string lib_name = "libstrategy_impl_1";
+
+    logger_ = logger::async_logger;
 
     my_set<my_string>& setStrategySet_ = CONFIG_MANAGER_INSTANCE->GetStrategySet();
     for (auto& it : setStrategySet_) {

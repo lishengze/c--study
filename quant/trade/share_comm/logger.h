@@ -9,6 +9,9 @@
 #include "spdlog/async_logger.h"
 #endif
 
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/basic_file_sink.h"
+
 namespace tech {
     inline void Nothing() {
 
@@ -36,6 +39,7 @@ public:
 
 public:
     static std::shared_ptr<spdlog::logger> async_logger;
+    static std::shared_ptr<spdlog::sinks::basic_file_sink_mt> file_sink;
     static int log_level;
 };
 

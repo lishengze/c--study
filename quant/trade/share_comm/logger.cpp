@@ -2,10 +2,14 @@
 #include "logger.h"
 #include "spdlog/async.h"
 #include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/basic_file_sink.h"
+
 
 namespace share_common
 {
     std::shared_ptr<spdlog::logger> logger::async_logger = nullptr;
+    std::shared_ptr<spdlog::sinks::basic_file_sink_mt> logger::file_sink = nullptr;
+
     int logger::log_level = -1;
     
     void logger::init(std::string name)
@@ -13,13 +17,18 @@ namespace share_common
         if (nullptr != async_logger) {
             return; // already init
         }
-        async_logger = spdlog::create_async<spdlog::sinks::rotating_file_sink_mt>(
-            "async_file_logger", 
-            name, 
-            (std::size_t)1024 * 1024 * 1024 * 3, 
-            1000); 
 
-        async_logger->set_pattern("[%H:%M:%S] %P %t [%l] %s [%!] %# | %v");
+        // async_logger = spdlog::create_async<spdlog::sinks::rotating_file_sink_mt>(
+        //     "async_file_logger", 
+        //     name, 
+        //     (std::size_t)1024 * 1024 * 1024 * 3, 
+        //     1000); 
+
+        file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(name, true);
+        async_logger = std::make_shared<spdlog::logger>(name, file_sink);      
+
+
+        async_logger->set_pattern("[%H:%M:%S],%P,%t,[%l],%s,[%!],%#|%v");
         async_logger->set_level(spdlog::level::debug);
         async_logger->flush_on(spdlog::level::err);
         spdlog::flush_every(std::chrono::seconds(1));

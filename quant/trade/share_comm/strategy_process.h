@@ -1,6 +1,6 @@
 #pragma once
 #include "share_comm_external_message.h"
-
+#include "logger.h"
 
 class StrategyProcess { 
 public:
@@ -19,7 +19,7 @@ public:
     bool CheckStock(const OrderReq& order_req);
 
     bool SendOrderReq(const OrderReq& order_req) {
-        // LOG_INFO("SendOrderReq, order_req: \n{}", order_req.str());
+        logger_->info("SendOrderReq, order_req: \n{}\n", order_req.str());
         std::cout << "SendOrderReq OrderReq: " << order_req.str() << std::endl;
         return true;        
     }
@@ -32,4 +32,5 @@ public:
 
 private:  
     std::unordered_map<std::string, TradeUnitDllInfoPtr> strategy_dll_map_;
+    std::shared_ptr<spdlog::logger> logger_;
 };
