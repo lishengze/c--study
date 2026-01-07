@@ -7,7 +7,7 @@ class StrategyImpl1 : public IStrateImpl {
 public:
     int ProcessKlineAtom(KlineAtom* pMarketData) override {
         // std::cout << "StrategyImpl1::ProcessMarketData: " << pMarketData->str() << std::endl;
-        logger_->info("StrategyImpl1::ProcessMarketData: {}", pMarketData->str());
+        logger_->info("StrategyImpl1::ProcessMarketData: {}", pMarketData->str(pConfigManager_->GetIndicatorSet()));
         
         if (pStrategyProcess_ == nullptr) {
             return ErrFuncParam1IsNull;

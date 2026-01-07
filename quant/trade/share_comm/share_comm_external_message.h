@@ -3,6 +3,7 @@
 #include "comm_define.h"
 #include "indicator.h"
 #include "share_comm_util.h"
+#include "config_manager.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -191,18 +192,60 @@ struct KlineAtom {
     // }
 
     my_string str() const {
-        return  my_string(stock_code) + my_string(", O:") + std::to_string(open_price)
+        my_string ret = my_string(stock_code) + my_string(", O:") + std::to_string(open_price)
                 + my_string(", H:") + std::to_string(high_price)
                 + my_string(", L:") + std::to_string(low_price)
                 + my_string(", C:") + std::to_string(close_price)
                 + my_string(", V:") + std::to_string(volume)
-                + my_string(", A:") + std::to_string(amount)                
- 
-                + my_string(", alpha_1:") + std::to_string(alpha_1)
-                + my_string(", alpha_10:") + std::to_string(alpha_10)
-                + my_string(", alpha_36:") + std::to_string(alpha_36)
-                ;       
-    }    
+                + my_string(", A:") + std::to_string(amount);
+        
+        my_set<int> vecIndicatorTypes = CONFIG_MANAGER_INSTANCE->GetIndicatorSet();
+
+        for (auto indicatorType : vecIndicatorTypes) {
+            switch (indicatorType) {
+                case int(KlineIndicatorType::Alpha_001):
+                    ret += my_string(", alpha_1:") + std::to_string(alpha_1);
+                    break;
+                case int(KlineIndicatorType::Alpha_010):
+                    ret += my_string(", alpha_10:") + std::to_string(alpha_10);
+                    break;
+                case int(KlineIndicatorType::Alpha_036):
+                    ret += my_string(", alpha_36:") + std::to_string(alpha_36);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return  ret;       
+    } 
+    
+    my_string str(my_set<int>& vecIndicatorTypes ) const {
+        my_string ret = my_string(stock_code) + my_string(", O:") + std::to_string(open_price)
+                + my_string(", H:") + std::to_string(high_price)
+                + my_string(", L:") + std::to_string(low_price)
+                + my_string(", C:") + std::to_string(close_price)
+                + my_string(", V:") + std::to_string(volume)
+                + my_string(", A:") + std::to_string(amount);
+        
+        for (auto indicatorType : vecIndicatorTypes) {
+            switch (indicatorType) {
+                case int(KlineIndicatorType::Alpha_001):
+                    ret += my_string(", alpha_1:") + std::to_string(alpha_1);
+                    break;
+                case int(KlineIndicatorType::Alpha_010):
+                    ret += my_string(", alpha_10:") + std::to_string(alpha_10);
+                    break;
+                case int(KlineIndicatorType::Alpha_036):
+                    ret += my_string(", alpha_36:") + std::to_string(alpha_36);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return  ret;       
+    }     
 };
 using KlineAtomSharedPtr = std::shared_ptr<KlineAtom>;
 
@@ -353,14 +396,19 @@ public:
         return ErrSuccess;
     }
 
+    virtual int RegisterConfigManager(ConfigManager * pConfigManager)  {
+        pConfigManager_ = pConfigManager;
+        return ErrSuccess;
+    }    
+
     void SetLogger(spdlog_ptr logger) {
         logger_ = logger;
     }
 
 protected:
-    spdlog_ptr logger_;
-    
+    spdlog_ptr logger_;    
     StrategyProcess* pStrategyProcess_;
+    ConfigManager* pConfigManager_;
 };
 
 
@@ -424,7 +472,11 @@ struct TradeUnitDllInfo
             std::cerr << "[主程序] 加载动态库失败！错误信息：tmp 为空 "  << std::endl;
             return false;
         }
+
+        pConfigManager_ = CONFIG_MANAGER_INSTANCE.get();
+
         tmp->SetLogger(logger_);
+        tmp->RegisterConfigManager(pConfigManager_);
 
         return true;
     }
@@ -510,6 +562,7 @@ struct TradeUnitDllInfo
     funcStrategyDestroyFunc* pFuncStrategyDestroy;
 
     spdlog_ptr logger_;
+    ConfigManager* pConfigManager_;
 };
 
 using TradeUnitDllInfoPtr = std::shared_ptr<TradeUnitDllInfo>;
