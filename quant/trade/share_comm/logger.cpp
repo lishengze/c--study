@@ -28,7 +28,7 @@ namespace share_common
         async_logger = std::make_shared<spdlog::logger>(name, file_sink);      
 
 
-        async_logger->set_pattern("[%H:%M:%S],%P,%t,[%l],%s,[%!],%#|%v");
+        async_logger->set_pattern("[%H:%M:%S],%t,[%l],%s,[%!],%#|%v");
         async_logger->set_level(spdlog::level::debug);
         async_logger->flush_on(spdlog::level::err);
         spdlog::flush_every(std::chrono::seconds(1));

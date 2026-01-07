@@ -501,7 +501,7 @@ struct TradeUnitDllInfo
             return false;
         }
 
-        logger_->set_pattern("[%H:%M:%S],%P,%t,[%l],%s,[%!],%#|%v");
+        logger_->set_pattern("[%H:%M:%S],%t,[%l],%s,[%!],%#|%v");
         logger_->set_level(spdlog::level::debug);
         logger_->flush_on(spdlog::level::err);
         spdlog::flush_every(std::chrono::seconds(1));
