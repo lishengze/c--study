@@ -1,6 +1,7 @@
 #include "test_pointer.h"
 #include <string>
 #include <iostream>
+#include <vector>
 using namespace std;
 
 class VisitorCallable
@@ -83,22 +84,39 @@ class TestPointer2 {
         string sClassName_;
 };
 
+void calc_tmp(int i) {
+    int a = i & 7;
+    int b = a >> 3;
+
+    cout << "i: " << i << ", a: " << a << ", b: " << b << endl;
+}
+
+void TestOperator() {
+    std::vector<int> v = {0, 8, 16, 24, 1, 9, 17, 25, 2, 10, 18, 26};
+    for (int i : v) {
+        calc_tmp(i);
+    }
+}
+
 void TestPointer() {
-    TestPointer1 t1;
-    TestPointer2 t2;
-    Message1 msg1;
-    Message2 msg2;
+    // TestPointer1 t1;
+    // TestPointer2 t2;
+    // Message1 msg1;
+    // Message2 msg2;
 
-    SingleEntryType pFuncSingleEntryType1 = (SingleEntryType)(&TestPointer1::PrintPointer1);
-    SingleEntryType pFuncSingleEntryType2 = (SingleEntryType)(&TestPointer2::PrintPointer2);
+    // SingleEntryType pFuncSingleEntryType1 = (SingleEntryType)(&TestPointer1::PrintPointer1);
+    // SingleEntryType pFuncSingleEntryType2 = (SingleEntryType)(&TestPointer2::PrintPointer2);
 
-    pFuncSingleEntryType1(&msg1);
-    pFuncSingleEntryType2(&msg2);
+    // pFuncSingleEntryType1(&msg1);
+    // pFuncSingleEntryType2(&msg2);
 
-    VisitorCallable::EntryType pFuncEntryType1 = (VisitorCallable::EntryType )&TestPointer1::PrintPointer1;
-    VisitorCallable::EntryType pFuncEntryType2 = (VisitorCallable::EntryType )&TestPointer2::PrintPointer2;
+    // VisitorCallable::EntryType pFuncEntryType1 = (VisitorCallable::EntryType )&TestPointer1::PrintPointer1;
+    // VisitorCallable::EntryType pFuncEntryType2 = (VisitorCallable::EntryType )&TestPointer2::PrintPointer2;
 
-    ( ( (VisitorCallable*)(&t1) ) ->*pFuncEntryType1 )(&msg1);
+    // ( ( (VisitorCallable*)(&t1) ) ->*pFuncEntryType1 )(&msg1);
+
+
+    TestOperator();
 
 }
 
