@@ -4,7 +4,7 @@
 #include <cassert>  // for assert
 
 template <typename T>
-class MemoryPool {
+class MemoryPool2 {
 private:
     // 内存块节点：包含空闲内存 + 下一个块的指针（单链表）
     struct BlockNode {
@@ -22,7 +22,7 @@ private:
         assert(n > 0);
         // 一次性分配 n 个 BlockNode 的连续内存（减少 malloc 调用）
         BlockNode* new_blocks = static_cast<BlockNode*>(std::malloc(n * sizeof(BlockNode)));
-        assert(new_blocks != nullptr && "MemoryPool: malloc failed!");
+        assert(new_blocks != nullptr && "MemoryPool2: malloc failed!");
 
         // 将新分配的块串联成链表
         for (size_t i = 0; i < n - 1; ++i) {
@@ -35,7 +35,7 @@ private:
 
 public:
     // 构造函数：指定每次扩容的块数量（默认 10 个）
-    explicit MemoryPool(size_t pre_allocate_num = 10)
+    explicit MemoryPool2(size_t pre_allocate_num = 10)
         : free_list_(nullptr)
         , kBlockNum(pre_allocate_num)
         , allocated_count_(0)
@@ -45,8 +45,8 @@ public:
     }
 
     // 析构函数：释放所有从系统分配的内存（必须确保所有对象已 Deallocate）
-    ~MemoryPool() {
-        assert(allocated_count_ == 0 && "MemoryPool: There are still allocated objects!");
+    ~MemoryPool2() {
+        assert(allocated_count_ == 0 && "MemoryPool2: There are still allocated objects!");
         // 遍历所有空闲块链表，释放内存（因块是连续分配的，只需释放链表头）
         BlockNode* current = free_list_;
         while (current != nullptr) {
@@ -60,10 +60,10 @@ public:
     }
 
     // 禁止拷贝和移动（避免内存管理混乱）
-    MemoryPool(const MemoryPool&) = delete;
-    MemoryPool& operator=(const MemoryPool&) = delete;
-    MemoryPool(MemoryPool&&) = delete;
-    MemoryPool& operator=(MemoryPool&&) = delete;
+    MemoryPool2(const MemoryPool2&) = delete;
+    MemoryPool2& operator=(const MemoryPool2&) = delete;
+    MemoryPool2(MemoryPool2&&) = delete;
+    MemoryPool2& operator=(MemoryPool2&&) = delete;
 
     // 分配内存并原地构造对象（支持任意参数的构造函数）
     template <typename... Args>
@@ -71,7 +71,7 @@ public:
         // 若无空闲块，扩容（预分配 kBlockNum 个块）
         if (free_list_ == nullptr) {
             AllocateBlocks(kBlockNum);
-            std::cout << "MemoryPool: Allocate " << kBlockNum << " new blocks" << std::endl;
+            std::cout << "MemoryPool2: Allocate " << kBlockNum << " new blocks" << std::endl;
         }
 
         // 从空闲链表头部取出一个块
@@ -86,7 +86,7 @@ public:
 
         // 验证对象地址是否正确对齐（安全检查）
         assert(reinterpret_cast<void*>(obj) == reinterpret_cast<void*>(block->data) &&
-               "MemoryPool: Object alignment error!");
+               "MemoryPool2: Object alignment error!");
 
         return obj;
     }
@@ -104,7 +104,7 @@ public:
 
         // 简单校验：确保 block 的 data 字段确实指向 obj（防止非法地址）
         if (reinterpret_cast<void*>(block->data) != reinterpret_cast<void*>(obj)) {
-            std::cerr << "MemoryPool: Invalid pointer to deallocate!" << std::endl;
+            std::cerr << "MemoryPool2: Invalid pointer to deallocate!" << std::endl;
             return false;
         }
 

@@ -12,7 +12,7 @@
 
 // 内存池模板类，T为内存池分配的对象类型
 template <typename T>
-class MemoryPool {
+class MemoryPool3 {
 public:
     // 内存块结构体：管理单个连续内存块的基础信息
     struct MemoryBlock {
@@ -34,7 +34,7 @@ public:
     };
 
     // 构造函数：预分配init_elem_count个T类型对象的内存，初始化定时检查（默认5秒检查一次，使用率阈值80%）
-    explicit MemoryPool(size_t init_elem_count, 
+    explicit MemoryPool3(size_t init_elem_count, 
                         size_t check_interval_ms = 5000, 
                         float usage_threshold = 0.8f)
         : elem_size_(sizeof(T)),
@@ -51,11 +51,11 @@ public:
         // 预分配初始内存
         expand(init_elem_count);
         // 启动定时检查线程
-        check_thread_ = std::thread(&MemoryPool::check_and_expand, this);
+        check_thread_ = std::thread(&MemoryPool3::check_and_expand, this);
     }
 
     // 析构函数：释放所有内存，停止定时检查线程
-    ~MemoryPool() {
+    ~MemoryPool3() {
         // 停止后台检查线程
         stop_check_thread_ = true;
         if (check_thread_.joinable()) {
@@ -76,12 +76,12 @@ public:
     }
 
     // 禁用拷贝构造和赋值运算符（内存池对象不可拷贝）
-    MemoryPool(const MemoryPool&) = delete;
-    MemoryPool& operator=(const MemoryPool&) = delete;
+    MemoryPool3(const MemoryPool3&) = delete;
+    MemoryPool3& operator=(const MemoryPool3&) = delete;
 
     // 移动构造和移动赋值（可选，此处禁用简化实现）
-    MemoryPool(MemoryPool&&) = delete;
-    MemoryPool& operator=(MemoryPool&&) = delete;
+    MemoryPool3(MemoryPool3&&) = delete;
+    MemoryPool3& operator=(MemoryPool3&&) = delete;
 
     /**
      * @brief 获取内存池的核心接口
@@ -156,7 +156,7 @@ public:
             }
         }
 
-        std::cout << "===== MemoryPool Status (Type: " << typeid(T).name() << ") =====" << std::endl;
+        std::cout << "===== MemoryPool3 Status (Type: " << typeid(T).name() << ") =====" << std::endl;
         std::cout << "Total elements capacity: " << total_elem << std::endl;
         std::cout << "Used elements: " << used_elem << std::endl;
         std::cout << "Free elements (continuous): " << free_continuous << std::endl;
@@ -386,10 +386,10 @@ private:
 };
 
 // 测试示例
-int test() {
+int test_pool3() {
     try {
         // 初始化内存池：预分配10个int类型对象，3秒检查一次，使用率阈值70%
-        MemoryPool<int> mp(10, 3000, 0.7f);
+        MemoryPool3<int> mp(10, 3000, 0.7f);
         mp.print_status();
 
         // 1. 申请非连续内存：5个int（非连续）

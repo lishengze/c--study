@@ -9,8 +9,8 @@
 #include <functional>
 
 template<typename T>
-class MemoryPool {
-    MemoryPool(int iCapacity = 100, int iExpandCapacity=50): pFreeListHead_(nullptr), iCapacity_(iCapacity), iExpandCapacity_(iExpandCapacity) {
+class MemoryPool1 {
+    MemoryPool1(int iCapacity = 100, int iExpandCapacity=50): pFreeListHead_(nullptr), iCapacity_(iCapacity), iExpandCapacity_(iExpandCapacity) {
 
         assert(iCapacity_ > 0);
         assert(iExpandCapacity_ > 0);
