@@ -4,7 +4,7 @@
 #   2025-09-08
 ##############################################################################################
 cmake_minimum_required(VERSION 3.12)
-project(memory_pool)
+project(memory_test)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g -pthread")
